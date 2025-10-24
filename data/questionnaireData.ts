@@ -23,13 +23,14 @@ export interface Domain {
   schemas: Schema[]; // varies by domain
 }
 
-export interface Instrument {
-  version: string;       // "2.0.0-general"
-  instrument: string;    // human-readable name
-  lastUpdated: string;   // ISO date
-  structureNotes: string;
-  domains: Domain[];     // 5 domains
+export const questionnaireData = {
+  version: "2.0.0-general",
+  instrument: "Schema Questionnaire v2 – General Reflective",
+  lastUpdated: "2025-10-24",
+  structureNotes: "5 domains × 18 schemas × 108 items",
+  sections: [ /* previously called domains */ ]
 }
+
 
 export const GENERAL_REFLECTIVE_V2: Instrument = {
   version: "2.0.0-general",
