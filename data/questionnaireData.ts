@@ -108,8 +108,7 @@ const GENERAL_REFLECTIVE_V2: Instrument = {
           ]
         }
       ]
-    }
-    // You’ll add the next domain here (2. IMPAIRED AUTONOMY & PERFORMANCE)
+    },
 
     {
       domain: "2. IMPAIRED AUTONOMY & PERFORMANCE (General reflective version)",
