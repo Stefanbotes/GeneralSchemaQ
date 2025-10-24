@@ -29,8 +29,6 @@ export interface Instrument {
   domains: Domain[];     // 5 domains
 }
 
-// ❌ REMOVE the old placeholder that had `sections: []`
-
 // ✅ KEEP ONLY the real instrument and export it as default
 const GENERAL_REFLECTIVE_V2: Instrument = {
   version: "2.0.0-general",
@@ -38,10 +36,9 @@ const GENERAL_REFLECTIVE_V2: Instrument = {
   lastUpdated: "2025-10-24",
   structureNotes:
     "Cognitive = items 1–2, Emotional = items 3–4, Belief = items 5–6. IDs use Domain.Schema.Item (e.g., 1.1.1). Total 108. No reverse scoring.",
+
   domains: [
-
-    }
-
+    {
       domain: "1. DISCONNECTION & REJECTION (General reflective version)",
       description: "Fear of loss, rejection, deprivation, mistrust, or not belonging.",
       schemas: [
@@ -99,19 +96,8 @@ const GENERAL_REFLECTIVE_V2: Instrument = {
         },
         {
           code: "1.5",
-          name: "Social Isolation / Alienation",
-          coreTheme: "Feeling different, excluded, or disconnected from social groups.",
-          items: [
-            { id: "1.5.1", type: "cognitive", text: "I often feel I don’t fit naturally into groups or social circles." },
-            { id: "1.5.2", type: "cognitive", text: "I tend to assume others find it easier to connect and belong than I do." },
-            { id: "1.5.3", type: "emotional", text: "Even in groups, I sometimes feel like I’m watching rather than participating." },
-            { id: "1.5.4", type: "emotional", text: "When others connect easily, I can feel left out or invisible." },
-            { id: "1.5.5", type: "belief", text: "Deep down, I believe I don’t truly belong anywhere." },
-            { id: "1.5.6", type: "belief", text: "I see myself as someone who tends to stand apart from others." }
-          ]
-        }
-      ]
-    },
+          name: "Social Isolation
+
     {
       domain: "2. IMPAIRED AUTONOMY & PERFORMANCE (General reflective version)",
       description: "Beliefs about one’s ability to function independently, handle life effectively, or feel secure in one’s judgment.",
