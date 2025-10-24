@@ -1,0 +1,197 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model accounts {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  users             users   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model assessment_questions {
+  id             String   @id // Question ID like "1.1.R1" from canonical source
+  order          Int      @unique
+  domain         String? // Domain/Section name (optional for legacy compatibility)
+  schema         String? // Schema name (e.g., "The Self-Doubter - Failure")
+  persona        String? // Persona name
+  healthyPersona String? // Healthy alternative persona
+  statement      String // Question text
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model assessments {
+  id                String            @id @default(cuid())
+  userId            String
+  status            AssessmentStatus  @default(NOT_STARTED)
+  agreedToTerms     Boolean           @default(false)
+  agreedAt          DateTime?
+  responses         Json? // Legacy JSON storage - will be deprecated
+  leadershipPersona String?
+  results           Json?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  users             users             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lasbi_responses   lasbi_responses[]
+}
+
+model leadership_personas {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  description     String
+  characteristics Json
+  strengths       Json
+  growthAreas     Json
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================================================
+// LASBI STABLE IDENTIFIER STORAGE - v1.0.1
+// ============================================================================
+
+// Reference table: LASBI item metadata
+model lasbi_items {
+  item_id         String   @id // cmf... (modern LASBI item ID)
+  canonical_id    String   @unique // "d.s.q" format (e.g., "1.1.1")
+  variable_id     String // "d.s" format (e.g., "1.1")
+  question_number Int // 1, 2, or 3
+  schema_label    String // Schema name for reference
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  responses lasbi_responses[]
+
+  @@index([canonical_id])
+  @@index([variable_id])
+  @@map("lasbi_items")
+}
+
+// Individual response storage with stable identifiers
+model lasbi_responses {
+  response_id     String   @id @default(cuid())
+  assessment_id   String
+  item_id         String
+  canonical_id    String // Denormalized for convenience
+  variable_id     String // Denormalized for convenience
+  value           Int // 1..5
+  mapping_version String   @default("1.0.1") // Track which mapping version was used
+  created_at      DateTime @default(now())
+
+  // Relations
+  assessment assessments @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
+  item       lasbi_items @relation(fields: [item_id], references: [item_id], onDelete: Restrict)
+
+  @@unique([assessment_id, item_id])
+  @@index([assessment_id])
+  @@index([variable_id])
+  @@index([canonical_id])
+  @@map("lasbi_responses")
+}
+
+// ============================================================================
+
+model password_reset_tokens {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expires   DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model rate_limit_records {
+  id          String   @id @default(cuid())
+  userId      String?
+  ipAddress   String?
+  action      String
+  attempts    Int      @default(1)
+  windowStart DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ipAddress, action, windowStart])
+  @@unique([userId, action, windowStart])
+}
+
+model sessions {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  tokenVersion Int      @default(0)
+  users        users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model users {
+  id                    String                  @id @default(cuid())
+  email                 String                  @unique
+  firstName             String
+  lastName              String
+  password              String
+  role                  UserRole                @default(CLIENT)
+  emailVerified         Boolean                 @default(false)
+  emailVerifiedAt       DateTime?
+  tokenVersion          Int                     @default(0)
+  loginAttempts         Int                     @default(0)
+  lockoutUntil          DateTime?
+  lastLogin             DateTime?
+  passwordChangedAt     DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  accounts              accounts[]
+  assessments           assessments[]
+  password_reset_tokens password_reset_tokens[]
+  rate_limit_records    rate_limit_records[]
+  sessions              sessions[]
+  verification_tokens   verification_tokens[]
+}
+
+model verification_tokens {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  userId    String?
+  expires   DateTime
+  createdAt DateTime @default(now())
+  users     users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
+}
+
+enum AssessmentStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum UserRole {
+  CLIENT
+  COACH
+  ADMIN
+}

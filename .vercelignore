@@ -1,0 +1,12 @@
+node_modules
+.next
+.env.local
+.env*.local
+*.log
+*.pdf
+.DS_Store
+.vscode
+.idea
+dev.log
+*.bak
+Uploads/
