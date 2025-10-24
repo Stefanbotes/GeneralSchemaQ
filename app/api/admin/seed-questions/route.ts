@@ -1,194 +1,194 @@
 // Protected API endpoint to seed assessment questions and LASBI items
-// This should be called ONCE after deployment to populate the production database
-// Requires ADMIN_SECRET_KEY environment variable for security
+// Call ONCE after deployment (or use ?force=true to wipe & reseed)
+// Requires ADMIN_SECRET_KEY env var
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Vercel function timeout
+export const maxDuration = 60;
+export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import * as fs from 'fs';
-import * as path from 'path';
+import { questionnaireData } from '@/data/questionnaireData'; // <— adjust if your file name/path differs
 
-// Helper function to load questionnaire data from the canonical source
-function loadQuestionnaireData() {
-  try {
-    const dataPath = path.join(process.cwd(), 'data', 'questionnaireData.js');
-    const content = fs.readFileSync(dataPath, 'utf8');
-    
-    // Extract the questionnaireData object
-    const match = content.match(/export const questionnaireData = ({[\s\S]*?});/);
-    if (!match) {
-      throw new Error('Could not parse questionnaireData from file');
-    }
-    
-    // Use eval in this controlled server-side context
-    const data = eval('(' + match[1] + ')');
-    return data;
-  } catch (error) {
-    console.error('Error loading questionnaire data:', error);
-    throw new Error(`Failed to load questionnaire data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+type Questionnaire = {
+  version?: string;
+  sections: Array<{
+    name: string; // domain
+    variables: Array<{
+      variableId: string;
+      name: string; // schema label
+      persona?: string;
+      healthyPersona?: string;
+      questions: Array<{
+        id: string;        // "1.1.1"
+        order: number;     // 1..108
+        dimension?: string;
+        text: string;
+      }>;
+    }>;
+  }>;
+};
+
+function validate(data: any): asserts data is Questionnaire {
+  if (!data || !Array.isArray(data.sections)) {
+    throw new Error('Invalid questionnaire data: sections missing');
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Security: Require admin secret key
-    const adminSecret = request.headers.get('x-admin-secret');
-    const expectedSecret = process.env.ADMIN_SECRET_KEY;
-    
-    if (!expectedSecret) {
+    // --- Auth guard ---
+    const expected = process.env.ADMIN_SECRET_KEY;
+    const provided =
+      req.headers.get('x-admin-secret') ??
+      new URL(req.url).searchParams.get('admin_secret');
+
+    if (!expected) {
       return NextResponse.json(
-        { 
-          error: 'Server configuration error: ADMIN_SECRET_KEY not set',
-          success: false 
-        },
+        { success: false, error: 'ADMIN_SECRET_KEY not set on server' },
         { status: 500 }
       );
     }
-    
-    if (adminSecret !== expectedSecret) {
+    if (provided !== expected) {
       return NextResponse.json(
-        { 
-          error: 'Unauthorized: Invalid admin secret',
-          success: false 
-        },
+        { success: false, error: 'Unauthorized: invalid admin secret' },
         { status: 401 }
       );
     }
 
-    // Check if questions already exist
-    const existingCount = await db.assessment_questions.count();
-    const existingLasbiCount = await db.lasbi_items.count();
-    
-    if (existingCount > 0 || existingLasbiCount > 0) {
+    // --- Parse flags ---
+    const force =
+      new URL(req.url).searchParams.get('force')?.toLowerCase() === 'true';
+
+    // --- Status before seeding ---
+    const [existingQ, existingL] = await Promise.all([
+      db.assessment_questions.count(),
+      db.lasbi_items.count(),
+    ]);
+
+    if (!force && (existingQ > 0 || existingL > 0)) {
       return NextResponse.json({
-        message: 'Questions already exist in database. Use force=true to re-seed.',
         success: true,
+        message:
+          'Questions already exist. Pass ?force=true to wipe and reseed.',
         data: {
-          existingQuestions: existingCount,
-          existingLasbiItems: existingLasbiCount
-        }
+          existingQuestions: existingQ,
+          existingLasbiItems: existingL,
+        },
       });
     }
 
-    // Load questionnaire data
-    console.log('📚 Loading questionnaire data...');
-    const questionnaireData = loadQuestionnaireData();
-    
-    if (!questionnaireData || !questionnaireData.sections) {
-      throw new Error('Invalid questionnaire data structure');
-    }
+    // --- Validate source data (imported TS) ---
+    const data: Questionnaire = questionnaireData as Questionnaire;
+    validate(data);
 
-    console.log(`📝 Loaded ${questionnaireData.sections.length} domains`);
-    
-    // Count total items
-    let totalItems = 0;
-    questionnaireData.sections.forEach((section: any) => {
-      section.variables.forEach((variable: any) => {
-        totalItems += variable.questions.length;
-      });
-    });
+    // --- Build payloads ---
+    const aq: Array<Parameters<typeof db.assessment_questions.createMany>[0]['data'][number]> = [];
+    const li: Array<Parameters<typeof db.lasbi_items.createMany>[0]['data'][number]> = [];
 
-    console.log(`📊 Total questions to seed: ${totalItems}`);
-
-    // Seed questions and LASBI items
-    let questionCount = 0;
-    let lasbiCount = 0;
-
-    for (const section of questionnaireData.sections) {
+    for (const section of data.sections) {
       const domain = section.name;
-      
+
       for (const variable of section.variables) {
         const schemaLabel = variable.name;
-        const persona = variable.persona;
-        const healthyPersona = variable.healthyPersona;
+        const persona = variable.persona ?? null;
+        const healthyPersona = variable.healthyPersona ?? null;
         const variableId = variable.variableId;
-        
-        for (const question of variable.questions) {
-          // Create assessment question
-          await db.assessment_questions.create({
-            data: {
-              id: question.id,  // e.g., "1.1.1"
-              order: question.order,
-              domain: domain,
-              schema: schemaLabel,
-              persona: persona,
-              healthyPersona: healthyPersona,
-              statement: question.text,
-              isActive: true
-            }
+
+        for (const q of variable.questions) {
+          aq.push({
+            id: q.id, // e.g., "1.1.1"
+            order: q.order,
+            domain,
+            schema: schemaLabel,
+            persona,
+            healthyPersona,
+            statement: q.text,
+            isActive: true,
+            // createdAt/updatedAt defaulted by Prisma schema
           });
-          questionCount++;
-          
-          // Extract question number from canonical ID (e.g., "1.1.1" -> 1)
-          const questionNumber = parseInt(question.id.split('.')[2]);
-          
-          // Create LASBI item with modern item_id format
-          const modernItemId = `cmf${question.id.replace(/\./g, '_')}`; // e.g., "cmf1_1_1"
-          
-          await db.lasbi_items.create({
-            data: {
-              item_id: modernItemId,
-              canonical_id: question.id,
-              variable_id: variableId,
-              question_number: questionNumber,
-              schema_label: schemaLabel
-            }
+
+          const questionNumber = Number(q.id.split('.')[2]); // "1.1.[N]"
+          const modernItemId = `cmf${q.id.replace(/\./g, '_')}`; // "cmf1_1_1"
+
+          li.push({
+            item_id: modernItemId,
+            canonical_id: q.id,
+            variable_id: variableId,
+            question_number: questionNumber,
+            schema_label: schemaLabel,
           });
-          lasbiCount++;
         }
       }
     }
 
-    console.log('✅ Seeding completed successfully!');
-    
+    // --- Write inside a transaction ---
+    await db.$transaction(async (tx) => {
+      // wipe if force OR any existing
+      if (force || existingQ > 0 || existingL > 0) {
+        await tx.lasbi_items.deleteMany({});
+        await tx.assessment_questions.deleteMany({});
+      }
+
+      // bulk insert
+      if (aq.length) {
+        await tx.assessment_questions.createMany({
+          data: aq,
+          skipDuplicates: true,
+        });
+      }
+      if (li.length) {
+        await tx.lasbi_items.createMany({
+          data: li,
+          skipDuplicates: true,
+        });
+      }
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Questions and LASBI items seeded successfully',
       data: {
-        questionsCreated: questionCount,
-        lasbiItemsCreated: lasbiCount,
-        version: questionnaireData.version,
-        domains: questionnaireData.sections.length
-      }
+        questionsCreated: aq.length,
+        lasbiItemsCreated: li.length,
+        version: data.version ?? null,
+        domains: data.sections.length,
+      },
     });
-
-  } catch (error) {
-    console.error('❌ Error seeding questions:', error);
+  } catch (err: any) {
+    console.error('Seeding error:', err);
     return NextResponse.json(
-      { 
+      {
+        success: false,
         error: 'Failed to seed questions',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        success: false 
+        details: err?.message ?? 'Unknown error',
       },
       { status: 500 }
     );
   }
 }
 
-// GET endpoint to check seeding status
-export async function GET(request: NextRequest) {
+// Health/status
+export async function GET() {
   try {
-    const questionCount = await db.assessment_questions.count();
-    const lasbiCount = await db.lasbi_items.count();
-    
+    const [qCount, lCount] = await Promise.all([
+      db.assessment_questions.count(),
+      db.lasbi_items.count(),
+    ]);
+
     return NextResponse.json({
       success: true,
       data: {
-        questionsInDatabase: questionCount,
-        lasbiItemsInDatabase: lasbiCount,
-        isSeeded: questionCount > 0 && lasbiCount > 0,
-        status: questionCount > 0 ? 'seeded' : 'empty'
-      }
-    });
-  } catch (error) {
-    console.error('Error checking seed status:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to check seed status',
-        success: false 
+        questionsInDatabase: qCount,
+        lasbiItemsInDatabase: lCount,
+        isSeeded: qCount > 0 && lCount > 0,
+        status: qCount > 0 ? 'seeded' : 'empty',
       },
+    });
+  } catch (err: any) {
+    console.error('Seed status error:', err);
+    return NextResponse.json(
+      { success: false, error: 'Failed to check seed status' },
       { status: 500 }
     );
   }
