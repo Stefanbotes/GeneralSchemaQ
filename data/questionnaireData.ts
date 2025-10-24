@@ -40,6 +40,8 @@ const GENERAL_REFLECTIVE_V2: Instrument = {
     "Cognitive = items 1–2, Emotional = items 3–4, Belief = items 5–6. IDs use Domain.Schema.Item (e.g., 1.1.1). Total 108. No reverse scoring.",
   domains: [
 
+    }
+
       domain: "1. DISCONNECTION & REJECTION (General reflective version)",
       description: "Fear of loss, rejection, deprivation, mistrust, or not belonging.",
       schemas: [
