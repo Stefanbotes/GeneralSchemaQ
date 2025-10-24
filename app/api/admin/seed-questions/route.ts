@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { questionnaireData } from '@/data/questionnaireData'; // <— adjust if your file name/path differs
+import questionnaireData from '@/data/questionnaireData'; // <-- default import to match your module
 
 type Questionnaire = {
   version?: string;
@@ -17,8 +17,8 @@ type Questionnaire = {
     variables: Array<{
       variableId: string;
       name: string; // schema label
-      persona?: string;
-      healthyPersona?: string;
+      persona?: string | null;
+      healthyPersona?: string | null;
       questions: Array<{
         id: string;        // "1.1.1"
         order: number;     // 1..108
@@ -56,11 +56,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Parse flags ---
+    // --- Flags ---
     const force =
       new URL(req.url).searchParams.get('force')?.toLowerCase() === 'true';
 
-    // --- Status before seeding ---
+    // --- Existing status ---
     const [existingQ, existingL] = await Promise.all([
       db.assessment_questions.count(),
       db.lasbi_items.count(),
@@ -78,13 +78,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // --- Validate source data (imported TS) ---
-    const data: Questionnaire = questionnaireData as Questionnaire;
+    // --- Load + validate data ---
+    const data = questionnaireData as Questionnaire;
     validate(data);
 
-    // --- Build payloads ---
-    const aq: Array<Parameters<typeof db.assessment_questions.createMany>[0]['data'][number]> = [];
-    const li: Array<Parameters<typeof db.lasbi_items.createMany>[0]['data'][number]> = [];
+    // --- Build payloads (use simple any[] to avoid prisma generic gymnastics) ---
+    const aq: any[] = [];
+    const li: any[] = [];
 
     for (const section of data.sections) {
       const domain = section.name;
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
         const schemaLabel = variable.name;
         const persona = variable.persona ?? null;
         const healthyPersona = variable.healthyPersona ?? null;
-        const variableId = variable.variableId;
+        const variableId = variable.variableId ?? schemaLabel; // safe fallback
 
         for (const q of variable.questions) {
           aq.push({
@@ -105,10 +105,10 @@ export async function POST(req: NextRequest) {
             healthyPersona,
             statement: q.text,
             isActive: true,
-            // createdAt/updatedAt defaulted by Prisma schema
           });
 
-          const questionNumber = Number(q.id.split('.')[2]); // "1.1.[N]"
+          const parts = String(q.id).split('.');
+          const questionNumber = Number(parts[2] ?? 0); // "1.1.[N]"
           const modernItemId = `cmf${q.id.replace(/\./g, '_')}`; // "cmf1_1_1"
 
           li.push({
@@ -122,15 +122,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // --- Write inside a transaction ---
+    // --- Transaction: wipe (if needed) then bulk insert ---
     await db.$transaction(async (tx) => {
-      // wipe if force OR any existing
       if (force || existingQ > 0 || existingL > 0) {
         await tx.lasbi_items.deleteMany({});
         await tx.assessment_questions.deleteMany({});
       }
 
-      // bulk insert
       if (aq.length) {
         await tx.assessment_questions.createMany({
           data: aq,
