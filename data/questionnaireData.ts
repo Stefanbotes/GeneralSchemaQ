@@ -1,6 +1,4 @@
-// schema-general-reflective-v2.ts
-// Schema Questionnaire v2 — General Reflective (108 items, 18 schemas, 5 domains)
-// Structure: Cognitive (1–2), Emotional (3–4), Belief (5–6). Forward-scored only.
+// ✅ data/questionnaireData.ts
 
 export type ItemType = "cognitive" | "emotional" | "belief";
 
@@ -20,25 +18,28 @@ export interface Schema {
 export interface Domain {
   domain: string;    // e.g., "1. DISCONNECTION & REJECTION (General reflective version)"
   description: string;
-  schemas: Schema[]; // varies by domain
+  schemas: Schema[];
 }
 
-export const questionnaireData = {
-  version: "2.0.0-general",
-  instrument: "Schema Questionnaire v2 – General Reflective",
-  lastUpdated: "2025-10-24",
-  structureNotes: "5 domains × 18 schemas × 108 items",
-  sections: [ /* previously called domains */ ]
+export interface Instrument {
+  version: string;       // "2.0.0-general"
+  instrument: string;    // human-readable name
+  lastUpdated: string;   // ISO date
+  structureNotes: string;
+  domains: Domain[];     // 5 domains
 }
 
+// ❌ REMOVE the old placeholder that had `sections: []`
 
-export const GENERAL_REFLECTIVE_V2: Instrument = {
+// ✅ KEEP ONLY the real instrument and export it as default
+const GENERAL_REFLECTIVE_V2: Instrument = {
   version: "2.0.0-general",
   instrument: "Schema Questionnaire v2 — General Reflective",
   lastUpdated: "2025-10-24",
-  structureNotes: "Cognitive = items 1–2, Emotional = items 3–4, Belief = items 5–6. IDs use Domain.Schema.Item format (e.g., 1.1.1). Total = 108 items (18 schemas × 6 items). No reverse scoring.",
+  structureNotes:
+    "Cognitive = items 1–2, Emotional = items 3–4, Belief = items 5–6. IDs use Domain.Schema.Item (e.g., 1.1.1). Total 108. No reverse scoring.",
   domains: [
-    {
+
       domain: "1. DISCONNECTION & REJECTION (General reflective version)",
       description: "Fear of loss, rejection, deprivation, mistrust, or not belonging.",
       schemas: [
