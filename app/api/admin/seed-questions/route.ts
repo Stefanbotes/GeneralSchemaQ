@@ -1,6 +1,5 @@
-// Protected API endpoint to seed assessment questions and LASBI items
-// Call ONCE after deployment (or use ?force=true to wipe & reseed)
-// Requires ADMIN_SECRET_KEY env var
+// ✅ app/api/admin/seed-questions/route.ts
+// Updated to use new Instrument (domains/schemas/items) format
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -8,32 +7,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import questionnaireData from '@/data/questionnaireData'; // <-- default import to match your module
-
-type Questionnaire = {
-  version?: string;
-  sections: Array<{
-    name: string; // domain
-    variables: Array<{
-      variableId: string;
-      name: string; // schema label
-      persona?: string | null;
-      healthyPersona?: string | null;
-      questions: Array<{
-        id: string;        // "1.1.1"
-        order: number;     // 1..108
-        dimension?: string;
-        text: string;
-      }>;
-    }>;
-  }>;
-};
-
-function validate(data: any): asserts data is Questionnaire {
-  if (!data || !Array.isArray(data.sections)) {
-    throw new Error('Invalid questionnaire data: sections missing');
-  }
-}
+import instrument from '@/data/questionnaireData'; // default export = GENERAL_REFLECTIVE_V2
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,11 +30,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Flags ---
+    // --- Parse flags ---
     const force =
       new URL(req.url).searchParams.get('force')?.toLowerCase() === 'true';
 
-    // --- Existing status ---
+    // --- Check existing data ---
     const [existingQ, existingL] = await Promise.all([
       db.assessment_questions.count(),
       db.lasbi_items.count(),
@@ -70,91 +44,78 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message:
-          'Questions already exist. Pass ?force=true to wipe and reseed.',
-        data: {
-          existingQuestions: existingQ,
-          existingLasbiItems: existingL,
-        },
+          'Questions already exist. Use ?force=true to wipe and reseed.',
+        data: { existingQuestions: existingQ, existingLasbiItems: existingL },
       });
     }
 
-    // --- Load + validate data ---
-    const data = questionnaireData as Questionnaire;
-    validate(data);
+    // --- Validate instrument structure ---
+    const data: any = instrument;
+    if (!data?.domains || !Array.isArray(data.domains)) {
+      throw new Error('Invalid instrument: domains missing');
+    }
 
-    // --- Build payloads (use simple any[] to avoid prisma generic gymnastics) ---
+    // --- Build payloads ---
     const aq: any[] = [];
     const li: any[] = [];
+    let order = 0;
 
-    for (const section of data.sections) {
-      const domain = section.name;
+    for (const d of data.domains) {
+      const domainName = d.domain;
 
-      for (const variable of section.variables) {
-        const schemaLabel = variable.name;
-        const persona = variable.persona ?? null;
-        const healthyPersona = variable.healthyPersona ?? null;
-        const variableId = variable.variableId ?? schemaLabel; // safe fallback
+      for (const s of d.schemas) {
+        const schemaLabel = s.name;
+        const variableId = s.code;
 
-        for (const q of variable.questions) {
+        for (const item of s.items) {
+          order += 1;
           aq.push({
-            id: q.id, // e.g., "1.1.1"
-            order: q.order,
-            domain,
+            id: item.id,
+            order,
+            domain: domainName,
             schema: schemaLabel,
-            persona,
-            healthyPersona,
-            statement: q.text,
+            persona: null,
+            healthyPersona: null,
+            statement: item.text,
             isActive: true,
           });
 
-          const parts = String(q.id).split('.');
-          const questionNumber = Number(parts[2] ?? 0); // "1.1.[N]"
-          const modernItemId = `cmf${q.id.replace(/\./g, '_')}`; // "cmf1_1_1"
+          const question_number = Number(String(item.id).split('.')[2] ?? 0);
+          const modernItemId = `cmf${item.id.replace(/\./g, '_')}`;
 
           li.push({
             item_id: modernItemId,
-            canonical_id: q.id,
+            canonical_id: item.id,
             variable_id: variableId,
-            question_number: questionNumber,
+            question_number,
             schema_label: schemaLabel,
           });
         }
       }
     }
 
-    // --- Transaction: wipe (if needed) then bulk insert ---
+    // --- Transaction: wipe + insert ---
     await db.$transaction(async (tx) => {
       if (force || existingQ > 0 || existingL > 0) {
         await tx.lasbi_items.deleteMany({});
         await tx.assessment_questions.deleteMany({});
       }
-
-      if (aq.length) {
-        await tx.assessment_questions.createMany({
-          data: aq,
-          skipDuplicates: true,
-        });
-      }
-      if (li.length) {
-        await tx.lasbi_items.createMany({
-          data: li,
-          skipDuplicates: true,
-        });
-      }
+      if (aq.length) await tx.assessment_questions.createMany({ data: aq });
+      if (li.length) await tx.lasbi_items.createMany({ data: li });
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Questions and LASBI items seeded successfully',
+      message: '✅ Seeding complete',
       data: {
         questionsCreated: aq.length,
         lasbiItemsCreated: li.length,
-        version: data.version ?? null,
-        domains: data.sections.length,
+        version: data.version,
+        domains: data.domains.length,
       },
     });
   } catch (err: any) {
-    console.error('Seeding error:', err);
+    console.error('❌ Seeding error:', err);
     return NextResponse.json(
       {
         success: false,
@@ -166,14 +127,13 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Health/status
+// --- Health check ---
 export async function GET() {
   try {
     const [qCount, lCount] = await Promise.all([
       db.assessment_questions.count(),
       db.lasbi_items.count(),
     ]);
-
     return NextResponse.json({
       success: true,
       data: {
@@ -184,9 +144,9 @@ export async function GET() {
       },
     });
   } catch (err: any) {
-    console.error('Seed status error:', err);
+    console.error('GET error:', err);
     return NextResponse.json(
-      { success: false, error: 'Failed to check seed status' },
+      { success: false, error: 'Failed to check status' },
       { status: 500 }
     );
   }
