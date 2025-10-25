@@ -1,3 +1,4 @@
+// app/api/admin/seed-questions/route.ts
 // Protected API endpoint to seed assessment questions and LASBI items
 // Call ONCE after deployment (or use ?force=true to wipe & reseed)
 // Requires ADMIN_SECRET_KEY env var
@@ -9,7 +10,7 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-// 👇 IMPORTANT: default import from your general instrument
+// IMPORTANT: default import from your general instrument
 import instrument from '@/data/questionnaireData';
 
 type ItemType = 'cognitive' | 'emotional' | 'belief';
@@ -41,6 +42,10 @@ function assertInstrument(x: any): asserts x is Instrument {
   }
 }
 
+function parseBool(s: string | null): boolean {
+  return (s ?? '').toLowerCase() === 'true';
+}
+
 export async function POST(req: NextRequest) {
   try {
     // --- Auth guard ---
@@ -63,8 +68,8 @@ export async function POST(req: NextRequest) {
     }
 
     // --- Parse flags ---
-    const force =
-      new URL(req.url).searchParams.get('force')?.toLowerCase() === 'true';
+    const url = new URL(req.url);
+    const force = parseBool(url.searchParams.get('force'));
 
     // --- Existing counts ---
     const [existingQ, existingL] = await Promise.all([
@@ -90,14 +95,13 @@ export async function POST(req: NextRequest) {
     const li: any[] = [];
 
     for (const dom of data.domains) {
-      // Optional: strip "1. " prefix and any parentheses suffix for a clean domain label
-      const cleanDomain = dom.domain
+      const cleanDomain = (dom.domain ?? '')
         .replace(/^\s*\d+\.\s*/, '')
         .replace(/\s*\(.*?\)\s*$/, '')
         .trim();
 
-      for (const sch of dom.schemas) {
-        for (const it of sch.items) {
+      for (const sch of dom.schemas ?? []) {
+        for (const it of sch.items ?? []) {
           order += 1;
 
           aq.push({
@@ -111,8 +115,8 @@ export async function POST(req: NextRequest) {
             isActive: true,
           });
 
-          const qNum = Number(it.id.split('.')[2]);                // 1..6
-          const modernItemId = `cmf${it.id.replace(/\./g, '_')}`;  // "cmf1_1_1"
+          const qNum = Number(String(it.id).split('.')[2]); // 1..6
+          const modernItemId = `cmf${String(it.id).replace(/\./g, '_')}`;  // "cmf1_1_1"
 
           li.push({
             item_id: modernItemId,
@@ -125,14 +129,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // --- Guard: refuse to proceed if instrument flattens to 0 ---
+    if (aq.length === 0 || li.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Instrument loaded but produced 0 items. Check that data/questionnaireData has populated domains/schemas/items and is a default export.',
+          debug: {
+            domains: data.domains?.length ?? 0,
+            aq: aq.length,
+            li: li.length,
+          },
+        },
+        { status: 500 }
+      );
+    }
+
     // --- Transaction: wipe (if force) + insert ---
     await db.$transaction(async (tx) => {
       if (force || existingQ > 0 || existingL > 0) {
         await tx.lasbi_items.deleteMany({});
         await tx.assessment_questions.deleteMany({});
       }
-      if (aq.length) await tx.assessment_questions.createMany({ data: aq });
-      if (li.length) await tx.lasbi_items.createMany({ data: li });
+      await tx.assessment_questions.createMany({ data: aq });
+      await tx.lasbi_items.createMany({ data: li });
     });
 
     return NextResponse.json({
@@ -161,13 +182,14 @@ export async function GET() {
       db.assessment_questions.count(),
       db.lasbi_items.count(),
     ]);
+    const isSeeded = qCount > 0 && lCount > 0;
     return NextResponse.json({
       success: true,
       data: {
         questionsInDatabase: qCount,
         lasbiItemsInDatabase: lCount,
-        isSeeded: qCount > 0 && lCount > 0,
-        status: qCount > 0 ? 'seeded' : 'empty',
+        isSeeded,
+        status: isSeeded ? 'seeded' : 'empty',
       },
     });
   } catch (err: any) {
