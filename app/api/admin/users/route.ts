@@ -5,21 +5,49 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-function clean(s?: string | null) { return (s ?? '').trim(); }
+// --- helpers ---------------------------------------------------------
+const clean = (s?: string | null) => (s ?? '').trim();
 
-function unauthorized() {
-  return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+// try to find a Prisma delegate by any of the provided names
+function tbl(...names: string[]) {
+  const anyDb = db as any;
+  for (const n of names) {
+    if (anyDb && typeof anyDb[n] === 'object' && anyDb[n] !== null) return anyDb[n];
+  }
+  // return a stub with no-op methods so code won't crash if a table doesn't exist
+  return new Proxy({}, { get: () => async () => undefined });
 }
 
+const T = {
+  // user table can be 'user' or 'users'
+  user: () => tbl('user', 'users'),
+
+  // next-auth-ish tables (singular or plural variants)
+  session: () => tbl('session', 'sessions'),
+  account: () => tbl('account', 'accounts'),
+  verificationToken: () => tbl('verificationToken', 'verificationTokens'),
+  passwordResetToken: () => tbl('passwordResetToken', 'passwordResetTokens'),
+
+  // your app tables (adjust names here if yours differ)
+  assessmentResponses: () => tbl('assessment_responses', 'assessmentResponses'),
+  assessmentResults:   () => tbl('assessment_results',  'assessmentResults'),
+};
+
 async function getUserByEmail(email: string) {
-  return db.user.findUnique({
+  const User = T.user();
+  // supports both Prisma 4/5 styles; uses findUnique on a unique email
+  return User.findUnique?.({
     where: { email },
     select: { id: true, email: true, name: true, createdAt: true, updatedAt: true },
   });
 }
 
+function unauthorized() {
+  return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+}
+
+// --- handlers --------------------------------------------------------
 export async function GET(req: NextRequest) {
-  // Preview: confirm the user exists and show related counts
   try {
     const expected = clean(process.env.ADMIN_SECRET_KEY);
     const provided = clean(req.headers.get('x-admin-secret') ?? new URL(req.url).searchParams.get('admin_secret'));
@@ -36,14 +64,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: { exists: false } });
     }
 
-    // Count related rows (ignore errors if some tables don’t exist in your schema)
+    // Related counts (each wrapped so the route still works if a table doesn't exist)
     const stats: Record<string, number> = {};
-    try { stats.sessions = await db.session.count({ where: { userId: user.id } }); } catch {}
-    try { stats.accounts = await db.account.count({ where: { userId: user.id } }); } catch {}
-    try { stats.verificationTokens = await db.verificationToken.count({ where: { identifier: email } }); } catch {}
-    try { stats.passwordResetTokens = await db.passwordResetToken.count({ where: { email } }); } catch {}
-    try { stats.assessmentResults = await db.assessment_results.count({ where: { userId: user.id } }); } catch {}
-    try { stats.assessmentResponses = await db.assessment_responses.count({ where: { userId: user.id } }); } catch {}
+    try { stats.sessions = await T.session().count({ where: { userId: user.id } }); } catch {}
+    try { stats.accounts = await T.account().count({ where: { userId: user.id } }); } catch {}
+    try { stats.verificationTokens = await T.verificationToken().count({ where: { identifier: email } }); } catch {}
+    try { stats.passwordResetTokens = await T.passwordResetToken().count({ where: { email } }); } catch {}
+    try { stats.assessmentResponses = await T.assessmentResponses().count({ where: { userId: user.id } }); } catch {}
+    try { stats.assessmentResults = await T.assessmentResults().count({ where: { userId: user.id } }); } catch {}
 
     return NextResponse.json({ success: true, data: { exists: true, user, relatedCounts: stats } });
   } catch (e: any) {
@@ -52,7 +80,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  // Hard-delete a user by email, cascading through related tables
   try {
     const expected = clean(process.env.ADMIN_SECRET_KEY);
     const provided = clean(req.headers.get('x-admin-secret') ?? new URL(req.url).searchParams.get('admin_secret'));
@@ -63,10 +90,10 @@ export async function DELETE(req: NextRequest) {
     const really = clean(url.searchParams.get('really')); // require confirmation
     if (!email) return NextResponse.json({ success: false, error: 'Missing ?email=...' }, { status: 400 });
     if (really !== 'yes') {
-      return NextResponse.json({
-        success: false,
-        error: 'Add &really=yes to confirm deletion (irreversible).',
-      }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Add &really=yes to confirm deletion (irreversible).' },
+        { status: 400 }
+      );
     }
 
     const user = await getUserByEmail(email);
@@ -74,17 +101,27 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: true, message: 'No-op: user not found' });
     }
 
-    await db.$transaction(async (tx) => {
-      // Delete child/related rows first; wrap each in try/catch in case a table isn’t present
-      try { await tx.session.deleteMany({ where: { userId: user.id } }); } catch {}
-      try { await tx.account.deleteMany({ where: { userId: user.id } }); } catch {}
-      try { await tx.verificationToken.deleteMany({ where: { identifier: email } }); } catch {}
-      try { await tx.passwordResetToken.deleteMany({ where: { email } }); } catch {}
-      try { await tx.assessment_responses.deleteMany({ where: { userId: user.id } }); } catch {}
-      try { await tx.assessment_results.deleteMany({ where: { userId: user.id } }); } catch {}
+    await (db as any).$transaction(async (tx: any) => {
+      // Rebind T to use the transaction client where possible
+      const TT = {
+        session: () => (tx.session ?? tx.sessions ?? {}),
+        account: () => (tx.account ?? tx.accounts ?? {}),
+        verificationToken: () => (tx.verificationToken ?? tx.verificationTokens ?? {}),
+        passwordResetToken: () => (tx.passwordResetToken ?? tx.passwordResetTokens ?? {}),
+        assessmentResponses: () => (tx.assessment_responses ?? tx.assessmentResponses ?? {}),
+        assessmentResults: () => (tx.assessment_results ?? tx.assessmentResults ?? {}),
+        user: () => (tx.user ?? tx.users ?? {}),
+      };
 
-      // Finally the user
-      await tx.user.delete({ where: { id: user.id } });
+      // Best-effort deletes; ignore if a table isn't present in your schema
+      try { await TT.session().deleteMany({ where: { userId: user.id } }); } catch {}
+      try { await TT.account().deleteMany({ where: { userId: user.id } }); } catch {}
+      try { await TT.verificationToken().deleteMany({ where: { identifier: email } }); } catch {}
+      try { await TT.passwordResetToken().deleteMany({ where: { email } }); } catch {}
+      try { await TT.assessmentResponses().deleteMany({ where: { userId: user.id } }); } catch {}
+      try { await TT.assessmentResults().deleteMany({ where: { userId: user.id } }); } catch {}
+
+      await TT.user().delete({ where: { id: user.id } });
     });
 
     return NextResponse.json({
