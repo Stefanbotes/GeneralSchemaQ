@@ -1,57 +1,58 @@
-
-// API route to fetch assessment questions from database (canonical source)
-export const dynamic = 'force-dynamic';
-
-import { NextRequest, NextResponse } from 'next/server';
+// app/api/assessment/questions/route.ts
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export async function GET(request: NextRequest) {
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export async function GET() {
   try {
-    // Fetch all active questions ordered by their sequence
-    const questions = await db.assessment_questions.findMany({
-      where: {
-        isActive: true
-      },
-      orderBy: {
-        order: 'asc'
-      },
+    const rows = await db.assessment_questions.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' },
       select: {
         id: true,
         order: true,
         domain: true,
         schema: true,
+        statement: true,
+        // keep these if you actually use them on the client:
         persona: true,
         healthyPersona: true,
-        statement: true
-      }
+      },
     });
 
-    // Transform to frontend format with all canonical fields
-    const transformedQuestions = questions.map((q: any) => ({
+    const questions = rows.map((q) => ({
       id: q.id,
       order: q.order,
       domain: q.domain,
       schema: q.schema,
-      persona: q.persona,
-      healthyPersona: q.healthyPersona,
       statement: q.statement,
-      type: 'likert-5' // All questions are Likert scale
+      persona: q.persona ?? null,
+      healthyPersona: q.healthyPersona ?? null,
+      type: 'likert-6', // UI has 6 options
     }));
 
-    return NextResponse.json({
-      questions: transformedQuestions,
-      total: questions.length,
-      success: true,
-      metadata: {
-        schemas: [...new Set(questions.map((q: any) => q.schema))].length,
-        domains: [...new Set(questions.map((q: any) => q.domain))].length
-      }
-    });
-
-  } catch (error) {
-    console.error('Error fetching questions:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch assessment questions', success: false },
+      {
+        success: true,
+        questions,
+        total: questions.length,
+        metadata: {
+          schemas: new Set(questions.map((q) => q.schema)).size,
+          domains: new Set(questions.map((q) => q.domain)).size,
+        },
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
+  } catch (err) {
+    console.error('Error fetching questions:', err);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch assessment questions' },
       { status: 500 }
     );
   }
