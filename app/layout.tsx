@@ -1,7 +1,6 @@
 // app/layout.tsx
 import './globals.css';
 import type { Metadata } from 'next';
-// If you use next-themes + shadcn:
 import { ThemeProvider } from 'next-themes';
 
 export const metadata: Metadata = {
@@ -12,13 +11,18 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* If you don't use next-themes, you can put className="dark" on <html> manually */}
       <body className="bg-background text-foreground antialiased">
-        {/* If using next-themes, wrap children so .dark class is applied to html */}
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <ThemeProvider
+          attribute="class"           // puts "dark" or "light" on <html>
+          defaultTheme="light"        // or "system"
+          enableSystem
+          disableTransitionOnChange   // avoids janky color transitions on theme toggle
+          storageKey="gs-theme"       // optional: custom localStorage key
+        >
           {children}
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
