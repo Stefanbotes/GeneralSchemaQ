@@ -1,5 +1,6 @@
-// ✅ app/api/admin/seed-questions/route.ts
-// Updated to use new Instrument (domains/schemas/items) format
+// Protected API endpoint to seed assessment questions and LASBI items
+// Call ONCE after deployment (or use ?force=true to wipe & reseed)
+// Requires ADMIN_SECRET_KEY env var
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -7,7 +8,38 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import instrument from '@/data/questionnaireData'; // default export = GENERAL_REFLECTIVE_V2
+
+// 👇 IMPORTANT: default import from your general instrument
+import instrument from '@/data/questionnaireData';
+
+type ItemType = 'cognitive' | 'emotional' | 'belief';
+
+type Instrument = {
+  version: string;
+  instrument: string;
+  lastUpdated: string;
+  structureNotes: string;
+  domains: Array<{
+    domain: string;
+    description: string;
+    schemas: Array<{
+      code: string;           // e.g., "1.1"
+      name: string;           // e.g., "Abandonment / Instability"
+      coreTheme: string;
+      items: Array<{
+        id: string;           // e.g., "1.1.1"
+        type: ItemType;
+        text: string;
+      }>;
+    }>;
+  }>;
+};
+
+function assertInstrument(x: any): asserts x is Instrument {
+  if (!x?.domains || !Array.isArray(x.domains)) {
+    throw new Error('Invalid instrument: missing domains[]');
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,7 +66,7 @@ export async function POST(req: NextRequest) {
     const force =
       new URL(req.url).searchParams.get('force')?.toLowerCase() === 'true';
 
-    // --- Check existing data ---
+    // --- Existing counts ---
     const [existingQ, existingL] = await Promise.all([
       db.assessment_questions.count(),
       db.lasbi_items.count(),
@@ -43,58 +75,57 @@ export async function POST(req: NextRequest) {
     if (!force && (existingQ > 0 || existingL > 0)) {
       return NextResponse.json({
         success: true,
-        message:
-          'Questions already exist. Use ?force=true to wipe and reseed.',
+        message: 'Questions already exist. Pass ?force=true to wipe and reseed.',
         data: { existingQuestions: existingQ, existingLasbiItems: existingL },
       });
     }
 
-    // --- Validate instrument structure ---
-    const data: any = instrument;
-    if (!data?.domains || !Array.isArray(data.domains)) {
-      throw new Error('Invalid instrument: domains missing');
-    }
+    // --- Validate instrument ---
+    const data = instrument as Instrument;
+    assertInstrument(data);
 
-    // --- Build payloads ---
+    // --- Build rows from instrument (GENERAL wording) ---
+    let order = 0;
     const aq: any[] = [];
     const li: any[] = [];
-    let order = 0;
 
-    for (const d of data.domains) {
-      const domainName = d.domain;
+    for (const dom of data.domains) {
+      // Optional: strip "1. " prefix and any parentheses suffix for a clean domain label
+      const cleanDomain = dom.domain
+        .replace(/^\s*\d+\.\s*/, '')
+        .replace(/\s*\(.*?\)\s*$/, '')
+        .trim();
 
-      for (const s of d.schemas) {
-        const schemaLabel = s.name;
-        const variableId = s.code;
-
-        for (const item of s.items) {
+      for (const sch of dom.schemas) {
+        for (const it of sch.items) {
           order += 1;
+
           aq.push({
-            id: item.id,
-            order,
-            domain: domainName,
-            schema: schemaLabel,
-            persona: null,
+            id: it.id,              // "1.1.1"
+            order,                  // 1..108
+            domain: cleanDomain,    // "DISCONNECTION & REJECTION"
+            schema: sch.name,       // "Abandonment / Instability"
+            persona: null,          // general set -> no leadership personas
             healthyPersona: null,
-            statement: item.text,
+            statement: it.text,     // <-- general wording
             isActive: true,
           });
 
-          const question_number = Number(String(item.id).split('.')[2] ?? 0);
-          const modernItemId = `cmf${item.id.replace(/\./g, '_')}`;
+          const qNum = Number(it.id.split('.')[2]);                // 1..6
+          const modernItemId = `cmf${it.id.replace(/\./g, '_')}`;  // "cmf1_1_1"
 
           li.push({
             item_id: modernItemId,
-            canonical_id: item.id,
-            variable_id: variableId,
-            question_number,
-            schema_label: schemaLabel,
+            canonical_id: it.id,
+            variable_id: sch.code,      // "1.1"
+            question_number: qNum,
+            schema_label: sch.name,
           });
         }
       }
     }
 
-    // --- Transaction: wipe + insert ---
+    // --- Transaction: wipe (if force) + insert ---
     await db.$transaction(async (tx) => {
       if (force || existingQ > 0 || existingL > 0) {
         await tx.lasbi_items.deleteMany({});
@@ -106,7 +137,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '✅ Seeding complete',
+      message: 'Seeded GENERAL reflective v2 successfully',
       data: {
         questionsCreated: aq.length,
         lasbiItemsCreated: li.length,
@@ -115,19 +146,15 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    console.error('❌ Seeding error:', err);
+    console.error('Seeding error:', err);
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to seed questions',
-        details: err?.message ?? 'Unknown error',
-      },
+      { success: false, error: err?.message ?? 'Failed to seed questions' },
       { status: 500 }
     );
   }
 }
 
-// --- Health check ---
+// Health check
 export async function GET() {
   try {
     const [qCount, lCount] = await Promise.all([
@@ -144,9 +171,8 @@ export async function GET() {
       },
     });
   } catch (err: any) {
-    console.error('GET error:', err);
     return NextResponse.json(
-      { success: false, error: 'Failed to check status' },
+      { success: false, error: 'Failed to check seed status' },
       { status: 500 }
     );
   }
