@@ -76,3 +76,9 @@
     @apply bg-background text-foreground;
   }
 }
+/* at very end of globals.css */
+@layer base {
+  :root { /* your light tokens */ }
+  .dark { /* your dark tokens */ }
+}
+
