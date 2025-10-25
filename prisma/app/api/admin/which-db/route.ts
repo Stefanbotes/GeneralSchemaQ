@@ -1,35 +1,57 @@
-// app/api/admin/which-db/route.ts
-import { NextResponse } from 'next/server';
-
-// avoid caching
-export const dynamic = 'force-dynamic';
-
+// Health/status + show which DB URL is in use (redacted)
 export async function GET() {
-  // Prefer PRISMA_DATABASE_URL if you switched schema.prisma to use it
-  const url = process.env.PRISMA_DATABASE_URL || process.env.DATABASE_URL || '';
+  try {
+    const [qCount, lCount] = await Promise.all([
+      db.assessment_questions.count(),
+      db.lasbi_items.count(),
+    ]);
 
-  const using =
-    url.includes('accelerate.prisma-data.net')
-      ? '✅ Accelerate (Independent Clone DB)'
-      : url.includes('db.prisma.io')
-      ? '⚠️ Prisma Cloud Postgres (shared)'
-      : url
-      ? '❓ Unknown URL'
-      : '🚫 No DB URL in env';
+    // Prefer PRISMA_DATABASE_URL (if you switched schema.prisma),
+    // otherwise fall back to DATABASE_URL so we always get an answer.
+    const raw =
+      process.env.PRISMA_DATABASE_URL ||
+      process.env.DATABASE_URL ||
+      '';
 
-  // Return only a redacted hint (no secrets)
-  const host = (() => {
+    const using =
+      raw.includes('accelerate.prisma-data.net')
+        ? '✅ Accelerate (Independent Clone DB)'
+        : raw.includes('db.prisma.io')
+        ? '⚠️ Prisma Cloud Postgres (shared)'
+        : raw
+        ? '❓ Unknown URL'
+        : '🚫 No DB URL in env';
+
+    // Redact secrets: show only host
+    let host = 'unparsable';
     try {
-      const u = new URL(url.replace(/^prisma\+/, '')); // URL() dislikes prisma+ scheme
-      return `${u.protocol}//${u.host}`;
+      const normalized = raw.replace(/^prisma\+/, ''); // URL() doesn’t like prisma+ scheme
+      const u = new URL(normalized);
+      host = `${u.protocol}//${u.host}`;
     } catch {
-      if (url.startsWith('prisma+postgres://accelerate.prisma-data.net')) {
-        return 'prisma+postgres://accelerate.prisma-data.net';
+      if (raw.startsWith('prisma+postgres://accelerate.prisma-data.net')) {
+        host = 'prisma+postgres://accelerate.prisma-data.net';
+      } else if (raw.includes('@')) {
+        host = 'redacted';
       }
-      if (url.includes('@')) return 'redacted';
-      return 'unparsable';
     }
-  })();
 
-  return NextResponse.json({ using, host });
+    return NextResponse.json({
+      success: true,
+      data: {
+        questionsInDatabase: qCount,
+        lasbiItemsInDatabase: lCount,
+        isSeeded: qCount > 0 && lCount > 0,
+        status: qCount > 0 ? 'seeded' : 'empty',
+        using,
+        host,
+      },
+    });
+  } catch (err: any) {
+    console.error('Seed status error:', err);
+    return NextResponse.json(
+      { success: false, error: 'Failed to check status' },
+      { status: 500 }
+    );
+  }
 }
