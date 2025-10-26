@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-// Ensure this page is always rendered on-demand (no static 404s)
+// Strongly opt out of SSG/ISR/prerender/caching for this page
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 export const runtime = 'nodejs';
 
 export default function ResultsPage() {
@@ -20,7 +22,6 @@ export default function ResultsPage() {
   const didAuto = useRef(false);
 
   useEffect(() => {
-    // Auto-download once if we just completed and have an id
     if (justCompleted && assessmentId && !didAuto.current) {
       didAuto.current = true;
       void downloadTier1(assessmentId);
@@ -34,7 +35,7 @@ export default function ResultsPage() {
       const res = await fetch('/api/reports/generate-tier1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assessmentId: id }),
+        body: JSON.stringify({ assessmentId: id })
       });
 
       if (!res.ok) {
@@ -86,7 +87,8 @@ export default function ResultsPage() {
 
             {!assessmentId && (
               <p className="text-sm text-center text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-                We couldn’t detect an assessment ID. Please return to the dashboard/results and open this page with the correct link, e.g. <code>/results?id=&lt;assessmentId&gt;</code>.
+                We couldn’t detect an assessment ID. Return to the dashboard and open this page with
+                a link like <code>/results?id=&lt;assessmentId&gt;</code>.
               </p>
             )}
 
