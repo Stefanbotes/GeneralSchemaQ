@@ -1,7 +1,7 @@
 // app/lib/shared-schema-scoring.ts
 // Golden-aligned schema scoring (18 schemas × 6 items = 108)
-// - Identity comes from mapping (itemId cmf… or canonicalId "d.s.q")
-// - Never infer meaning from order/position
+// Identity comes from mapping (itemId cmf… or canonicalId "d.s.q")
+// Never infer meaning from order/position
 
 import {
   loadItemToSchema,          // Map<string, { variableId, clinicalSchemaId, schemaLabel, questionNumber, reverse?, weight? }>
@@ -16,20 +16,20 @@ import {
 export type ResponseInput = {
   itemId?: string;       // modern LASBI id (cmf…)
   canonicalId?: string;  // "d.s.q" (e.g., "2.4.3")
-  value: number;         // 1..5
+  value: number;         // 1..6
 };
 
 export type SchemaScore = {
   variableId: string;         // "d.s"
   clinicalSchemaId: string;   // e.g., "failure"
   schemaLabel: string;        // presentation label
-  n: number;                  // always 6 when complete
-  mean: number;               // unrounded 1..5 (after reverse/weights)
+  n: number;                  // usually 6 when complete
+  mean: number;               // unrounded 1..6 (after reverse/weights)
   index0to100: number;        // unrounded linear 0..100
 };
 
 export type ScoreOptions = {
-  payloadMappingVersion?: string; // version carried by the payload (required in prod)
+  payloadMappingVersion?: string; // version carried by the payload (recommended in prod)
   applyWeights?: boolean;         // default false (weight=1)
   round?: boolean;                // default false (leave unrounded)
   requireCompleteness?: boolean;  // default true (108 total, 6 per schema)
@@ -38,8 +38,13 @@ export type ScoreOptions = {
 // -------------------------------
 // Helpers
 // -------------------------------
+
+// Canonical id pattern: domain 1..5, sub 1..5, question 1..6
 const CANONICAL_RE = /^[1-5]\.[1-5]\.[1-6]$/;
-const toIdx = (mean1to5: number) => (mean1to5 - 1) * 25; // 1→0, 5→100
+
+// Convert 1..6 mean to 0..100 index: 1→0, 6→100
+const toIdx = (mean1to6: number) => ((mean1to6 - 1) / 5) * 100;
+
 const round2 = (x: number) => Math.round((x + Number.EPSILON) * 100) / 100;
 
 function pickKey(r: ResponseInput): string | null {
@@ -49,8 +54,7 @@ function pickKey(r: ResponseInput): string | null {
 }
 
 // -------------------------------
-// Public API
-// -------------------------------
+/** Main scoring API: aggregates responses into per-schema scores. */
 export function scoreSchemas(
   responses: ResponseInput[],
   opts: ScoreOptions = {}
@@ -66,7 +70,7 @@ export function scoreSchemas(
     requireCompleteness = true
   } = opts;
 
-  // 1) Version gate (hard fail unless you’re explicitly bypassing)
+  // 1) Version gate (hard fail unless explicitly bypassed)
   if (payloadMappingVersion && payloadMappingVersion !== mappingVersion) {
     throw new Error(
       `Mapping version mismatch: got '${payloadMappingVersion}', expected '${mappingVersion}'`
@@ -90,18 +94,19 @@ export function scoreSchemas(
     }
 
     const raw = Number(r.value);
-    if (!Number.isFinite(raw) || raw < 1 || raw > 5) {
-      throw new Error(`Bad value at index ${i + 1}: ${r.value} (expected 1..5)`);
+    if (!Number.isFinite(raw) || raw < 1 || raw > 6) {
+      throw new Error(`Bad value at index ${i + 1}: ${r.value} (expected 1..6)`);
     }
 
-    const value = meta.reverse ? 6 - raw : raw;
-    const weight = applyWeights ? meta.weight ?? 1 : 1;
+    // Reverse on a 1..6 scale
+    const value = meta.reverse ? (7 - raw) : raw;
+    const weight = applyWeights ? (meta.weight ?? 1) : 1;
 
     return {
       variableId: meta.variableId,                 // "d.s"
       clinicalSchemaId: meta.clinicalSchemaId,     // stable clinical id
       schemaLabel: meta.schemaLabel,               // display label
-      questionNumber: meta.questionNumber,         // 1..3
+      questionNumber: meta.questionNumber,         // 1..6
       value,
       weight
     };
@@ -195,6 +200,7 @@ export function toCanonicalVariableOrder(ids: string[]): string[] {
 // -------------------------------
 // Legacy Compatibility API
 // -------------------------------
+
 const TIE_BREAKER_ORDER = [
   "Negativity/Pessimism","Emotional Inhibition","Unrelenting Standards/Hypercriticalness",
   "Abandonment/Instability","Mistrust/Abuse","Emotional Deprivation","Defectiveness/Shame","Social Isolation/Alienation",
@@ -219,7 +225,11 @@ export type DisplayScore = SchemaScore & {
 
 /**
  * Legacy: scoreAssessmentResponses
- * Adapts old API (Record<string,number>) to new scoreSchemas API
+ * Adapts old API (Record<string,number|string>) to new scoreSchemas API
+ * Accepts keys as:
+ *  - cmf… (modern itemId)
+ *  - d.s.q (canonical; q=1..6)
+ *  - position "1".."108" (fallback via canonical order)
  */
 export async function scoreAssessmentResponses(
   responses: Record<string, string | number>
@@ -229,16 +239,20 @@ export async function scoreAssessmentResponses(
 }> {
   // Convert to new API format
   const responseInputs: ResponseInput[] = [];
+
+  const canon = loadCanonicalItemOrder(); // length 108 (d.s.q)
   
   for (const [key, val] of Object.entries(responses)) {
     const numVal = typeof val === 'string' ? parseInt(val, 10) : val;
+
+    if (!Number.isFinite(numVal)) continue;
+
     if (isItemId(key)) {
       responseInputs.push({ itemId: key, value: numVal });
-    } else if (/^[1-5]\.[1-5]\.[1-3]$/.test(key)) {
+    } else if (/^[1-5]\.[1-5]\.[1-6]$/.test(key)) {
       responseInputs.push({ canonicalId: key, value: numVal });
     } else {
-      // Legacy position-based (1..54)
-      const canon = loadCanonicalItemOrder();
+      // Legacy position-based (1..108)
       const idx = parseInt(key, 10) - 1;
       if (idx >= 0 && idx < canon.length) {
         responseInputs.push({ canonicalId: canon[idx], value: numVal });
@@ -255,13 +269,12 @@ export async function scoreAssessmentResponses(
   // Sort descending by index
   const ranked = [...scores].sort((a, b) => b.index0to100 - a.index0to100);
 
-  // Apply tie-breaking
+  // Prepare display with stable tie-breaker
   const display: DisplayScore[] = ranked.map(s => ({
     ...s,
     displayIndex: Math.round(s.index0to100)
   }));
 
-  // Stable sort with tie-breaker
   display.sort((a, b) => {
     if (a.displayIndex !== b.displayIndex) return b.displayIndex - a.displayIndex;
     return byTieBreaker(a.schemaLabel, b.schemaLabel);
@@ -293,3 +306,4 @@ export function pickTop3(
     tertiary: ranked[2] ? mark(ranked[2]) : undefined
   };
 }
+
