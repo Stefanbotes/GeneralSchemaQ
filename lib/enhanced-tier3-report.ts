@@ -2,16 +2,16 @@
 // Enhanced Tier 3 Clinical Report Generation (Research Names with Clinical Insights)
 // Uses research names with full clinical context and schema-based analysis
 
-import { getPersonaForTier, SCHEMA_CATEGORIES } from './enhanced-persona-mapping';
-import { CANONICAL_SCHEMA_MAP, getCanonicalSchemaInfo, getAnalysisVersion } from './canonical-schema-mapping';
 
-interface EnhancedClinicalReportOptions {
-  participantName: string;
-  participantEmail: string;
-  participantTeam?: string;
-  assessmentDate: string;
-  assessmentId: string;
-}
+import { generateEnhancedTier2Report } from "@/app/lib/tier2-report";
+// ...
+const html = generateEnhancedTier2Report(analysis, {
+  participantName,
+  participantEmail,
+  participantTeam,
+  assessmentDate,
+  assessmentId
+});
 
 export function generateEnhancedTier3Report(analysis: any, options: EnhancedClinicalReportOptions): string {
   // ✅ CLINICAL: Use same canonical scores as Inner Personareport
