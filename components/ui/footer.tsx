@@ -17,7 +17,7 @@ export function Footer() {
           </div>
         </div>
         <p className="text-center text-sm">
-          © 2025 Leadership Personas Assessment. All rights reserved.
+          © 2025 Inner Personas Assessment. All rights reserved.
         </p>
       </div>
     </footer>
