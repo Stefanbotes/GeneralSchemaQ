@@ -9,7 +9,7 @@
 
 ### 1. Git Repository Configuration
 - ✅ Git repository initialized and configured
-- ✅ Remote repository connected to: `https://github.com/Stefanbotes/NLPQV2.git`
+- ✅ Remote repository connected to: `https://github.com/Stefanbotes/InnerPersona.git`
 - ✅ Git credentials configured (user: Stefanbotes)
 - ✅ `.gitignore` properly configured to exclude sensitive files
 
@@ -33,8 +33,8 @@ The provided GitHub Personal Access Token lacks the required permissions to push
 
 **Error Message:**
 ```
-remote: Permission to Stefanbotes/NLPQV2.git denied to Stefanbotes.
-fatal: unable to access 'https://github.com/Stefanbotes/NLPQV2.git/': The requested URL returned error: 403
+remote: Permission to Stefanbotes/InnerPersona.git denied to Stefanbotes.
+fatal: unable to access 'https://github.com/Stefanbotes/InnerPersona.git/': The requested URL returned error: 403
 ```
 
 **Root Cause:**
@@ -89,7 +89,7 @@ Run these commands in the terminal (replace `YOUR_NEW_TOKEN` with your actual to
 cd /home/ubuntu/ntaqv2
 
 # Update the remote URL with your new token
-git remote set-url origin https://YOUR_NEW_TOKEN@github.com/Stefanbotes/NLPQV2.git
+git remote set-url origin https://YOUR_NEW_TOKEN@github.com/Stefanbotes/InnerPersona.git
 
 # Verify repository status
 git status
@@ -103,7 +103,7 @@ git push -u origin master -f
 
 ### Step 2: Verify GitHub Push
 
-1. Visit: https://github.com/Stefanbotes/NLPQV2
+1. Visit: https://github.com/Stefanbotes/InnerPersona
 2. Confirm all files are present
 3. Check commit history is correct
 4. Verify README displays properly
@@ -115,7 +115,7 @@ Follow the comprehensive guide at:
 
 **Quick Summary:**
 1. Log in to Vercel (https://vercel.com)
-2. Import GitHub repository: Stefanbotes/NLPQV2
+2. Import GitHub repository: Stefanbotes/InnerPersona
 3. Configure environment variables (database, auth, email)
 4. Deploy application
 5. Run Prisma migrations

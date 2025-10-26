@@ -31,7 +31,7 @@ Vercel may be using a cached version of your project that still has the old syml
 
 **Actions:**
 1. Go to your Vercel project dashboard: https://vercel.com/dashboard
-2. Navigate to your project: **NLPQV2**
+2. Navigate to your project: **InnerPersona**
 3. Go to **Settings** → **General**
 4. Scroll down to find **Build & Development Settings**
 5. Look for **"Clear Build Cache"** or **"Reset Build Cache"** button
@@ -106,7 +106,7 @@ git push origin master
 
 #### 5.1 Verify Branch Connection
 1. Go to Vercel project **Settings** → **Git**
-2. Ensure it's connected to: `Stefanbotes/NLPQV2`
+2. Ensure it's connected to: `Stefanbotes/InnerPersona`
 3. Ensure it's deploying from: `master` branch
 4. Verify **Production Branch** is set to `master`
 
@@ -275,9 +275,9 @@ If the error persists after trying all steps:
 Since you have a Vercel Pro plan, you have access to priority support:
 1. Go to https://vercel.com/support
 2. Submit a ticket with:
-   - Project name: **NLPQV2**
+   - Project name: **InnerPersona**
    - Error message: `ENOENT: no such file or directory, mkdir '/vercel/path0/.next'`
-   - Repository: https://github.com/Stefanbotes/NLPQV2
+   - Repository: https://github.com/Stefanbotes/InnerPersona
    - Mention: "Cleared cache, verified configuration, local build works"
    - Attach build logs
 
@@ -317,11 +317,11 @@ As a temporary workaround, consider deploying to:
 After following these steps, your deployment should:
 1. Build successfully on Vercel
 2. Deploy to production
-3. Be accessible at your Vercel URL (e.g., `https://nlpqv2.vercel.app`)
+3. Be accessible at your Vercel URL (e.g., `https://InnerPersona.vercel.app`)
 
 ---
 
-**Repository:** https://github.com/Stefanbotes/NLPQV2  
+**Repository:** https://github.com/Stefanbotes/InnerPersona  
 **Local Path:** `/home/ubuntu/ntaqv2`  
 **Latest Fix Commit:** `155c795 fix: resolve Vercel build error`  
 **Vercel Pro Plan:** Active ✅

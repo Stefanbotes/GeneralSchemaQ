@@ -170,7 +170,7 @@ The build shows some warnings about Node.js modules and bcryptjs not being suppo
 - 1 file changed
 - 4 insertions(+), 6 deletions(-)
 
-**Pushed to:** `https://github.com/Stefanbotes/NLPQV2.git`
+**Pushed to:** `https://github.com/Stefanbotes/InnerPersona.git`
 
 ---
 

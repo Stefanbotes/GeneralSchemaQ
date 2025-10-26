@@ -9,12 +9,12 @@ This guide provides step-by-step instructions for seeding your production databa
 
 ### Check Deployment Status
 1. Go to your Vercel dashboard: https://vercel.com/dashboard
-2. Locate your NLPQV2 project
+2. Locate your InnerPersona project
 3. Verify that the latest deployment shows as "Ready" or "Success"
 4. The deployment should be using the latest commit: `5e3c60d` (or newer)
 
 ### Test Production URL
-1. Visit your production URL: **https://nlpqv2.vercel.app**
+1. Visit your production URL: **https://InnerPersona.vercel.app**
 2. Verify the homepage loads correctly
 3. Check that styling and UI elements are working
 4. Try navigating to different pages (login, signup, etc.)
@@ -30,7 +30,7 @@ You'll need two environment variables to run the seeding script:
 
 ### 1. PRODUCTION_URL (Already Known)
 ```bash
-PRODUCTION_URL="https://nlpqv2.vercel.app"
+PRODUCTION_URL="https://InnerPersona.vercel.app"
 ```
 
 ### 2. ADMIN_SECRET_KEY (You Need to Provide This)
@@ -64,13 +64,13 @@ PRODUCTION_URL="https://nlpqv2.vercel.app"
 **Option A: With Inline Environment Variables**
 ```bash
 cd /home/ubuntu/ntaqv2
-PRODUCTION_URL="https://nlpqv2.vercel.app" ADMIN_SECRET_KEY="your-actual-secret-key" ./scripts/seed-production.sh
+PRODUCTION_URL="https://InnerPersona.vercel.app" ADMIN_SECRET_KEY="your-actual-secret-key" ./scripts/seed-production.sh
 ```
 
 **Option B: Export Variables First**
 ```bash
 cd /home/ubuntu/ntaqv2
-export PRODUCTION_URL="https://nlpqv2.vercel.app"
+export PRODUCTION_URL="https://InnerPersona.vercel.app"
 export ADMIN_SECRET_KEY="your-actual-secret-key"
 ./scripts/seed-production.sh
 ```
@@ -84,14 +84,14 @@ export ADMIN_SECRET_KEY="your-actual-secret-key"
 ### During Execution
 The script will:
 1. Display the production URL being used
-2. Make an HTTP POST request to: `https://nlpqv2.vercel.app/api/seed-questions`
+2. Make an HTTP POST request to: `https://InnerPersona.vercel.app/api/seed-questions`
 3. Send the admin secret key for authentication
 4. Wait for the response
 
 ### Successful Output
 ```
 🌱 Seeding production database...
-Production URL: https://nlpqv2.vercel.app
+Production URL: https://InnerPersona.vercel.app
 
 Response:
 {
@@ -133,7 +133,7 @@ Response:
 
 #### 4. Network or Server Error
 ```
-curl: (7) Failed to connect to nlpqv2.vercel.app
+curl: (7) Failed to connect to InnerPersona.vercel.app
 ```
 **Fix:** Check that:
 - Your production site is deployed and accessible
@@ -145,7 +145,7 @@ curl: (7) Failed to connect to nlpqv2.vercel.app
 ## Step 5: Verify Seeding Success
 
 ### Check via Application
-1. Log into your production site: https://nlpqv2.vercel.app
+1. Log into your production site: https://InnerPersona.vercel.app
 2. Navigate to the questionnaire section
 3. Verify that questions are visible and can be answered
 
@@ -217,7 +217,7 @@ Response: 404 Not Found
 Once you have your admin secret key, use this command:
 
 ```bash
-cd /home/ubuntu/ntaqv2 && PRODUCTION_URL="https://nlpqv2.vercel.app" ADMIN_SECRET_KEY="your-secret-key-here" ./scripts/seed-production.sh
+cd /home/ubuntu/ntaqv2 && PRODUCTION_URL="https://InnerPersona.vercel.app" ADMIN_SECRET_KEY="your-secret-key-here" ./scripts/seed-production.sh
 ```
 
 ---
@@ -245,4 +245,4 @@ If you encounter issues:
 
 **Last Updated:** October 23, 2025  
 **Deployment Commit:** 5e3c60d  
-**Production URL:** https://nlpqv2.vercel.app
+**Production URL:** https://InnerPersona.vercel.app

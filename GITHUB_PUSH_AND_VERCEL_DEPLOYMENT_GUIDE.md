@@ -3,7 +3,7 @@
 ## 🚨 Current Status
 
 **Git Repository:** ✅ Initialized and configured  
-**Remote Repository:** ✅ Connected to https://github.com/Stefanbotes/NLPQV2.git  
+**Remote Repository:** ✅ Connected to https://github.com/Stefanbotes/InnerPersona.git  
 **GitHub Token:** ❌ Missing required permissions (needs `repo` scope)
 
 ---
@@ -41,7 +41,7 @@ Once you have a token with proper permissions, run these commands:
 cd /home/ubuntu/ntaqv2
 
 # Update the remote URL with your new token
-git remote set-url origin https://YOUR_NEW_TOKEN@github.com/Stefanbotes/NLPQV2.git
+git remote set-url origin https://YOUR_NEW_TOKEN@github.com/Stefanbotes/InnerPersona.git
 
 # Verify the repository status
 git status
@@ -61,7 +61,7 @@ git push -u origin master
 ### Step 3: Verify the Push
 
 After pushing, verify by visiting:
-- **Repository URL:** https://github.com/Stefanbotes/NLPQV2
+- **Repository URL:** https://github.com/Stefanbotes/InnerPersona
 - Check that all files are present (except those in .gitignore)
 - Verify the commit history is correct
 
@@ -84,7 +84,7 @@ After pushing, verify by visiting:
 2. **Import Project:**
    - Click "Add New..." → "Project"
    - Select "Import Git Repository"
-   - Choose: **Stefanbotes/NLPQV2**
+   - Choose: **Stefanbotes/InnerPersona**
    - Click "Import"
 
 3. **Configure Project Settings:**
@@ -484,7 +484,7 @@ Copy this checklist when setting up environment variables in Vercel:
 Your deployment is successful when:
 
 ✅ **Code is on GitHub:**
-- Repository is accessible at https://github.com/Stefanbotes/NLPQV2
+- Repository is accessible at https://github.com/Stefanbotes/InnerPersona
 - All necessary files are pushed (excluding .env and ignored files)
 
 ✅ **Vercel Deployment Works:**

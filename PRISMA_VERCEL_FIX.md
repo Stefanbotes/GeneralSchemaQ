@@ -56,7 +56,7 @@ npm run vercel:build
 
 Changes committed and pushed to GitHub:
 - **Commit**: `fix: Add prisma generate to postinstall for Vercel builds`
-- **Repository**: https://github.com/Stefanbotes/NLPQV2.git
+- **Repository**: https://github.com/Stefanbotes/InnerPersona.git
 - **Branch**: master
 
 ## Vercel Next Steps

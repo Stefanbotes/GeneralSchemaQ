@@ -124,7 +124,7 @@ Route (app)                               Size     First Load JS
 
 **Commit Hash:** `6755582`  
 **Branch:** `master`  
-**Pushed to:** https://github.com/Stefanbotes/NLPQV2.git
+**Pushed to:** https://github.com/Stefanbotes/InnerPersona.git
 
 **Commit Message:**
 ```
@@ -217,7 +217,7 @@ export const dynamic = 'force-dynamic';
 
 ## Contact & Support
 
-- **Repository:** https://github.com/Stefanbotes/NLPQV2
+- **Repository:** https://github.com/Stefanbotes/InnerPersona
 - **App Name:** NTAQV2 (Leadership Questionnaire)
 - **Framework:** Next.js 14 (App Router)
 - **Database:** PostgreSQL with Prisma

@@ -96,7 +96,7 @@ git push origin master
 ```
 
 **Commit:** `da5567f`  
-**GitHub Repo:** https://github.com/Stefanbotes/NLPQV2.git
+**GitHub Repo:** https://github.com/Stefanbotes/InnerPersona.git
 
 ---
 
@@ -167,7 +167,7 @@ NextAuth routes are particularly sensitive because they:
 
 1. **Monitor Vercel Build**
    - Vercel should automatically detect the new commit and trigger a build
-   - Watch for: https://vercel.com/stefanbotes/nlpqv2/deployments
+   - Watch for: https://vercel.com/stefanbotes/InnerPersona/deployments
 
 2. **Verify Production Deployment**
    - Check that all routes load correctly
@@ -253,7 +253,7 @@ NEXT_PUBLIC_APP_URL=...
 
 ## Contact & Support
 
-- **GitHub Repository:** https://github.com/Stefanbotes/NLPQV2.git
+- **GitHub Repository:** https://github.com/Stefanbotes/InnerPersona.git
 - **Latest Commit:** da5567f
 - **Working Directory:** `/home/ubuntu/ntaqv2`
 - **Preview URL:** https://1571c35e96.preview.abacusai.app (DeepAgent)

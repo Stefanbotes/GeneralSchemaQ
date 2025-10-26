@@ -338,7 +338,7 @@ Error: ENOENT: no such file or directory, mkdir '/vercel/path0/.next'
 
 **Commit Hash:** 943c5fb  
 **Branch:** master  
-**Pushed to:** https://github.com/Stefanbotes/NLPQV2.git  
+**Pushed to:** https://github.com/Stefanbotes/InnerPersona.git  
 
 **Commit Message:**
 ```

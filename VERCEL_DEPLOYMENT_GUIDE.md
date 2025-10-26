@@ -44,7 +44,7 @@ Before we start, make sure you have:
 - **What it is:** A platform to store and manage your code
 - **Why you need it:** Vercel deploys from GitHub repositories
 - **Sign up:** [github.com](https://github.com) (it's free!)
-- **Repository URL:** `https://github.com/Stefanbotes/NLPQV2.git`
+- **Repository URL:** `https://github.com/Stefanbotes/InnerPersona.git`
 
 ### 2. Vercel Account ✓
 - **What it is:** The hosting platform we'll use
@@ -68,12 +68,12 @@ Before we start, make sure you have:
 
 ## 📝 Step 1: Prepare Your GitHub Repository
 
-Your code is already on GitHub at: `https://github.com/Stefanbotes/NLPQV2.git`
+Your code is already on GitHub at: `https://github.com/Stefanbotes/InnerPersona.git`
 
 **What you need to check:**
 
 1. **Visit your repository:**
-   - Go to `https://github.com/Stefanbotes/NLPQV2`
+   - Go to `https://github.com/Stefanbotes/InnerPersona`
    - Make sure you can see the code files
 
 2. **Verify the repository is public or you have access:**
@@ -82,7 +82,7 @@ Your code is already on GitHub at: `https://github.com/Stefanbotes/NLPQV2.git`
 
 3. **Note down your repository details:**
    - Owner: `Stefanbotes`
-   - Repository name: `NLPQV2`
+   - Repository name: `InnerPersona`
    - Branch: `main` (usually the default)
 
 ✅ **Once you can see your repository on GitHub, you're ready for the next step!**
@@ -154,14 +154,14 @@ Now let's tell Vercel about your NTAQV2 application.
 
 2. **Find Your Repository:**
    - You'll see a list of your GitHub repositories
-   - Look for **"NLPQV2"** in the list
+   - Look for **"InnerPersona"** in the list
    - If you don't see it:
      - Click "Adjust GitHub App Permissions"
      - Make sure Vercel has access to your repositories
-     - Click "Select Repositories" and choose NLPQV2
+     - Click "Select Repositories" and choose InnerPersona
 
 3. **Click "Import":**
-   - Find the NLPQV2 repository in the list
+   - Find the InnerPersona repository in the list
    - Click the "Import" button next to it
 
 ### 3.3 Configure Project
@@ -170,7 +170,7 @@ You'll now see the "Configure Project" page. Let's set it up:
 
 1. **Project Name:**
    - Vercel suggests a name (usually your repo name)
-   - You can keep it as **"nlpqv2"** or change it to something like **"ntaqv2-leadership-app"**
+   - You can keep it as **"InnerPersona"** or change it to something like **"ntaqv2-leadership-app"**
    - This becomes part of your URL: `your-project-name.vercel.app`
 
 2. **Framework Preset:**
@@ -1228,7 +1228,7 @@ If none of the above solutions work:
 
 5. **Check GitHub Issues:**
    - Your repository might have known issues
-   - Check: `https://github.com/Stefanbotes/NLPQV2/issues`
+   - Check: `https://github.com/Stefanbotes/InnerPersona/issues`
 
 ---
 

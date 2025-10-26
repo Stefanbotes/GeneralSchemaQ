@@ -91,7 +91,7 @@ Since the fix IS in GitHub, there are a few possible reasons:
 1. Go to Vercel dashboard → Your project
 2. Click **"Settings"** → **"Git"**
 3. Verify:
-   - ✅ Connected repository: `Stefanbotes/NLPQV2`
+   - ✅ Connected repository: `Stefanbotes/InnerPersona`
    - ✅ Production Branch: `master`
    - ✅ Auto-deploy enabled
 

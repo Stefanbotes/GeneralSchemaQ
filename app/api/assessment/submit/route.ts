@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build NLPQV2-style raw map: { "1.1.1": value, ... }
+    // Build InnerPersona-style raw map: { "1.1.1": value, ... }
     const rawScores108: Record<string, number | string> = {};
     for (const r of validation.responses) {
       const triple = toTripleKey(r);

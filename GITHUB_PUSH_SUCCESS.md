@@ -15,7 +15,7 @@ da94a18 - Add email configuration summary document
 cd197b0 - Add Gmail SMTP setup documentation for Vercel deployment
 ```
 
-**Repository:** https://github.com/Stefanbotes/NLPQV2  
+**Repository:** https://github.com/Stefanbotes/InnerPersona  
 **Branch:** master
 
 ---
@@ -42,7 +42,7 @@ Vercel is now automatically detecting these changes and will:
    - Optimizes assets
 
 ### 4. **Deploy to Production**
-   - App deployed to: https://nlpqv2.vercel.app
+   - App deployed to: https://InnerPersona.vercel.app
    - New deployment becomes live
 
 ---
@@ -50,7 +50,7 @@ Vercel is now automatically detecting these changes and will:
 ## 👀 Monitor the Deployment
 
 ### **Vercel Dashboard**
-Visit: https://vercel.com/stefanbotes-projects/nlpqv2/deployments
+Visit: https://vercel.com/stefanbotes-projects/InnerPersona/deployments
 
 ### **What to Look For:**
 
@@ -109,7 +109,7 @@ npx prisma studio --port 5556
 *(Requires DATABASE_URL to be set locally to your Vercel database)*
 
 ### **3. Test the Live App**
-Visit: https://nlpqv2.vercel.app
+Visit: https://InnerPersona.vercel.app
 
 **Test These Features:**
 - ✅ Home page loads correctly
@@ -131,7 +131,7 @@ Visit: https://nlpqv2.vercel.app
 
 ### **Expected Email Behavior:**
 1. User signs up → Verification email sent via Gmail SMTP
-2. User receives email from: `noreply@nlpqv2.app`
+2. User receives email from: `noreply@InnerPersona.app`
 3. Email contains magic link for verification
 4. User clicks link → Account verified → Can log in
 
@@ -232,7 +232,7 @@ After deployment completes, verify:
 - [ ] Deployment status shows "Ready" in Vercel dashboard
 - [ ] Build logs show successful migration
 - [ ] All 7 database tables exist
-- [ ] App loads at https://nlpqv2.vercel.app
+- [ ] App loads at https://InnerPersona.vercel.app
 - [ ] Sign up page works
 - [ ] Email verification sends (test with real email)
 - [ ] User can log in after verification

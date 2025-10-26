@@ -169,7 +169,7 @@ Route (app)                               Size     First Load JS
 Vercel should automatically detect the new commit and redeploy:
 
 1. **Go to your Vercel dashboard**: https://vercel.com/dashboard
-2. **Navigate to your project**: NLPQV2
+2. **Navigate to your project**: InnerPersona
 3. **Check Deployments tab**
    - You should see a new deployment in progress for commit `9613420`
 4. **Wait for deployment to complete** (~2-5 minutes)
@@ -284,7 +284,7 @@ git checkout checkpoint-before-content-changes
 
 ## Support & Resources
 
-- **GitHub Repository:** https://github.com/Stefanbotes/NLPQV2
+- **GitHub Repository:** https://github.com/Stefanbotes/InnerPersona
 - **Vercel Documentation:** https://vercel.com/docs
 - **Next.js 14 Docs:** https://nextjs.org/docs
 - **Prisma Docs:** https://www.prisma.io/docs
