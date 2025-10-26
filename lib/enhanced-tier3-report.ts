@@ -14,7 +14,7 @@ interface EnhancedClinicalReportOptions {
 }
 
 export function generateEnhancedTier3Report(analysis: any, options: EnhancedClinicalReportOptions): string {
-  // ✅ CLINICAL: Use same canonical scores as Leadership report
+  // ✅ CLINICAL: Use same canonical scores as Inner Personareport
   const canonicalTop5 = analysis.tier3.canonicalTop5 || [];
   
   // 🔍 DEBUGGING: Log canonical scores used for clinical report
@@ -42,7 +42,7 @@ export function generateEnhancedTier3Report(analysis: any, options: EnhancedClin
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinical Leadership Assessment - ${options.participantName}</title>
+    <title>Clinical Inner PersonaAssessment - ${options.participantName}</title>
     <style>
         body {
             font-family: 'Georgia', 'Times New Roman', serif;
@@ -188,8 +188,8 @@ export function generateEnhancedTier3Report(analysis: any, options: EnhancedClin
         </div>
         
         <div class="header">
-            <div class="logo">Clinical Leadership Assessment</div>
-            <h1>Schema-Based Leadership Analysis</h1>
+            <div class="logo">Clinical Inner PersonaAssessment</div>
+            <h1>Schema-Based Inner PersonaAnalysis</h1>
             <p>Comprehensive clinical evaluation using schema therapy principles</p>
         </div>
 
@@ -199,7 +199,7 @@ export function generateEnhancedTier3Report(analysis: any, options: EnhancedClin
             <p><strong>Assessment Date:</strong> ${options.assessmentDate}</p>
             <p><strong>Assessment ID:</strong> ${options.assessmentId}</p>
             <p><strong>Report Type:</strong> Tier 3 - Clinical Analysis</p>
-            <p><strong>Framework:</strong> Schema Therapy Leadership Assessment (18 Personas)</p>
+            <p><strong>Framework:</strong> Schema Therapy Inner PersonaAssessment (18 Personas)</p>
             <p><strong>Scoring Method:</strong> Canonical 3-items-per-persona framework</p>
             <p><strong>Scale:</strong> Activation indices (0-100) derived from Likert responses. Values >80 indicate strong schema activation.</p>
         </div>
@@ -208,7 +208,7 @@ export function generateEnhancedTier3Report(analysis: any, options: EnhancedClin
         <div style="background: #f3f4f6; padding: 25px; border-radius: 8px; margin: 25px 0; border: 2px solid #6b7280;">
             <h4>🔍 Clinical Scoring Verification (Canonical Top 5)</h4>
             <p style="font-size: 14px; color: #6b7280; margin-bottom: 15px;">
-                <em>This clinical report uses the same canonical scores as Leadership reports for consistency.</em>
+                <em>This clinical report uses the same canonical scores as Inner Personareports for consistency.</em>
             </p>
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <thead>
@@ -239,7 +239,7 @@ export function generateEnhancedTier3Report(analysis: any, options: EnhancedClin
             
             <div class="clinical-insights">
                 <h4>🔬 Clinical Insights</h4>
-                <p>Clinical assessment reveals <strong>${primaryCanonical?.clinicalName || 'Unknown Schema'}</strong> pattern within the <strong>${schemaCategory}</strong> domain (${canonicalTop5[0]?.score || 0}/100 activation index). This indicates specific neurobiological and behavioral patterns that manifest in leadership contexts.</p>
+                <p>Clinical assessment reveals <strong>${primaryCanonical?.clinicalName || 'Unknown Schema'}</strong> pattern within the <strong>${schemaCategory}</strong> domain (${canonicalTop5[0]?.score || 0}/100 activation index). This indicates specific neurobiological and behavioral patterns that manifest in Inner Personacontexts.</p>
                 
                 <div style="font-size: 13px; color: #6b7280; background: #f9fafb; padding: 10px; border-radius: 4px; margin-top: 10px;">
                     <strong>Activation Index:</strong> Normalized score (0-100) based on 1-5 Likert scale responses. Values >80 indicate strong pattern activation (average response >4.0).
@@ -291,7 +291,7 @@ export function generateEnhancedTier3Report(analysis: any, options: EnhancedClin
 
         <div class="schema-section">
             <h4>📋 Schema-Based Clinical Formulation</h4>
-            <p>This assessment reveals <strong>${primaryCanonical?.persona || primary.name}</strong> (<em>${primaryCanonical?.clinicalName}</em>) as the dominant leadership schema pattern within the <strong>${schemaCategory}</strong> domain.</p>
+            <p>This assessment reveals <strong>${primaryCanonical?.persona || primary.name}</strong> (<em>${primaryCanonical?.clinicalName}</em>) as the dominant Inner Personaschema pattern within the <strong>${schemaCategory}</strong> domain.</p>
             
             <div class="clinical-note">
                 <strong>Clinical Interpretation:</strong> The identified pattern suggests specific neurobiological activation patterns and cognitive-behavioral responses consistent with schema therapy frameworks. This profile indicates both adaptive strengths and areas requiring therapeutic intervention.
@@ -299,16 +299,16 @@ export function generateEnhancedTier3Report(analysis: any, options: EnhancedClin
             
             <h5>Recommended Clinical Interventions:</h5>
             <ul>
-                <li><strong>Cognitive Restructuring:</strong> Address underlying schema-driven beliefs about leadership and authority</li>
-                <li><strong>Behavioral Experiments:</strong> Test assumptions about leadership effectiveness and team responses</li>
+                <li><strong>Cognitive Restructuring:</strong> Address underlying schema-driven beliefs about Inner Personaand authority</li>
+                <li><strong>Behavioral Experiments:</strong> Test assumptions about Inner Personaeffectiveness and team responses</li>
                 <li><strong>Schema Therapy Techniques:</strong> Work with identified patterns using appropriate therapeutic modalities</li>
-                <li><strong>Mindfulness-Based Leadership:</strong> Develop present-moment awareness in leadership contexts</li>
+                <li><strong>Mindfulness-Based Leadership:</strong> Develop present-moment awareness in Inner Personacontexts</li>
             </ul>
         </div>
 
         <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 35px; border-radius: 8px; margin: 40px 0; border: 2px solid #6b7280;">
             <h4>🧠 Neurobiological Considerations</h4>
-            <p>The <strong>${primaryCanonical?.persona || primary.name}</strong> pattern is associated with specific neurobiological activation patterns that influence decision-making, stress response, and interpersonal dynamics in leadership contexts.</p>
+            <p>The <strong>${primaryCanonical?.persona || primary.name}</strong> pattern is associated with specific neurobiological activation patterns that influence decision-making, stress response, and interpersonal dynamics in Inner Personacontexts.</p>
             
             <p><strong>Treatment Planning:</strong> Consider the interplay between identified schema patterns and neurobiological factors when developing intervention strategies. The presence of supporting patterns (${supportingCanonical?.map((p: any) => p.canonical.persona).join(', ') || 'none identified'}) suggests cognitive flexibility that can be leveraged in therapeutic work.</p>
         </div>
@@ -324,7 +324,7 @@ export function generateEnhancedTier3Report(analysis: any, options: EnhancedClin
                 <p><strong>Analysis Version:</strong> ${getAnalysisVersion()}</p>
             </div>
             
-            <p>Clinical Assessment Report generated on ${new Date().toLocaleDateString()} | Schema-Based Leadership Assessment Framework © 2025</p>
+            <p>Clinical Assessment Report generated on ${new Date().toLocaleDateString()} | Schema-Based Inner PersonaAssessment Framework © 2025</p>
         </div>
     </div>
 </body>

@@ -238,7 +238,7 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
           <p className="text-green-800 font-medium">✅ {users.length} user(s) with completed assessments</p>
           <p className="text-green-700 text-sm mt-1">
-            Select a user below to generate their advanced leadership (Tier 2) or clinical (Tier 3) reports.
+            Select a user below to generate their advanced Inner Persona(Tier 2) or clinical (Tier 3) reports.
           </p>
         </div>
       )}
@@ -311,18 +311,18 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
       
       {selectedUser && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Tier 2: Leadership Report */}
+          {/* Tier 2: Inner PersonaReport */}
           <div className="p-4 border-2 border-blue-200 rounded-lg bg-primary50">
             <div className="flex items-center mb-3">
               <FileText className="h-5 w-5 text-primary600 mr-2" />
-              <h4 className="font-semibold text-primary800">Tier 2: Leadership Report</h4>
+              <h4 className="font-semibold text-primary800">Tier 2: Inner PersonaReport</h4>
             </div>
             <p className="text-sm text-primary700 mb-4">
-              Comprehensive leadership development report using personas framework. 
+              Comprehensive Inner Personadevelopment report using personas framework. 
               Ideal for coaching and professional development contexts.
             </p>
             <div className="text-xs text-primary600 mb-3">
-              <strong>Contains:</strong> Primary persona analysis, supporting patterns, development action plans, leadership pattern integration
+              <strong>Contains:</strong> Primary persona analysis, supporting patterns, development action plans, Inner Personapattern integration
             </div>
             <Button 
               onClick={() => handleGenerateReport(2, selectedUser)}
@@ -334,7 +334,7 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
               ) : (
                 <>
                   <Download className="h-4 w-4 mr-2" />
-                  Generate Leadership Report
+                  Generate Inner PersonaReport
                 </>
               )}
             </Button>
@@ -488,7 +488,7 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
         </h4>
         <ul className="text-sm text-gray-700 space-y-1">
           <li><strong>Tier 1:</strong> Automatically downloaded when users complete assessments</li>
-          <li><strong>Tier 2:</strong> For leadership coaching and professional development contexts</li>
+          <li><strong>Tier 2:</strong> For Inner Personacoaching and professional development contexts</li>
           <li><strong>Tier 3:</strong> Only for clinical supervision and therapeutic intervention planning</li>
           <li><strong>JSON Export:</strong> Structured data for research, integration, and analysis (v1.0.0 specification)</li>
           <li><strong>Security:</strong> Advanced reports and data exports are admin-only for quality assurance and appropriate use</li>

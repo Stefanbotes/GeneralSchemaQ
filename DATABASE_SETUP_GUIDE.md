@@ -23,7 +23,7 @@ Your app needs these tables in the database:
 4. `verification_tokens` - Email verification
 5. `password_reset_tokens` - Password resets
 6. `rate_limit_records` - Security rate limiting
-7. `assessments` - Leadership assessments
+7. `assessments` - Inner Personaassessments
 8. `assessment_questions` - Question bank
 9. `lasbi_items` - LASBI item metadata
 10. `lasbi_responses` - Assessment responses
@@ -311,5 +311,5 @@ npx prisma migrate reset
 ---
 
 **Last Updated:** October 23, 2025  
-**App:** NTAQV2 Leadership Questionnaire  
+**App:** NTAQV2 Inner PersonaQuestionnaire  
 **Database:** PostgreSQL with Prisma ORM

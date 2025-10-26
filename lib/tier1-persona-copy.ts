@@ -103,7 +103,7 @@ export const TIER1_PERSONA_BY_SCHEMA: Record<string, Tier1PersonaCopy> = {
     healthyPersona: "The Differentiated Leader",
     leadershipId: "the_over_adapter",
     clinicalId: "enmeshment_undeveloped_self",
-    publicDescription: "You maintain healthy autonomy and a distinct leadership voice.",
+    publicDescription: "You maintain healthy autonomy and a distinct Inner Personavoice.",
     strengthFocus: "Identity & clarity",
     developmentEdge: "Name your stance first; collaborate from clear ownership."
   },

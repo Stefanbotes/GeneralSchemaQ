@@ -1,5 +1,5 @@
 
-// Schema Therapy Framework for Leadership Assessment
+// Schema Therapy Framework for Inner PersonaAssessment
 // Based on Young's Schema Theory adapted for organizational leadership
 
 export interface SchemaActivation {
@@ -201,7 +201,7 @@ export function calculateSchemaActivations(responses: Record<string, string>): S
   return activations.sort((a, b) => b.activationLevel - a.activationLevel);
 }
 
-// Calculate persona activations for leadership framework
+// Calculate persona activations for Inner Personaframework
 export function calculatePersonaActivations(responses: Record<string, string>): PersonaActivation[] {
   const { personaMapping } = require('@/data/personaMapping');
   
@@ -224,7 +224,7 @@ export function calculatePersonaActivations(responses: Record<string, string>): 
         publicName: personaInfo?.publicName || personaName,
         activationLevel: Math.round(activationLevel * 10) / 10,
         rank: 0, // Will be set after sorting
-        strengthFocus: personaInfo?.strengthFocus || 'Leadership Qualities',
+        strengthFocus: personaInfo?.strengthFocus || 'Inner PersonaQualities',
         developmentEdge: personaInfo?.developmentEdge || 'Continue developing skills'
       });
     }
@@ -259,13 +259,13 @@ function generateTier1Analysis(primaryPersona: PersonaActivation, topPersonas: P
   const strengthsList = topPersonas.map(p => p.strengthFocus.toLowerCase()).join(', ');
   
   return {
-    summary: `Your leadership style shows strong ${primaryPersona.strengthFocus.toLowerCase()} with ${primaryPersona.activationLevel.toFixed(1)}% alignment to ${primaryPersona.publicName} patterns. You bring valuable qualities including ${strengthsList} that contribute to organizational success. Your approach demonstrates natural leadership capabilities that help teams achieve their goals while maintaining positive relationships.`,
+    summary: `Your Inner Personastyle shows strong ${primaryPersona.strengthFocus.toLowerCase()} with ${primaryPersona.activationLevel.toFixed(1)}% alignment to ${primaryPersona.publicName} patterns. You bring valuable qualities including ${strengthsList} that contribute to organizational success. Your approach demonstrates natural Inner Personacapabilities that help teams achieve their goals while maintaining positive relationships.`,
     keyStrengths: topPersonas.slice(0, 3).map(p => p.strengthFocus),
     growthAreas: topPersonas.slice(0, 2).map(p => p.developmentEdge.split('.')[0])
   };
 }
 
-// Tier 2: Detailed Leadership Report (8-12 pages worth of content)
+// Tier 2: Detailed Inner PersonaReport (8-12 pages worth of content)
 function generateTier2Analysis(primaryPersona: PersonaActivation, allPersonas: PersonaActivation[], participantData: any) {
   const supportingPersonas = allPersonas.slice(1, 5).filter(p => p.activationLevel >= 60);
   
@@ -312,15 +312,15 @@ function generateLeadershipPattern(primary: PersonaActivation, supporting: Perso
 }
 
 function generateDetailedPersonaAnalysis(primary: PersonaActivation, supporting: PersonaActivation[]): string {
-  return `As ${primary.publicName} (${primary.activationLevel}% activation), your leadership is characterized by ${primary.strengthFocus.toLowerCase()}. This creates a distinctive leadership approach that emphasizes excellence and results while maintaining focus on team development. Your supporting personas (${supporting.map(p => p.personaName).join(', ')}) add complexity and depth to your leadership style, creating unique strengths and development opportunities.`;
+  return `As ${primary.publicName} (${primary.activationLevel}% activation), your Inner Personais characterized by ${primary.strengthFocus.toLowerCase()}. This creates a distinctive Inner Personaapproach that emphasizes excellence and results while maintaining focus on team development. Your supporting personas (${supporting.map(p => p.personaName).join(', ')}) add complexity and depth to your Inner Personastyle, creating unique strengths and development opportunities.`;
 }
 
 function generateImmediateActions(primary: PersonaActivation): string[] {
   return [
     `Leverage your ${primary.strengthFocus.toLowerCase()} in current projects`,
-    'Seek feedback on how your leadership style affects team dynamics',
+    'Seek feedback on how your Inner Personastyle affects team dynamics',
     'Identify 2-3 specific situations where you can apply your natural strengths',
-    'Practice self-awareness of your automatic leadership responses'
+    'Practice self-awareness of your automatic Inner Personaresponses'
   ];
 }
 
@@ -335,10 +335,10 @@ function generateMediumTermActions(primary: PersonaActivation, supporting: Perso
 
 function generateLongTermActions(primary: PersonaActivation): string[] {
   return [
-    'Evolve your leadership style to include advanced capabilities',
-    'Mentor others who share similar leadership patterns',
+    'Evolve your Inner Personastyle to include advanced capabilities',
+    'Mentor others who share similar Inner Personapatterns',
     'Develop expertise in areas that complement your natural strengths',
-    'Create leadership legacy that leverages your unique capabilities'
+    'Create Inner Personalegacy that leverages your unique capabilities'
   ];
 }
 
@@ -346,12 +346,12 @@ function generateClinicalFormulation(primary: SchemaActivation, secondary: Schem
   const pattern = `${primary.clinicalName} (${primary.activationLevel}% activation)`;
   const secondaryPatterns = secondary.map(s => `${s.clinicalName} (${s.activationLevel}%)`).join(', ');
   
-  return `Primary pattern presents as ${pattern} within the ${primary.domain} domain. Secondary activations include ${secondaryPatterns}. This configuration suggests a complex leadership schema pattern requiring integrated therapeutic approach focusing on ${primary.domain.toLowerCase()} concerns while addressing secondary schema interactions.`;
+  return `Primary pattern presents as ${pattern} within the ${primary.domain} domain. Secondary activations include ${secondaryPatterns}. This configuration suggests a complex Inner Personaschema pattern requiring integrated therapeutic approach focusing on ${primary.domain.toLowerCase()} concerns while addressing secondary schema interactions.`;
 }
 
 function generateRiskAssessment(primary: SchemaActivation, secondary: SchemaActivation[]): { highRisk: string[]; protectiveFactors: string[] } {
   const risks = [
-    'Potential for interpersonal difficulties in leadership contexts',
+    'Potential for interpersonal difficulties in Inner Personacontexts',
     'Risk of team dysfunction due to schema-driven responses',
     'Possible career advancement limitations if patterns are rigid'
   ];
@@ -386,8 +386,8 @@ function generateIntermediateClinicalRecommendations(primary: SchemaActivation, 
 function generateLongTermClinicalRecommendations(primary: SchemaActivation, secondary: SchemaActivation[]): string[] {
   return [
     'Comprehensive schema integration therapy',
-    'Leadership coaching with clinical supervision',
+    'Inner Personacoaching with clinical supervision',
     'Ongoing monitoring of workplace interpersonal effectiveness',
-    'Development of healthy leadership templates'
+    'Development of healthy Inner Personatemplates'
   ];
 }

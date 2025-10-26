@@ -1,5 +1,5 @@
 
-// Enhanced API route for Tier 2 Leadership Development Report (Coaching Focus)
+// Enhanced API route for Tier 2 Inner PersonaDevelopment Report (Coaching Focus)
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
@@ -157,10 +157,10 @@ export async function POST(request: NextRequest) {
           // Primary persona data expected by template
           primaryPersona: {
             name: primary?.schemaLabel || 'Unknown Schema',
-            strengthFocus: `Your primary leadership pattern shows strength in the ${primary?.schemaLabel || 'Unknown'} approach with a development index of ${Math.round(primary?.index0to100 || 0)}.`,
+            strengthFocus: `Your primary Inner Personapattern shows strength in the ${primary?.schemaLabel || 'Unknown'} approach with a development index of ${Math.round(primary?.index0to100 || 0)}.`,
             developmentEdge: primary && (primary.index0to100 < 60) 
-              ? `This schema is emerging (below the 60-point threshold) and represents your developing leadership edge.`
-              : `This established pattern (${Math.round(primary?.index0to100 || 0)} points) represents your core leadership strength.`
+              ? `This schema is emerging (below the 60-point threshold) and represents your developing Inner Personaedge.`
+              : `This established pattern (${Math.round(primary?.index0to100 || 0)} points) represents your core Inner Personastrength.`
           },
           // Supporting personas
           supportingPersonas: [
@@ -172,18 +172,18 @@ export async function POST(request: NextRequest) {
             tertiary && {
               name: tertiary.schemaLabel, 
               strengthFocus: `Tertiary pattern with ${Math.round(tertiary.index0to100)} development points.`,
-              developmentEdge: tertiary.index0to100 < 60 ? 'Developing leadership dimension.' : 'Additional leadership resource.'
+              developmentEdge: tertiary.index0to100 < 60 ? 'Developing Inner Personadimension.' : 'Additional Inner Personaresource.'
             }
           ].filter(Boolean),
           // Detailed analysis based on canonical scores
-          detailedAnalysis: `Your leadership assessment reveals a primary pattern in ${primary?.schemaLabel || 'Unknown'} (${Math.round(primary?.index0to100 || 0)} points), supported by ${secondary?.schemaLabel || 'Unknown'} (${Math.round(secondary?.index0to100 || 0)} points) and ${tertiary?.schemaLabel || 'Unknown'} (${Math.round(tertiary?.index0to100 || 0)} points). This combination provides you with a distinctive leadership approach that draws from multiple developmental frameworks.`,
+          detailedAnalysis: `Your Inner Personaassessment reveals a primary pattern in ${primary?.schemaLabel || 'Unknown'} (${Math.round(primary?.index0to100 || 0)} points), supported by ${secondary?.schemaLabel || 'Unknown'} (${Math.round(secondary?.index0to100 || 0)} points) and ${tertiary?.schemaLabel || 'Unknown'} (${Math.round(tertiary?.index0to100 || 0)} points). This combination provides you with a distinctive Inner Personaapproach that draws from multiple developmental frameworks.`,
           // Development recommendations based on the scores
           developmentRecommendations: [
             `Focus on strengthening your primary ${primary?.schemaLabel || 'Unknown'} pattern through targeted practice and reflection.`,
-            secondary && `Integrate your secondary ${secondary.schemaLabel} abilities to create more flexible leadership responses.`,
+            secondary && `Integrate your secondary ${secondary.schemaLabel} abilities to create more flexible Inner Personaresponses.`,
             tertiary && `Explore how your ${tertiary.schemaLabel} tendencies can complement your primary approach in different contexts.`,
-            `Consider how the interplay between these three patterns creates your unique leadership signature.`,
-            `Work with a leadership coach to develop specific strategies for leveraging this multi-pattern approach.`
+            `Consider how the interplay between these three patterns creates your unique Inner Personasignature.`,
+            `Work with a Inner Personacoach to develop specific strategies for leveraging this multi-pattern approach.`
           ].filter(Boolean),
           // Keep canonical scores for debugging
           canonicalScores: {
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
       const reportOptions = {
         participantName: `${user.firstName} ${user.lastName}`,
         participantEmail: user.email,
-        participantTeam: 'Leadership Development',
+        participantTeam: 'Inner PersonaDevelopment',
         assessmentDate: new Date(assessment.createdAt).toLocaleDateString(),
         assessmentId: assessment.id
       };
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Leadership Report - ${user.firstName} ${user.lastName}</title>
+    <title>Inner PersonaReport - ${user.firstName} ${user.lastName}</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background: #f8fafc; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
 <body>
     <div class="container">
         <div class="header">
-            <h1>Tier 2 Leadership Development Report</h1>
+            <h1>Tier 2 Inner PersonaDevelopment Report</h1>
             <p><strong>${user.firstName} ${user.lastName}</strong></p>
             <p>Assessment ID: ${assessment.id}</p>
         </div>

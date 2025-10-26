@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seeding with Enhanced 18-Persona Leadership Assessment...');
+  console.log('🌱 Starting database seeding with Enhanced 18-Persona Inner PersonaAssessment...');
 
   // Clear existing personas to update them with new enhanced personas
   console.log('🧹 Clearing existing personas...');
@@ -122,7 +122,7 @@ async function main() {
     console.log('📋 Sample users already exist, skipping creation...');
   }
 
-  // Clear existing questions and create Professional Leadership Schema Assessment Questions (54 items)
+  // Clear existing questions and create Professional Inner PersonaSchema Assessment Questions (54 items)
   console.log('🧹 Skipping question clearing (will be handled separately)...');
   // await prisma.assessment_questions.deleteMany({});
   
@@ -136,7 +136,7 @@ async function main() {
     
     { order: 4, category: 'isolation', statement: 'I feel fundamentally different from other leaders in my organization.' },
     { order: 5, category: 'isolation', statement: 'I prefer to work independently rather than collaborate closely with others.' },
-    { order: 6, category: 'isolation', statement: 'I often feel like an outsider in leadership meetings or groups.' },
+    { order: 6, category: 'isolation', statement: 'I often feel like an outsider in Inner Personameetings or groups.' },
     
     { order: 7, category: 'emotional_deprivation', statement: 'I rarely expect emotional support or understanding from my work colleagues.' },
     { order: 8, category: 'emotional_deprivation', statement: 'I keep my emotions separate from my professional interactions.' },
@@ -146,12 +146,12 @@ async function main() {
     { order: 11, category: 'mistrust', statement: 'I assume that people have hidden agendas in their professional interactions.' },
     { order: 12, category: 'mistrust', statement: 'I prefer to verify everything rather than trust others\' reports or commitments.' },
     
-    { order: 13, category: 'defectiveness', statement: 'I avoid situations where my leadership abilities might be closely scrutinized.' },
+    { order: 13, category: 'defectiveness', statement: 'I avoid situations where my Inner Personaabilities might be closely scrutinized.' },
     { order: 14, category: 'defectiveness', statement: 'I worry that others will discover that I\'m not as competent as they think.' },
     { order: 15, category: 'defectiveness', statement: 'I tend to minimize my achievements and contributions to team success.' },
 
     // IMPAIRED AUTONOMY & PERFORMANCE DOMAIN (Questions 16-27)
-    { order: 16, category: 'incompetence', statement: 'I question my ability to handle complex leadership challenges.' },
+    { order: 16, category: 'incompetence', statement: 'I question my ability to handle complex Inner Personachallenges.' },
     { order: 17, category: 'incompetence', statement: 'I seek excessive input from others before making important decisions.' },
     { order: 18, category: 'incompetence', statement: 'I doubt my judgment even in areas where I have significant experience.' },
     
@@ -289,7 +289,7 @@ async function main() {
       growthAreas: JSON.stringify([
         'Your insights have tremendous value - consider sharing expertise more visibly',
         'Increase visibility to amplify positive impact',
-        'Balance behind-the-scenes work with leadership presence',
+        'Balance behind-the-scenes work with Inner Personapresence',
         'Develop comfort with presenting strategic insights publicly'
       ]),
     },
@@ -391,7 +391,7 @@ async function main() {
     },
     {
       name: 'The Careful Evaluator',
-      description: 'Your careful consideration of decisions and attention to potential challenges helps organizations avoid costly mistakes. You bring valuable quality control and risk assessment to leadership decisions.',
+      description: 'Your careful consideration of decisions and attention to potential challenges helps organizations avoid costly mistakes. You bring valuable quality control and risk assessment to Inner Personadecisions.',
       characteristics: JSON.stringify({
         researchName: 'The Self-Doubter',
         publicName: 'The Careful Evaluator',
@@ -401,7 +401,7 @@ async function main() {
       }),
       strengths: JSON.stringify([
         'Careful consideration prevents costly organizational mistakes',
-        'Brings valuable quality control to leadership decisions',
+        'Brings valuable quality control to Inner Personadecisions',
         'Excellent attention to potential challenges and risks',
         'Thorough assessment approach ensures well-informed decisions',
         'Provides thoughtful risk assessment and mitigation'
@@ -487,7 +487,7 @@ async function main() {
     },
     {
       name: 'The Relationship Cultivator',
-      description: 'You have exceptional skills in building positive relationships and managing stakeholder perceptions. Your awareness of how others view leadership decisions helps organizations maintain strong external relationships.',
+      description: 'You have exceptional skills in building positive relationships and managing stakeholder perceptions. Your awareness of how others view Inner Personadecisions helps organizations maintain strong external relationships.',
       characteristics: JSON.stringify({
         researchName: 'The Image Manager',
         publicName: 'The Relationship Cultivator',
@@ -499,19 +499,19 @@ async function main() {
         'Exceptional skills in building positive relationships',
         'Excellent at managing stakeholder perceptions',
         'Maintains strong external organizational relationships',
-        'Aware of how leadership decisions impact various stakeholders',
+        'Aware of how Inner Personadecisions impact various stakeholders',
         'Skilled at communication and engagement strategies'
       ]),
       growthAreas: JSON.stringify([
         'Your relationship skills are strong - balance external focus with authenticity',
         'Consider balancing stakeholder management with self-expression',
         'Ensure internal team development receives adequate attention',
-        'Maintain authentic leadership while managing perceptions'
+        'Maintain authentic Inner Personawhile managing perceptions'
       ]),
     },
     {
       name: 'The Strategic Influencer',
-      description: 'You excel at understanding organizational dynamics and driving results through strategic influence. Your ability to navigate complex systems and make things happen is a valuable leadership asset.',
+      description: 'You excel at understanding organizational dynamics and driving results through strategic influence. Your ability to navigate complex systems and make things happen is a valuable Inner Personaasset.',
       characteristics: JSON.stringify({
         researchName: 'The Power Broker',
         publicName: 'The Strategic Influencer',
@@ -528,7 +528,7 @@ async function main() {
       ]),
       growthAreas: JSON.stringify([
         'Your influence capabilities are impressive - consider collaborative approaches',
-        'Explore how collaborative leadership can amplify your strong results',
+        'Explore how collaborative Inner Personacan amplify your strong results',
         'Balance strategic influence with inclusive decision-making',
         'Use influence to empower others and build organizational capability'
       ]),
@@ -631,7 +631,7 @@ async function main() {
     },
     {
       name: 'The Authentic Communicator',
-      description: 'Your authentic, direct communication style brings clarity and transparency to leadership interactions. Teams appreciate knowing exactly where they stand and value your honest, straightforward approach.',
+      description: 'Your authentic, direct communication style brings clarity and transparency to Inner Personainteractions. Teams appreciate knowing exactly where they stand and value your honest, straightforward approach.',
       characteristics: JSON.stringify({
         researchName: 'The Unfiltered Reactor',
         publicName: 'The Authentic Communicator',
@@ -665,20 +665,20 @@ async function main() {
   console.log('📝 Creating sample assessments...');
   const users = await prisma.users.findMany();
   
-  // Create completed 54-question assessment for Bob (Professional Leadership Schema Assessment)
+  // Create completed 54-question assessment for Bob (Professional Inner PersonaSchema Assessment)
   const bob = users.find((u: any) => u.firstName === 'Bob');
   if (bob) {
     // Generate realistic 54-question Likert scale responses for "The Visionary" persona
     const bobResponses: Record<string, string> = {};
     
-    // Questions 1-54: Professional Leadership Schema Assessment (Likert scale 1-5)
+    // Questions 1-54: Professional Inner PersonaSchema Assessment (Likert scale 1-5)
     // Pattern for "The Visionary" - strong strategic thinking, high vision, moderate execution
     const visionaryPattern = [
       // Strategic thinking questions (high scores 4-5)
       5, 4, 5, 4, 5, 4, 5, 4, 4, 5,
       // Innovation and change questions (high scores)
       5, 4, 5, 4, 5, 5, 4, 5, 4, 4,
-      // People leadership questions (moderate to high)
+      // People Inner Personaquestions (moderate to high)
       4, 3, 4, 4, 3, 4, 4, 3, 4, 3,
       // Detail and execution questions (moderate scores 2-3)
       3, 2, 3, 3, 2, 3, 2, 3, 3, 2,

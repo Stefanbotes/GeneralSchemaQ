@@ -1,7 +1,7 @@
 # DeepAgent Preview Mode Investigation - Final Summary
 
 **Date**: October 21, 2025  
-**Project**: NTAQV2 Leadership Assessment App  
+**Project**: NTAQV2 Inner PersonaAssessment App  
 **Status**: ✅ RESOLVED
 
 ---

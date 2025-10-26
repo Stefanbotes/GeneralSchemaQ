@@ -243,7 +243,7 @@ export function AssessmentClient() {
   // Report
   const handleDownloadReport = async () => {
     try {
-      toast.loading('Generating your leadership summary...');
+      toast.loading('Generating your Inner Personasummary...');
       const res = await fetch('/api/reports/generate-tier1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -266,7 +266,7 @@ export function AssessmentClient() {
       a.remove();
       URL.revokeObjectURL(url);
       toast.dismiss();
-      toast.success('Leadership summary downloaded!');
+      toast.success('Inner Personasummary downloaded!');
     } catch {
       toast.dismiss();
       toast.error('Failed to download report.');
@@ -301,7 +301,7 @@ export function AssessmentClient() {
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Loading Assessment</h3>
-            <p className="text-gray-500">Preparing your 108-question leadership assessment...</p>
+            <p className="text-gray-500">Preparing your 108-question Inner Personaassessment...</p>
           </CardContent>
         </Card>
       </div>

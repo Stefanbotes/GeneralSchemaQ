@@ -142,7 +142,7 @@ export class FrameworkReportGenerator {
             <p>Report Generated: ${new Date().toLocaleDateString()}</p>
         </div>
 
-        <h2>🎯 Primary Leadership Profile</h2>
+        <h2>🎯 Primary Inner PersonaProfile</h2>
         <div class="primary-persona">
             <div style="display: flex; align-items: center; margin-bottom: 25px;">
                 <div style="background: #7c3aed; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; margin-right: 20px;">
@@ -155,7 +155,7 @@ export class FrameworkReportGenerator {
                 <div class="score-badge">${primary.percentage}% Alignment</div>
             </div>
             
-            <h4>Leadership Description:</h4>
+            <h4>Inner PersonaDescription:</h4>
             <p>${primary.publicDescription}</p>
             
             <div class="strength-card">
@@ -178,7 +178,7 @@ export class FrameworkReportGenerator {
             </div>
         </div>
 
-        <h2>🔍 Your Unique Leadership Signature</h2>
+        <h2>🔍 Your Unique Inner PersonaSignature</h2>
         <div class="integration-section">
             <h4>Secondary Strengths Integration:</h4>
             
@@ -207,7 +207,7 @@ export class FrameworkReportGenerator {
                 ${this.generateMediumTermActions(primary)}
             </ol>
             
-            <h3>Long-term Leadership Evolution (Next 6-12 months):</h3>
+            <h3>Long-term Inner PersonaEvolution (Next 6-12 months):</h3>
             <ol>
                 ${this.generateLongTermActions(primary)}
             </ol>
@@ -249,7 +249,7 @@ export class FrameworkReportGenerator {
 
         <div style="background: #7c3aed; color: white; padding: 30px; border-radius: 8px; margin: 40px 0; text-align: center;">
             <h3 style="color: white; margin-top: 0;">Your ${primary.strengthFocus.toLowerCase()} creates ${this.getImpactStatement(primary)}.</h3>
-            <p style="margin-bottom: 0;">Continue building on your natural ${primary.publicName.toLowerCase().replace('the ', '')} strengths while developing the integration strategies outlined in this report to maximize your leadership impact and organizational effectiveness.</p>
+            <p style="margin-bottom: 0;">Continue building on your natural ${primary.publicName.toLowerCase().replace('the ', '')} strengths while developing the integration strategies outlined in this report to maximize your Inner Personaimpact and organizational effectiveness.</p>
         </div>
 
         <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b; font-size: 14px;">
@@ -393,7 +393,7 @@ export class FrameworkReportGenerator {
             <table style="width: 100%; border: none;">
                 <tr><td><strong>Assessment Date:</strong></td><td>${options.assessmentDate}</td></tr>
                 <tr><td><strong>Participant Code:</strong></td><td>${options.assessmentId}</td></tr>
-                <tr><td><strong>Assessment Protocol:</strong></td><td>Leadership Schema Assessment (108-item)</td></tr>
+                <tr><td><strong>Assessment Protocol:</strong></td><td>Inner PersonaSchema Assessment (108-item)</td></tr>
                 <tr><td><strong>Completion Status:</strong></td><td>100% (108/108 items completed)</td></tr>
                 <tr><td><strong>Overall Clinical Significance:</strong></td><td>${analysis.overallClinicalSignificance}</td></tr>
             </table>
@@ -409,8 +409,8 @@ export class FrameworkReportGenerator {
             <h4>Clinical Definition & Manifestation:</h4>
             <p>${primary.clinicalDescription}</p>
             
-            <h4>Organizational Leadership Context:</h4>
-            <p>In leadership contexts, this schema manifests as ${primary.strengthFocus.toLowerCase()} behaviors that can be both adaptive and potentially problematic depending on organizational context and activation intensity.</p>
+            <h4>Organizational Inner PersonaContext:</h4>
+            <p>In Inner Personacontexts, this schema manifests as ${primary.strengthFocus.toLowerCase()} behaviors that can be both adaptive and potentially problematic depending on organizational context and activation intensity.</p>
         </div>
 
         <h2>Complete Domain Analysis</h2>
@@ -485,20 +485,20 @@ export class FrameworkReportGenerator {
             <h2>Research Implications</h2>
             
             <h3>Schema Therapy Research:</h3>
-            <p>This profile contributes to understanding of schema activation patterns in organizational leadership contexts, particularly regarding ${primary.domain.toLowerCase()} domain schemas and their manifestation in professional environments.</p>
+            <p>This profile contributes to understanding of schema activation patterns in organizational Inner Personacontexts, particularly regarding ${primary.domain.toLowerCase()} domain schemas and their manifestation in professional environments.</p>
             
             <h3>Organizational Psychology Research:</h3>
-            <p>Findings support schema-based leadership models and suggest specific interventions for ${primary.clinicalName.toLowerCase().replace('the ', '')} patterns in organizational contexts.</p>
+            <p>Findings support schema-based Inner Personamodels and suggest specific interventions for ${primary.clinicalName.toLowerCase().replace('the ', '')} patterns in organizational contexts.</p>
             
-            <h3>Leadership Development Research:</h3>
+            <h3>Inner PersonaDevelopment Research:</h3>
             <p>Profile suggests targeted development approaches focused on ${primary.strengthFocus.toLowerCase()} enhancement while addressing clinical considerations for optimal organizational functioning.</p>
         </div>
 
         <div style="margin-top: 50px; padding-top: 30px; border-top: 3px solid #dc2626; text-align: center; color: #64748b; font-size: 14px;">
             <p><strong>CONFIDENTIAL CLINICAL ASSESSMENT</strong></p>
-            <p>This clinical assessment is based on the Schema-Focused Leadership Assessment protocol.</p>
+            <p>This clinical assessment is based on the Schema-Focused Inner PersonaAssessment protocol.</p>
             <p>Assessment ID: ${options.assessmentId} | Clinical Analysis Generated: ${new Date().toLocaleDateString()}</p>
-            <p>Clinical Leadership Assessment © 2025 | Requires Clinical Supervision</p>
+            <p>Clinical Inner PersonaAssessment © 2025 | Requires Clinical Supervision</p>
         </div>
     </div>
 </body>
@@ -513,21 +513,21 @@ export class FrameworkReportGenerator {
         "Creates team alignment through connection and loyalty focus, establishing strong interpersonal bonds within group dynamics",
         "Navigates organizational complexity by leveraging relationship capital to build bridges and facilitate communication",
         "Builds strategic influence through deep personal connections, enabling trust-based collaboration in planning processes",
-        "Establishes leadership credibility via consistent relationship investment, which creates sustainable team loyalty and engagement"
+        "Establishes Inner Personacredibility via consistent relationship investment, which creates sustainable team loyalty and engagement"
       ],
       "The Thoughtful Strategist": [
         "Demonstrates careful planning and analysis in decision-making processes, prioritizing thorough evaluation and risk assessment",
         "Creates team confidence through systematic thinking and preparation, establishing reliable strategic direction",
         "Navigates organizational complexity by leveraging analytical depth to identify optimal paths forward",
         "Builds strategic influence through well-researched insights, enabling data-driven collaboration in planning processes",
-        "Establishes leadership credibility via consistent strategic thinking, which builds trust in long-term planning capabilities"
+        "Establishes Inner Personacredibility via consistent strategic thinking, which builds trust in long-term planning capabilities"
       ],
       "The Focus Leader": [
         "Demonstrates task focus and clarity in decision-making processes, prioritizing objective achievement and goal alignment",
         "Creates team productivity through results-driven clarity, establishing clear performance expectations",
         "Navigates organizational complexity by leveraging focus discipline to maintain direction despite distractions",
         "Builds strategic influence through consistent execution, enabling achievement-oriented collaboration in planning processes",
-        "Establishes leadership credibility via reliable delivery focus, which creates trust in goal achievement capabilities"
+        "Establishes Inner Personacredibility via reliable delivery focus, which creates trust in goal achievement capabilities"
       ]
     };
     
@@ -536,7 +536,7 @@ export class FrameworkReportGenerator {
       `Creates team alignment through ${persona.strengthFocus.toLowerCase()}, establishing consistent performance patterns`,
       `Navigates organizational complexity by leveraging ${persona.strengthFocus.toLowerCase()} to optimize outcomes`,
       `Builds strategic influence through ${persona.strengthFocus.toLowerCase()}, enabling effective collaboration`,
-      `Establishes leadership credibility via consistent ${persona.strengthFocus.toLowerCase()}, which builds stakeholder confidence`
+      `Establishes Inner Personacredibility via consistent ${persona.strengthFocus.toLowerCase()}, which builds stakeholder confidence`
     ];
     
     return personaImplications.map(impl => `<li>${impl}</li>`).join('');
@@ -547,7 +547,7 @@ export class FrameworkReportGenerator {
       "The Relationship Champion": [
         "Team members experience strong emotional connection and support in their work environment",
         "Team performance benefits from enhanced collaboration and trust-based problem-solving approaches",
-        "Team culture is strengthened through loyalty-building and relationship-focused leadership modeling",
+        "Team culture is strengthened through loyalty-building and relationship-focused Inner Personamodeling",
         "Team development is supported via personal investment and individual attention to growth needs",
         "Team capabilities are expanded through collaborative skill development and relationship capital building"
       ],
@@ -561,7 +561,7 @@ export class FrameworkReportGenerator {
       "The Focus Leader": [
         "Team members experience clear direction and results-focused guidance in their work environment",
         "Team performance benefits from enhanced productivity and goal-oriented problem-solving approaches",
-        "Team culture is strengthened through achievement focus and task-oriented leadership modeling",
+        "Team culture is strengthened through achievement focus and task-oriented Inner Personamodeling",
         "Team development is supported via performance optimization and execution skill development",
         "Team capabilities are expanded through disciplined focus and results-oriented skill building"
       ]
@@ -570,7 +570,7 @@ export class FrameworkReportGenerator {
     const personaBenefits = benefits[persona.publicName] || [
       `Team members experience ${persona.strengthFocus.toLowerCase()} support in their work environment`,
       `Team performance benefits from ${persona.strengthFocus.toLowerCase()}-oriented problem-solving approaches`,
-      `Team culture is enhanced through ${persona.strengthFocus.toLowerCase()} leadership modeling`,
+      `Team culture is enhanced through ${persona.strengthFocus.toLowerCase()} Inner Personamodeling`,
       `Team development is supported via ${persona.strengthFocus.toLowerCase()} skill development`,
       `Team capabilities are expanded through ${persona.strengthFocus.toLowerCase()} emphasis and skill building`
     ];
@@ -585,7 +585,7 @@ export class FrameworkReportGenerator {
         "<strong>Independence Building:</strong> Identify team members ready for increased autonomy and gradually reduce check-in frequency",
         "<strong>Efficiency Integration:</strong> Balance relationship investment with task completion by time-blocking relationship activities",
         "<strong>Delegation Practice:</strong> Choose one recurring task weekly to delegate completely, resisting the urge to over-monitor",
-        "<strong>Self-Care Scheduling:</strong> Block 15 minutes daily for personal needs to model sustainable leadership practices"
+        "<strong>Self-Care Scheduling:</strong> Block 15 minutes daily for personal needs to model sustainable Inner Personapractices"
       ],
       "The Thoughtful Strategist": [
         "<strong>Visibility Enhancement:</strong> Share one strategic insight publicly each day through team communications or meetings",
@@ -621,13 +621,13 @@ export class FrameworkReportGenerator {
         "<strong>Mentoring Program Design:</strong> Create structured mentoring relationships that leverage your connection abilities",
         "<strong>360-Degree Feedback:</strong> Implement comprehensive feedback system to understand relationship impact across the organization",
         "<strong>Boundary Management Systems:</strong> Develop policies and practices that maintain relationships while protecting time and energy",
-        "<strong>Leadership Philosophy Integration:</strong> Create written leadership approach that combines relationship excellence with operational effectiveness"
+        "<strong>Inner PersonaPhilosophy Integration:</strong> Create written Inner Personaapproach that combines relationship excellence with operational effectiveness"
       ]
     };
     
     const defaultActions = [
       `<strong>Skill Integration Program:</strong> Develop complementary skills that enhance your natural ${persona.strengthFocus.toLowerCase()}`,
-      `<strong>Leadership Style Refinement:</strong> Work with coach or mentor to optimize your ${persona.strengthFocus.toLowerCase()} approach`,
+      `<strong>Inner PersonaStyle Refinement:</strong> Work with coach or mentor to optimize your ${persona.strengthFocus.toLowerCase()} approach`,
       `<strong>Organizational Impact Assessment:</strong> Measure and document the organizational value of your ${persona.strengthFocus.toLowerCase()}`,
       `<strong>Team Development Initiative:</strong> Create program that builds team capabilities in your strength areas`,
       `<strong>Cross-Functional Collaboration:</strong> Apply your ${persona.strengthFocus.toLowerCase()} in new organizational contexts`
@@ -640,9 +640,9 @@ export class FrameworkReportGenerator {
   private generateLongTermActions(persona: PersonaScore): string {
     const actions: Record<string, string[]> = {
       "The Relationship Champion": [
-        "<strong>Legacy Leadership Development:</strong> Evolve toward integrated relationship-systems leadership that builds both connection and organizational capability",
+        "<strong>Legacy Inner PersonaDevelopment:</strong> Evolve toward integrated relationship-systems Inner Personathat builds both connection and organizational capability",
         "<strong>Culture Architecture:</strong> Use relationship expertise to design and implement organizational cultures that thrive on authentic connection",
-        "<strong>Leadership Philosophy Mastery:</strong> Develop comprehensive leadership framework that demonstrates how relationship excellence drives business results",
+        "<strong>Inner PersonaPhilosophy Mastery:</strong> Develop comprehensive Inner Personaframework that demonstrates how relationship excellence drives business results",
         "<strong>Executive Coaching Mastery:</strong> Master ability to develop other leaders' relationship and connection capabilities",
         "<strong>Organizational Transformation Leadership:</strong> Lead culture change initiatives that integrate relationship excellence with operational performance"
       ]
@@ -650,7 +650,7 @@ export class FrameworkReportGenerator {
     
     const defaultActions = [
       `<strong>Mastery Development:</strong> Become organizational expert in ${persona.strengthFocus.toLowerCase()} applications`,
-      `<strong>Leadership Philosophy Completion:</strong> Develop comprehensive approach that integrates ${persona.strengthFocus.toLowerCase()} with strategic leadership`,
+      `<strong>Inner PersonaPhilosophy Completion:</strong> Develop comprehensive approach that integrates ${persona.strengthFocus.toLowerCase()} with strategic leadership`,
       `<strong>Mentoring Excellence:</strong> Master development of other leaders' capabilities in ${persona.strengthFocus.toLowerCase()}`,
       `<strong>Organizational Innovation:</strong> Pioneer new approaches that leverage ${persona.strengthFocus.toLowerCase()} for competitive advantage`,
       `<strong>Legacy Building:</strong> Create lasting organizational systems that embody your ${persona.strengthFocus.toLowerCase()} approach`
@@ -661,11 +661,11 @@ export class FrameworkReportGenerator {
   }
 
   private generateIntegrationPattern(primary: PersonaScore, secondary: PersonaScore): string {
-    return `Your ${primary.publicName.toLowerCase().replace('the ', '')} approach is enhanced by ${secondary.publicName.toLowerCase().replace('the ', '')} capabilities, creating a leadership style that combines ${primary.strengthFocus.toLowerCase()} with ${secondary.strengthFocus.toLowerCase()}.`;
+    return `Your ${primary.publicName.toLowerCase().replace('the ', '')} approach is enhanced by ${secondary.publicName.toLowerCase().replace('the ', '')} capabilities, creating a Inner Personastyle that combines ${primary.strengthFocus.toLowerCase()} with ${secondary.strengthFocus.toLowerCase()}.`;
   }
 
   private generateCombinedImpact(primary: PersonaScore, secondary: PersonaScore): string {
-    return `This integration enables you to deliver ${primary.strengthFocus.toLowerCase()} while simultaneously providing ${secondary.strengthFocus.toLowerCase()}, creating multidimensional leadership value for your organization.`;
+    return `This integration enables you to deliver ${primary.strengthFocus.toLowerCase()} while simultaneously providing ${secondary.strengthFocus.toLowerCase()}, creating multidimensional Inner Personavalue for your organization.`;
   }
 
   private generateSupportingDynamic(primary: PersonaScore, tertiary: PersonaScore): string {
@@ -709,7 +709,7 @@ export class FrameworkReportGenerator {
       `Appreciate and actively engage with this leader's ${persona.strengthFocus.toLowerCase()} approach`,
       `Provide feedback on how their ${persona.strengthFocus.toLowerCase()} impacts team performance and satisfaction`,
       `Support their development by sharing what works best for ${persona.strengthFocus.toLowerCase()} collaboration`,
-      `Contribute your own strengths to complement their ${persona.strengthFocus.toLowerCase()} leadership style`
+      `Contribute your own strengths to complement their ${persona.strengthFocus.toLowerCase()} Inner Personastyle`
     ];
     
     return guidance.map(item => `<li>${item}</li>`).join('');
@@ -728,12 +728,12 @@ export class FrameworkReportGenerator {
 
   private generateOrganizationalFit(persona: PersonaScore): string {
     const fit: Record<string, string> = {
-      "The Relationship Champion": "This leadership profile thrives in collaborative, relationship-focused organizational cultures and may face challenges in highly transactional or purely results-driven environments. Consider placement in roles requiring stakeholder engagement, team building, or culture development for optimal effectiveness.",
-      "The Thoughtful Strategist": "This leadership profile thrives in strategic, planning-focused organizational cultures and may face challenges in fast-paced, execution-only environments. Consider placement in roles requiring analysis, strategic thinking, or complex problem-solving for optimal effectiveness.",
-      "The Focus Leader": "This leadership profile thrives in results-oriented, performance-focused organizational cultures and may face challenges in highly relationship-dependent or emotionally complex environments. Consider placement in roles requiring execution excellence, goal achievement, or operational leadership for optimal effectiveness."
+      "The Relationship Champion": "This Inner Personaprofile thrives in collaborative, relationship-focused organizational cultures and may face challenges in highly transactional or purely results-driven environments. Consider placement in roles requiring stakeholder engagement, team building, or culture development for optimal effectiveness.",
+      "The Thoughtful Strategist": "This Inner Personaprofile thrives in strategic, planning-focused organizational cultures and may face challenges in fast-paced, execution-only environments. Consider placement in roles requiring analysis, strategic thinking, or complex problem-solving for optimal effectiveness.",
+      "The Focus Leader": "This Inner Personaprofile thrives in results-oriented, performance-focused organizational cultures and may face challenges in highly relationship-dependent or emotionally complex environments. Consider placement in roles requiring execution excellence, goal achievement, or operational Inner Personafor optimal effectiveness."
     };
     
-    return fit[persona.publicName] || `This leadership profile tends to excel in environments that value ${persona.strengthFocus.toLowerCase()} and may need additional support in contexts requiring different primary capabilities.`;
+    return fit[persona.publicName] || `This Inner Personaprofile tends to excel in environments that value ${persona.strengthFocus.toLowerCase()} and may need additional support in contexts requiring different primary capabilities.`;
   }
 
   private getImpactStatement(persona: PersonaScore): string {
@@ -748,7 +748,7 @@ export class FrameworkReportGenerator {
       "Security & Predictability": "stable foundation for team performance",
       "Team Support & Generosity": "strong team loyalty and high engagement",
       "Flexibility & Consensus Building": "collaborative success and team harmony",
-      "Collaborative Decision-Making": "inclusive leadership and team alignment",
+      "Collaborative Decision-Making": "inclusive Inner Personaand team alignment",
       "Professional Relationships": "strategic stakeholder engagement and influence",
       "Organizational Navigation": "results through strategic influence and systems thinking",
       "Realistic Assessment & Planning": "practical decisions and effective preparation",

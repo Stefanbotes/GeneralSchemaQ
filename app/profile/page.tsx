@@ -121,7 +121,7 @@ export default async function ProfilePage() {
             <div className="text-center py-8 text-gray-500">
               <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p>No assessments completed yet.</p>
-              <p className="text-sm">Start your first leadership assessment to see your results here.</p>
+              <p className="text-sm">Start your first Inner Personaassessment to see your results here.</p>
               <Link href="/assessment">
                 <Button className="mt-4">
                   Take Assessment Now

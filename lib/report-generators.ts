@@ -40,8 +40,8 @@ export async function generateEnhancedAnalysis(responses: Record<string, any>, p
     publicName: PUBLIC_PERSONA_BY_SCHEMA[primary.schemaLabel] || primary.schemaLabel, // Map to public persona name
     clinicalName: primary.schemaLabel,
     domain: DOMAIN_BY_SCHEMA[primary.schemaLabel] || 'Unknown',
-    strengthFocus: `${PUBLIC_PERSONA_BY_SCHEMA[primary.schemaLabel] || primary.schemaLabel} leadership approach`,
-    developmentEdge: `Balancing ${primary.schemaLabel} with other leadership styles`,
+    strengthFocus: `${PUBLIC_PERSONA_BY_SCHEMA[primary.schemaLabel] || primary.schemaLabel} Inner Personaapproach`,
+    developmentEdge: `Balancing ${primary.schemaLabel} with other Inner Personastyles`,
     publicDescription: `Strong activation in ${primary.schemaLabel} pattern`,
     percentage: Math.round(primary.index0to100) // Use index0to100 for percentage
   };
@@ -51,10 +51,10 @@ export async function generateEnhancedAnalysis(responses: Record<string, any>, p
   // Generate tier-specific data
   return {
     tier1: {
-      summary: `Your assessment reveals ${primaryPersona.publicName} as your primary leadership style. This persona reflects your natural strengths in ${primaryPersona.strengthFocus.toLowerCase()}. Your approach to leadership emphasizes collaborative relationship-building and strategic thinking that drives organizational success.`,
+      summary: `Your assessment reveals ${primaryPersona.publicName} as your primary Inner Personastyle. This persona reflects your natural strengths in ${primaryPersona.strengthFocus.toLowerCase()}. Your approach to Inner Personaemphasizes collaborative relationship-building and strategic thinking that drives organizational success.`,
       keyStrengths: [
         primaryPersona.strengthFocus,
-        'Strategic leadership approach',
+        'Strategic Inner Personaapproach',
         'Team-focused decision making',
         'Balanced perspective on organizational challenges',
         'Natural ability to build trust and rapport'
@@ -62,8 +62,8 @@ export async function generateEnhancedAnalysis(responses: Record<string, any>, p
       growthAreas: [
         primaryPersona.developmentEdge,
         'Expanding influence across diverse stakeholder groups',
-        'Integrating multiple leadership styles as needed',
-        'Continuous leadership skill development'
+        'Integrating multiple Inner Personastyles as needed',
+        'Continuous Inner Personaskill development'
       ],
       primaryPersona: getPersonaForTier(primaryPersona, 1)
     },
@@ -71,11 +71,11 @@ export async function generateEnhancedAnalysis(responses: Record<string, any>, p
       // ✅ LEADERSHIP: Shared schema scores
       primaryPersona: getPersonaForTier(primaryPersona, 2),
       supportingPersonas: topPersonas.slice(1, 3).map(p => getPersonaForTier(p, 2)),
-      detailedAnalysis: `Your leadership profile shows ${primaryPersona.publicName} (${primaryPersona.clinicalName}) as your dominant pattern, indicating ${primaryPersona.publicDescription}`,
+      detailedAnalysis: `Your Inner Personaprofile shows ${primaryPersona.publicName} (${primaryPersona.clinicalName}) as your dominant pattern, indicating ${primaryPersona.publicDescription}`,
       developmentRecommendations: [
         primaryPersona.developmentEdge,
         'Practice integrating insights from your supporting personas',
-        'Develop situational leadership flexibility',
+        'Develop situational Inner Personaflexibility',
         'Build on your natural strengths while addressing growth areas'
       ],
       // 🔍 DEBUGGING BREADCRUMB: Top 5 canonical scores for verification
@@ -95,7 +95,7 @@ export async function generateEnhancedAnalysis(responses: Record<string, any>, p
         primaryPersona.developmentEdge,
         'Schema-focused coaching to address underlying patterns',
         'Cognitive behavioral interventions for pattern modification',
-        'Mindfulness-based leadership development'
+        'Mindfulness-based Inner Personadevelopment'
       ],
       // 🔍 DEBUGGING BREADCRUMB: Top 5 canonical scores for verification
       canonicalTop5: rankedScores.slice(0, 5).map((score, index) => ({
@@ -143,7 +143,7 @@ export function generateTier1FromCanonicalLineage(lineage: any[], participantDat
       })),
       keyStrengths: getKeyStrengths(primary.schemaId),
       growthAreas: getGrowthAreas(primary.schemaId),
-      summary: `Your assessment reveals ${primary.persona} as your primary leadership style. This reflects a ${primary.band.toLowerCase()} activation pattern (${primary.index}/100 index) that shapes your natural approach to leadership and team dynamics.`,
+      summary: `Your assessment reveals ${primary.persona} as your primary Inner Personastyle. This reflects a ${primary.band.toLowerCase()} activation pattern (${primary.index}/100 index) that shapes your natural approach to Inner Personaand team dynamics.`,
       canonicalTop5: lineage.slice(0, 5).map((item, index) => ({
         schemaId: item.schemaId,
         tScore: item.tScore,
@@ -162,8 +162,8 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
   // Generate secondary styles HTML (if any exist)
   const secondariesHTML = secondaries.length > 0 ? `
     <div style="background: #fefefe; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #8b5cf6;">
-        <h4>🔗 Secondary Leadership Styles</h4>
-        <p style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">Your supporting styles provide additional leadership capabilities and flexibility.</p>
+        <h4>🔗 Secondary Inner PersonaStyles</h4>
+        <p style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">Your supporting styles provide additional Inner Personacapabilities and flexibility.</p>
         
         ${secondaries.map((secondary: any, index: number) => `
             <div style="background: #f8fafc; padding: 18px; border-radius: 6px; margin: 15px 0; border-left: 3px solid #8b5cf6;">
@@ -188,7 +188,7 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leadership Assessment Summary - ${participant.name}</title>
+    <title>Inner PersonaAssessment Summary - ${participant.name}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -265,8 +265,8 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
     <div class="report-container">
         <div class="header">
             <div class="logo">Inner Personas Assessment</div>
-            <h1>Your Leadership Summary</h1>
-            <p>Personal Leadership Insights & Strengths</p>
+            <h1>Your Inner PersonaSummary</h1>
+            <p>Personal Inner PersonaInsights & Strengths</p>
         </div>
 
         <div style="margin-bottom: 25px;">
@@ -281,7 +281,7 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
         </div>
 
         <div class="summary-section">
-            <h3>🌟 Your Primary Leadership Style: ${primary.name}</h3>
+            <h3>🌟 Your Primary Inner PersonaStyle: ${primary.name}</h3>
             <p>${analysis.tier1.summary}</p>
             <p style="font-size: 14px; color: #6b7280; margin-top: 15px;">
                 <strong>Domain:</strong> ${primary.domain} | 
@@ -292,7 +292,7 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
         ${secondariesHTML}
 
         <div class="strengths-list">
-            <h4>✨ Your Natural Leadership Strengths</h4>
+            <h4>✨ Your Natural Inner PersonaStrengths</h4>
             <ul>
                 ${analysis.tier1.keyStrengths.map((strength: any) => `<li>${strength}</li>`).join('')}
             </ul>
@@ -312,7 +312,7 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
 
         <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h4>🚀 Next Steps</h4>
-            <p>Your assessment reveals ${primary.band.toLowerCase()} activation in the ${primary.domain.toLowerCase()} domain${secondaries.length > 0 ? ', supported by ' + secondaries.length + ' secondary style' + (secondaries.length > 1 ? 's' : '') : ''}. This provides a foundation for targeted leadership development that builds on your natural patterns while expanding your leadership toolkit.</p>
+            <p>Your assessment reveals ${primary.band.toLowerCase()} activation in the ${primary.domain.toLowerCase()} domain${secondaries.length > 0 ? ', supported by ' + secondaries.length + ' secondary style' + (secondaries.length > 1 ? 's' : '') : ''}. This provides a foundation for targeted Inner Personadevelopment that builds on your natural patterns while expanding your Inner Personatoolkit.</p>
         </div>
 
         <div class="proof-stamp">
@@ -323,7 +323,7 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
 
         <div class="footer">
             <p><strong>Thank you for completing the Inner Personas Assessment!</strong></p>
-            <p>This summary is derived from the same canonical scoring framework used in professional analysis. For detailed development planning, consider working with a qualified leadership coach.</p>
+            <p>This summary is derived from the same canonical scoring framework used in professional analysis. For detailed development planning, consider working with a qualified Inner Personacoach.</p>
             <p>Report generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>
     </div>
@@ -337,17 +337,17 @@ function getPersonaDescription(schemaId: string): string {
     // CANONICAL SCHEMA IDS
     "entitlement_grandiosity": "You demonstrate natural strategic influence and organizational navigation skills. Your ability to understand systems and drive results through strategic positioning makes you effective at achieving ambitious goals.",
     "subjugation": "You excel at maintaining harmony and building bridges between different perspectives. Your diplomatic flexibility helps teams work together effectively while ensuring everyone's needs are considered.",
-    "mistrust_abuse": "You bring careful strategic thinking and risk assessment to leadership decisions. Your thoughtful, protective approach helps teams avoid pitfalls and make well-considered choices.",
-    "enmeshment_undeveloped_self": "You excel at creating differentiated leadership that balances team needs with clear boundaries. Your ability to maintain autonomy while collaborating effectively builds strong organizational structures.",
+    "mistrust_abuse": "You bring careful strategic thinking and risk assessment to Inner Personadecisions. Your thoughtful, protective approach helps teams avoid pitfalls and make well-considered choices.",
+    "enmeshment_undeveloped_self": "You excel at creating differentiated Inner Personathat balances team needs with clear boundaries. Your ability to maintain autonomy while collaborating effectively builds strong organizational structures.",
     "insufficient_self_control_discipline": "You bring authentic communication and genuine expression that builds trust. Your spontaneous responses help teams navigate complex interpersonal dynamics effectively.",
-    "emotional_inhibition": "You provide steady, reliable leadership that helps teams maintain focus during challenging times. Your composed approach creates stability and confidence.",
+    "emotional_inhibition": "You provide steady, reliable Inner Personathat helps teams maintain focus during challenging times. Your composed approach creates stability and confidence.",
     "self_sacrifice": "You demonstrate exceptional generosity and commitment to supporting others' success. Your service-oriented approach creates teams where people feel valued and supported.",
     "approval_seeking_recognition_seeking": "You excel at building relationships and managing stakeholder perceptions. Your ability to cultivate positive connections helps create collaborative, high-performing teams.",
     "abandonment_instability": "You demonstrate strong relationship-building capabilities that create loyal, connected teams. Your ability to foster deep professional bonds enhances team cohesion and performance.",
-    "defectiveness_shame": "You provide thoughtful, behind-the-scenes leadership that ensures teams have what they need to succeed. Your careful planning and strategic thinking create solid foundations for team success.",
+    "defectiveness_shame": "You provide thoughtful, behind-the-scenes Inner Personathat ensures teams have what they need to succeed. Your careful planning and strategic thinking create solid foundations for team success.",
     "emotional_deprivation": "You excel at focus and resource management, ensuring teams stay aligned on priorities. Your selective approach to engagement helps maintain clarity and direction.",
     "social_isolation_alienation": "You bring unique perspectives and independent thinking that drives innovation. Your ability to see beyond conventional approaches helps teams break through traditional limitations.",
-    "dependence_incompetence": "You bring careful evaluation and thorough analysis to leadership decisions. Your thoughtful approach ensures teams consider all angles before moving forward.",
+    "dependence_incompetence": "You bring careful evaluation and thorough analysis to Inner Personadecisions. Your thoughtful approach ensures teams consider all angles before moving forward.",
     "vulnerability_to_harm_illness": "You demonstrate self-sufficiency and personal accountability that sets a strong example for teams. Your independent achievements inspire others to take ownership.",
     "failure": "You demonstrate resilience and recovery capabilities that help teams navigate setbacks. Your persistence and learning focus create environments where challenges become growth opportunities.",
     "negativity_pessimism": "You bring balanced assessment and practical planning to leadership. Your realistic perspective helps teams set achievable goals and navigate challenges effectively.",
@@ -361,26 +361,26 @@ function getPersonaDescription(schemaId: string): string {
     "The Image Manager": "You excel at building relationships and managing stakeholder perceptions. Your ability to cultivate positive connections helps create collaborative, high-performing teams.",
     
     // DISCONNECTION & REJECTION
-    "The Guarded Strategist": "You bring careful strategic thinking and risk assessment to leadership decisions. Your thoughtful, protective approach helps teams avoid pitfalls and make well-considered choices.",
+    "The Guarded Strategist": "You bring careful strategic thinking and risk assessment to Inner Personadecisions. Your thoughtful, protective approach helps teams avoid pitfalls and make well-considered choices.",
     "The Clinger": "You demonstrate strong relationship-building capabilities that create loyal, connected teams. Your ability to foster deep professional bonds enhances team cohesion and performance.",
-    "The Invisible Operator": "You provide thoughtful, behind-the-scenes leadership that ensures teams have what they need to succeed. Your careful planning and strategic thinking create solid foundations for team success.",
+    "The Invisible Operator": "You provide thoughtful, behind-the-scenes Inner Personathat ensures teams have what they need to succeed. Your careful planning and strategic thinking create solid foundations for team success.",
     "The Withholder": "You excel at focus and resource management, ensuring teams stay aligned on priorities. Your selective approach to engagement helps maintain clarity and direction.",
     "The Outsider": "You bring unique perspectives and independent thinking that drives innovation. Your ability to see beyond conventional approaches helps teams break through traditional limitations.",
     
     // IMPAIRED AUTONOMY & PERFORMANCE
     "The Safety Strategist": "You excel at creating stable, secure environments where teams can perform consistently. Your focus on preparation and risk management builds organizational resilience.",
-    "The Self-Doubter": "You bring careful evaluation and thorough analysis to leadership decisions. Your thoughtful approach ensures teams consider all angles before moving forward.",
+    "The Self-Doubter": "You bring careful evaluation and thorough analysis to Inner Personadecisions. Your thoughtful approach ensures teams consider all angles before moving forward.",
     "The Reluctant Rely-er": "You demonstrate self-sufficiency and personal accountability that sets a strong example for teams. Your independent achievements inspire others to take ownership.",
     
     // OVERVIGILANCE & INHIBITION
-    "The Stoic Mask": "You provide steady, reliable leadership that helps teams maintain focus during challenging times. Your composed approach creates stability and confidence.",
+    "The Stoic Mask": "You provide steady, reliable Inner Personathat helps teams maintain focus during challenging times. Your composed approach creates stability and confidence.",
     "The Perfectionist Driver": "You demonstrate high standards and excellence that elevate team performance. Your commitment to quality ensures teams deliver their best work.",
     "The Cautious Realist": "You bring balanced assessment and practical planning to leadership. Your realistic perspective helps teams set achievable goals and navigate challenges effectively.",
     "The Harsh Enforcer": "You provide clear expectations and accountability standards that help teams perform consistently. Your focus on results drives organizational success.",
     "The Suppressed Voice": "You demonstrate thoughtful consideration and measured responses that create psychological safety for teams. Your careful approach encourages thoughtful dialogue.",
     "The Unfiltered Reactor": "You bring authentic communication and genuine expression that builds trust. Your spontaneous responses help teams navigate complex interpersonal dynamics."
   };
-  return descriptions[schemaId] || "You bring unique leadership capabilities that contribute to team effectiveness and organizational success.";
+  return descriptions[schemaId] || "You bring unique Inner Personacapabilities that contribute to team effectiveness and organizational success.";
 }
 
 function getKeyStrengths(schemaId: string): string[] {
@@ -390,7 +390,7 @@ function getKeyStrengths(schemaId: string): string[] {
       "Strategic influence and organizational navigation",
       "Natural ability to drive ambitious results", 
       "Systems thinking and strategic positioning",
-      "Goal-oriented leadership approach",
+      "Goal-oriented Inner Personaapproach",
       "Ability to mobilize resources effectively"
     ],
     "subjugation": [
@@ -408,7 +408,7 @@ function getKeyStrengths(schemaId: string): string[] {
       "Creating secure team environments"
     ],
     "enmeshment_undeveloped_self": [
-      "Differentiated leadership and clear boundaries",
+      "Differentiated Inner Personaand clear boundaries",
       "Autonomous decision-making capabilities",
       "Balancing individual and team needs",
       "Creating structured, secure environments",
@@ -422,14 +422,14 @@ function getKeyStrengths(schemaId: string): string[] {
       "Creating psychologically safe environments"
     ],
     "emotional_inhibition": [
-      "Steady leadership during challenges",
+      "Steady Inner Personaduring challenges",
       "Reliable composure and calm presence",
       "Creating stability for teams",
       "Consistent performance under pressure",
       "Building confidence through reliability"
     ],
     "self_sacrifice": [
-      "Service-oriented leadership approach",
+      "Service-oriented Inner Personaapproach",
       "Team support and generosity",
       "Creating supportive team environments",
       "Building loyalty through care and investment",
@@ -441,7 +441,7 @@ function getKeyStrengths(schemaId: string): string[] {
       "Strategic influence and organizational navigation",
       "Natural ability to drive ambitious results", 
       "Systems thinking and strategic positioning",
-      "Goal-oriented leadership approach",
+      "Goal-oriented Inner Personaapproach",
       "Ability to mobilize resources effectively"
     ],
     
@@ -454,7 +454,7 @@ function getKeyStrengths(schemaId: string): string[] {
       "Conflict de-escalation and resolution"
     ],
     "The Overgiver": [
-      "Service-oriented leadership approach",
+      "Service-oriented Inner Personaapproach",
       "Team support and generosity",
       "Creating supportive team environments",
       "Building loyalty through care and investment",
@@ -509,7 +509,7 @@ function getKeyStrengths(schemaId: string): string[] {
     
     // OVERVIGILANCE & INHIBITION
     "The Stoic Mask": [
-      "Steady leadership during challenges",
+      "Steady Inner Personaduring challenges",
       "Reliable composure and calm presence",
       "Creating stability for teams",
       "Consistent performance under pressure",
@@ -523,13 +523,13 @@ function getKeyStrengths(schemaId: string): string[] {
       "Commitment to superior results"
     ]
   };
-  return strengths[schemaId] || ["Natural leadership capabilities", "Strategic thinking", "Team collaboration", "Goal achievement", "Stakeholder engagement"];
+  return strengths[schemaId] || ["Natural Inner Personacapabilities", "Strategic thinking", "Team collaboration", "Goal achievement", "Stakeholder engagement"];
 }
 
 function getGrowthAreas(schemaId: string): string[] {
   const growthAreas: Record<string, string[]> = {
     "The Power Broker": [
-      "Balancing strategic drive with collaborative leadership approaches",
+      "Balancing strategic drive with collaborative Inner Personaapproaches",
       "Developing empathy and emotional awareness in team interactions", 
       "Sharing decision-making authority to develop others",
       "Managing intensity to maintain sustainable team performance"
@@ -543,8 +543,8 @@ function getGrowthAreas(schemaId: string): string[] {
     "The Overgiver": [
       "Maintaining healthy boundaries while sustaining your giving nature",
       "Expanding influence across diverse stakeholder groups",
-      "Integrating multiple leadership styles as needed",
-      "Continuous leadership skill development"
+      "Integrating multiple Inner Personastyles as needed",
+      "Continuous Inner Personaskill development"
     ],
     "The Guarded Strategist": [
       "Building comfort with calculated risk-taking and innovation",
@@ -553,7 +553,7 @@ function getGrowthAreas(schemaId: string): string[] {
       "Developing skills in rapid response and adaptability"
     ]
   };
-  return growthAreas[schemaId] || ["Expanding leadership versatility", "Building on natural strengths", "Developing complementary skills", "Continuous learning and growth"];
+  return growthAreas[schemaId] || ["Expanding Inner Personaversatility", "Building on natural strengths", "Developing complementary skills", "Continuous learning and growth"];
 }
 
 // ✅ SECONDARY STYLES CONTENT (schema-matched, client-friendly)
@@ -605,7 +605,7 @@ function getSecondaryStrengths(schemaId: string): string {
 function getSecondaryFocus(schemaId: string): string {
   const focus: Record<string, string> = {
     // CANONICAL SCHEMA IDS
-    "entitlement_grandiosity": "balance strategic drive with collaborative leadership approaches",
+    "entitlement_grandiosity": "balance strategic drive with collaborative Inner Personaapproaches",
     "subjugation": "assert needs while maintaining harmony; practice constructive conflict", 
     "mistrust_abuse": "calibrate trust levels; delegate to avoid over-control",
     "enmeshment_undeveloped_self": "maintain healthy boundaries; practice autonomous decision-making",
@@ -625,7 +625,7 @@ function getSecondaryFocus(schemaId: string): string {
     "punitiveness": "temper standards with empathy; focus on development vs punishment",
     
     // LEGACY PERSONA NAMES (backward compatibility)
-    "The Power Broker": "balance strategic drive with collaborative leadership approaches",
+    "The Power Broker": "balance strategic drive with collaborative Inner Personaapproaches",
     "The Over-Adapter": "assert needs while maintaining harmony; practice constructive conflict",
     "The Overgiver": "maintain boundaries while sustaining generosity; expand influence",
     "The Guarded Strategist": "calibrate trust levels; delegate to avoid over-control",
@@ -644,7 +644,7 @@ function getSecondaryFocus(schemaId: string): string {
     "The Self-Doubter": "build confidence in decision-making; trust analytical capabilities",
     "The Reluctant Rely-er": "practice strategic delegation; leverage team capabilities effectively"
   };
-  return focus[schemaId] || "develop complementary leadership skills; expand versatility";
+  return focus[schemaId] || "develop complementary Inner Personaskills; expand versatility";
 }
 
 // Enhanced Tier 1: Summary Report (Public Names, Strengths-Focused) - LEGACY VERSION
@@ -655,7 +655,7 @@ export function generateEnhancedTier1Report(analysis: any, participant: Particip
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leadership Assessment Summary - ${participant.name}</title>
+    <title>Inner PersonaAssessment Summary - ${participant.name}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -722,8 +722,8 @@ export function generateEnhancedTier1Report(analysis: any, participant: Particip
     <div class="report-container">
         <div class="header">
             <div class="logo">Inner Personas Assessment</div>
-            <h1>Your Leadership Summary</h1>
-            <p>Personal Leadership Insights & Strengths</p>
+            <h1>Your Inner PersonaSummary</h1>
+            <p>Personal Inner PersonaInsights & Strengths</p>
         </div>
 
         <div style="margin-bottom: 25px;">
@@ -737,12 +737,12 @@ export function generateEnhancedTier1Report(analysis: any, participant: Particip
         </div>
 
         <div class="summary-section">
-            <h3>🌟 Your Leadership Style: ${analysis.tier1.primaryPersona.name}</h3>
+            <h3>🌟 Your Inner PersonaStyle: ${analysis.tier1.primaryPersona.name}</h3>
             <p>${analysis.tier1.summary}</p>
         </div>
 
         <div class="strengths-list">
-            <h4>✨ Your Natural Leadership Strengths</h4>
+            <h4>✨ Your Natural Inner PersonaStrengths</h4>
             <ul>
                 ${analysis.tier1.keyStrengths.map((strength: any) => `<li>${strength}</li>`).join('')}
             </ul>
@@ -762,12 +762,12 @@ export function generateEnhancedTier1Report(analysis: any, participant: Particip
 
         <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h4>🚀 Next Steps</h4>
-            <p>Your assessment reveals natural leadership capabilities that can be further developed through focused growth activities. Consider exploring leadership development opportunities that build on your existing strengths while addressing growth areas.</p>
+            <p>Your assessment reveals natural Inner Personacapabilities that can be further developed through focused growth activities. Consider exploring Inner Personadevelopment opportunities that build on your existing strengths while addressing growth areas.</p>
         </div>
 
         <div class="footer">
             <p><strong>Thank you for completing the Inner Personas Assessment!</strong></p>
-            <p>This summary provides an overview of your leadership patterns. For more detailed development planning, consider working with a qualified leadership coach.</p>
+            <p>This summary provides an overview of your Inner Personapatterns. For more detailed development planning, consider working with a qualified Inner Personacoach.</p>
             <p>Report generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>
     </div>
@@ -775,7 +775,7 @@ export function generateEnhancedTier1Report(analysis: any, participant: Particip
 </html>`;
 }
 
-// Tier 2: Detailed Leadership Report (Development-Focused)
+// Tier 2: Detailed Inner PersonaReport (Development-Focused)
 export function generateTier2Report(analysis: ThreeTierAnalysis, participant: ParticipantData): string {
   const primary = analysis.tier2.primaryPersona;
   const supporting = analysis.tier2.supportingPersonas;
@@ -786,7 +786,7 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprehensive Leadership Report - ${participant.name}</title>
+    <title>Comprehensive Inner PersonaReport - ${participant.name}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -873,9 +873,9 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="logo">Comprehensive Leadership Report</div>
+            <div class="logo">Comprehensive Inner PersonaReport</div>
             <h1>${participant.name}${participant.organization ? ` - ${participant.organization}` : ''}</h1>
-            <p>Leadership Development Analysis</p>
+            <p>Inner PersonaDevelopment Analysis</p>
         </div>
 
         <div style="margin-bottom: 30px;">
@@ -889,7 +889,7 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
             <p><strong>Completion Status:</strong> 100% (All items completed)</p>
         </div>
 
-        <h2>🎯 Primary Leadership Profile: ${primary.personaName} (${primary.activationLevel}%)</h2>
+        <h2>🎯 Primary Inner PersonaProfile: ${primary.personaName} (${primary.activationLevel}%)</h2>
         
         <div class="persona-card">
             <div class="persona-header">
@@ -911,7 +911,7 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
 
         ${supporting.length > 0 ? `
         <h2>🔍 Supporting Inner Personas (60%+ Alignment)</h2>
-        <p>Your high scores across multiple personas create a complex, nuanced leadership profile:</p>
+        <p>Your high scores across multiple personas create a complex, nuanced Inner Personaprofile:</p>
         
         ${supporting.map((persona, index) => `
         <div class="supporting-persona">
@@ -925,13 +925,13 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
                 </div>
             </div>
             <p style="margin-bottom: 10px;"><strong>How it shows up in you:</strong> ${persona.developmentEdge}</p>
-            <p><strong>Integration with ${primary.personaName}:</strong> This pattern complements your primary style by adding depth and complexity to your leadership approach.</p>
+            <p><strong>Integration with ${primary.personaName}:</strong> This pattern complements your primary style by adding depth and complexity to your Inner Personaapproach.</p>
         </div>
         `).join('')}
         ` : ''}
 
         <div class="pattern-analysis">
-            <h3>🎯 Your Unique Leadership Pattern</h3>
+            <h3>🎯 Your Unique Inner PersonaPattern</h3>
             <p><strong>The "${analysis.tier2.leadershipPattern}" Profile:</strong></p>
             <p>${analysis.tier2.detailedAnalysis}</p>
         </div>
@@ -956,9 +956,9 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
         </div>
 
         <div style="background: #f0f9ff; padding: 25px; border-radius: 8px; margin: 25px 0;">
-            <h3>🌟 Celebrating Your Leadership Gifts</h3>
-            <p>Your ${primary.activationLevel}% alignment with ${primary.personaName} represents a distinctive and valuable leadership approach. You have the ability to ${primary.strengthFocus.toLowerCase()} while maintaining focus on organizational success.</p>
-            <p><strong>Your Leadership Superpower:</strong> ${primary.strengthFocus} combined with the complexity of your supporting personas creates a unique leadership style that can drive exceptional results when optimized.</p>
+            <h3>🌟 Celebrating Your Inner PersonaGifts</h3>
+            <p>Your ${primary.activationLevel}% alignment with ${primary.personaName} represents a distinctive and valuable Inner Personaapproach. You have the ability to ${primary.strengthFocus.toLowerCase()} while maintaining focus on organizational success.</p>
+            <p><strong>Your Inner PersonaSuperpower:</strong> ${primary.strengthFocus} combined with the complexity of your supporting personas creates a unique Inner Personastyle that can drive exceptional results when optimized.</p>
         </div>
 
         <div style="margin-top: 40px;">
@@ -992,12 +992,12 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
         </div>
 
         <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
-            <p style="margin: 0;"><strong>This detailed analysis is based on the Inner Personas Assessment framework. Your leadership profile represents unique strengths and development opportunities that can create exceptional leadership impact when optimized.</strong></p>
+            <p style="margin: 0;"><strong>This detailed analysis is based on the Inner Personas Assessment framework. Your Inner Personaprofile represents unique strengths and development opportunities that can create exceptional Inner Personaimpact when optimized.</strong></p>
         </div>
 
         <div class="footer">
-            <p>This report is confidential and intended for leadership development purposes.</p>
-            <p>For additional development support, consider working with a qualified leadership coach.</p>
+            <p>This report is confidential and intended for Inner Personadevelopment purposes.</p>
+            <p>For additional development support, consider working with a qualified Inner Personacoach.</p>
             <p>Generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>
     </div>
@@ -1005,7 +1005,7 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
 </html>`;
 }
 
-// Tier 2: Detailed Leadership Report (Professional Development)
+// Tier 2: Detailed Inner PersonaReport (Professional Development)
 export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, participant: ParticipantData): string {
   const primary = analysis.tier2.primaryPersona;
   const supporting = analysis.tier2.supportingPersonas;
@@ -1016,7 +1016,7 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprehensive Leadership Report - ${participant.name}</title>
+    <title>Comprehensive Inner PersonaReport - ${participant.name}</title>
     <style>
         body {
             font-family: Georgia, 'Times New Roman', serif;
@@ -1101,13 +1101,13 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
             </ol>
         </div>
 
-        <h2>🎯 Primary Leadership Profile: ${primary.personaName} (${primary.activationLevel}%)</h2>
+        <h2>🎯 Primary Inner PersonaProfile: ${primary.personaName} (${primary.activationLevel}%)</h2>
         
         <div class="primary-persona">
             <h3>What Being "${primary.personaName}" Means</h3>
             <p><strong>Core Pattern:</strong> ${analysis.tier2.detailedAnalysis}</p>
             
-            <h4>Your Leadership Strengths as ${primary.personaName}:</h4>
+            <h4>Your Inner PersonaStrengths as ${primary.personaName}:</h4>
             <div style="background: #f0fff4; padding: 20px; border-radius: 6px; margin: 15px 0;">
                 <p><strong>⚡ ${primary.strengthFocus}</strong></p>
                 <ul>
@@ -1132,21 +1132,21 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
 
         ${supporting.length > 0 ? `
         <h2>🔍 Understanding Your Supporting Personas (60%+ Alignment)</h2>
-        <p>Your high scores across multiple personas create a complex, powerful leadership profile:</p>
+        <p>Your high scores across multiple personas create a complex, powerful Inner Personaprofile:</p>
         
         ${supporting.map(persona => `
         <div class="supporting-personas">
             <h4>${persona.personaName} (${persona.activationLevel}%)</h4>
             <p><strong>How it shows up in you:</strong> ${persona.developmentEdge}</p>
-            <p><strong>Integration with ${primary.personaName}:</strong> This pattern adds ${persona.strengthFocus.toLowerCase()} to your leadership approach, creating additional depth and capability.</p>
+            <p><strong>Integration with ${primary.personaName}:</strong> This pattern adds ${persona.strengthFocus.toLowerCase()} to your Inner Personaapproach, creating additional depth and capability.</p>
         </div>
         `).join('')}
         ` : ''}
 
         <div class="pattern-section">
-            <h3>🎯 Your Unique Leadership Pattern</h3>
+            <h3>🎯 Your Unique Inner PersonaPattern</h3>
             <p><strong>The "${analysis.tier2.leadershipPattern}" Profile:</strong></p>
-            <p>You are someone who ${primary.strengthFocus.toLowerCase()} while ${supporting.length > 0 ? supporting[0].strengthFocus.toLowerCase() : 'maintaining focus on organizational success'}. This creates a leadership style that is both demanding and supportive, creating unique value for your organization.</p>
+            <p>You are someone who ${primary.strengthFocus.toLowerCase()} while ${supporting.length > 0 ? supporting[0].strengthFocus.toLowerCase() : 'maintaining focus on organizational success'}. This creates a Inner Personastyle that is both demanding and supportive, creating unique value for your organization.</p>
         </div>
 
         <div class="development-section">
@@ -1162,7 +1162,7 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
                 ${analysis.tier2.actionPlan.mediumTerm.map(action => `<li>${action}</li>`).join('')}
             </ul>
             
-            <h4>Long-term Leadership Evolution (Next 6-12 months):</h4>
+            <h4>Long-term Inner PersonaEvolution (Next 6-12 months):</h4>
             <ul>
                 ${analysis.tier2.actionPlan.longTerm.map(action => `<li>${action}</li>`).join('')}
             </ul>
@@ -1170,11 +1170,11 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
 
         ${participant.organization ? `
         <div style="background: #ecfdf5; padding: 25px; border-radius: 8px; margin: 25px 0;">
-            <h3>🌟 The ${participant.organization} Context: Maximizing Your Leadership Impact</h3>
+            <h3>🌟 The ${participant.organization} Context: Maximizing Your Inner PersonaImpact</h3>
             <p><strong>Your Natural Advantages:</strong></p>
             <ul>
                 <li>Your ${primary.strengthFocus.toLowerCase()} aligns well with organizational needs</li>
-                <li>Your leadership pattern supports both individual and team performance</li>
+                <li>Your Inner Personapattern supports both individual and team performance</li>
                 <li>Your approach can drive sustainable results while developing others</li>
             </ul>
             
@@ -1182,22 +1182,22 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
             <ul>
                 <li>Balance your natural style with organizational culture requirements</li>
                 <li>Leverage your strengths while addressing potential blind spots</li>
-                <li>Integrate your leadership approach with organizational development goals</li>
+                <li>Integrate your Inner Personaapproach with organizational development goals</li>
             </ul>
         </div>
         ` : ''}
 
         <div style="text-align: center; background: #f0f9ff; padding: 25px; border-radius: 8px; margin: 30px 0;">
-            <h3>🎉 Celebrating Your Unique Leadership Gifts</h3>
-            <p>Your ${primary.activationLevel}% alignment with ${primary.personaName}, supported by your secondary personas, represents a rare and powerful leadership combination.</p>
-            <p><strong>Your Leadership Superpower:</strong> You create environments where ${primary.strengthFocus.toLowerCase()} drives results while maintaining team engagement and development focus.</p>
+            <h3>🎉 Celebrating Your Unique Inner PersonaGifts</h3>
+            <p>Your ${primary.activationLevel}% alignment with ${primary.personaName}, supported by your secondary personas, represents a rare and powerful Inner Personacombination.</p>
+            <p><strong>Your Inner PersonaSuperpower:</strong> You create environments where ${primary.strengthFocus.toLowerCase()} drives results while maintaining team engagement and development focus.</p>
             <p><strong>The Key:</strong> Continue leveraging your natural strengths while strategically developing complementary capabilities.</p>
         </div>
 
         <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #2d3748; color: #4a5568; font-size: 14px;">
             <p>This detailed analysis is based on the Inner Personas Assessment framework.</p>
-            <p>Your complex profile represents unique leadership capabilities that, when optimized, create exceptional organizational impact.</p>
-            <p>For implementation support, consider working with a qualified leadership coach or development professional.</p>
+            <p>Your complex profile represents unique Inner Personacapabilities that, when optimized, create exceptional organizational impact.</p>
+            <p>For implementation support, consider working with a qualified Inner Personacoach or development professional.</p>
         </div>
     </div>
 </body>
@@ -1215,7 +1215,7 @@ export function generateTier3ClinicalReport(analysis: ThreeTierAnalysis, partici
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinical Leadership Schema Assessment Report - ${participant.name}</title>
+    <title>Clinical Inner PersonaSchema Assessment Report - ${participant.name}</title>
     <style>
         body {
             font-family: 'Times New Roman', serif;
@@ -1307,9 +1307,9 @@ export function generateTier3ClinicalReport(analysis: ThreeTierAnalysis, partici
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="clinical-logo">Clinical Leadership Schema Assessment Report</div>
+            <div class="clinical-logo">Clinical Inner PersonaSchema Assessment Report</div>
             <h1>Behavioral Pattern Analysis</h1>
-            <p>Evidence-Based Leadership Diagnostic</p>
+            <p>Evidence-Based Inner PersonaDiagnostic</p>
         </div>
 
         <div style="background: #edf2f7; padding: 20px; border-radius: 4px; margin-bottom: 30px; border: 1px solid #cbd5e0;">
@@ -1323,7 +1323,7 @@ export function generateTier3ClinicalReport(analysis: ThreeTierAnalysis, partici
                   day: 'numeric' 
                 })}</td></tr>
                 <tr><td><strong>Assessment Tool:</strong></td><td>108-Item Behavioral Reflection Inventory</td></tr>
-                <tr><td><strong>Clinical Framework:</strong></td><td>Schema-Based Leadership Pattern Analysis</td></tr>
+                <tr><td><strong>Clinical Framework:</strong></td><td>Schema-Based Inner PersonaPattern Analysis</td></tr>
                 <tr><td><strong>Report Date:</strong></td><td>${new Date().toLocaleDateString('en-US', { 
                   year: 'numeric', 
                   month: 'long', 
@@ -1443,10 +1443,10 @@ export function generateTier3ClinicalReport(analysis: ThreeTierAnalysis, partici
 
         <div style="background: #f7fafc; padding: 20px; border-radius: 4px; border: 1px solid #cbd5e0; margin: 20px 0;">
             <h3>Assessment Methodology</h3>
-            <p><strong>Instrument:</strong> 108-Item Behavioral Reflection Inventory based on Schema Therapy leadership pattern recognition</p>
+            <p><strong>Instrument:</strong> 108-Item Behavioral Reflection Inventory based on Schema Therapy Inner Personapattern recognition</p>
             <p><strong>Scoring:</strong> 5-point Likert scale with qualitative response integration</p>
-            <p><strong>Analysis Framework:</strong> Young's Schema Theory adapted for organizational leadership contexts</p>
-            <p><strong>Validation:</strong> Cross-referenced against established clinical leadership assessment protocols</p>
+            <p><strong>Analysis Framework:</strong> Young's Schema Theory adapted for organizational Inner Personacontexts</p>
+            <p><strong>Validation:</strong> Cross-referenced against established clinical Inner Personaassessment protocols</p>
             <p><strong>Reliability:</strong> Test-retest reliability coefficient: r = 0.87</p>
         </div>
 
@@ -1469,14 +1469,14 @@ export function generateTier3ClinicalReport(analysis: ThreeTierAnalysis, partici
 // Clinical content generators
 function getClinicalDefinition(schemaName: string): string {
   const definitions: Record<string, string> = {
-    'Abandonment': 'The belief that close others will be lost, with the expectation that they will eventually leave, die, or abandon the individual. In leadership contexts, manifests as excessive control and monitoring of relationships.',
+    'Abandonment': 'The belief that close others will be lost, with the expectation that they will eventually leave, die, or abandon the individual. In Inner Personacontexts, manifests as excessive control and monitoring of relationships.',
     'Punitiveness': 'The belief that people should be harshly punished for making mistakes. Tendency toward anger, intolerance, and lack of patience with those who do not meet expectations or make errors.',
     'Emotional Deprivation': 'The expectation that others will not adequately provide emotional support, understanding, or caring. In leadership, manifests as withholding emotional connection.',
-    'Defectiveness/Shame': 'The feeling that one is fundamentally flawed, bad, unwanted, or inferior. In leadership contexts, may manifest as avoiding visibility or hiding perceived weaknesses.',
+    'Defectiveness/Shame': 'The feeling that one is fundamentally flawed, bad, unwanted, or inferior. In Inner Personacontexts, may manifest as avoiding visibility or hiding perceived weaknesses.',
     'Self-Sacrifice': 'Excessive focus on meeting others\' needs at the expense of one\'s own gratification. In leadership, manifests as over-giving and neglect of personal boundaries.',
-    'Emotional Inhibition': 'Excessive inhibition of spontaneous action, feeling, or communication. In leadership contexts, presents as controlled, detached professional demeanor.',
+    'Emotional Inhibition': 'Excessive inhibition of spontaneous action, feeling, or communication. In Inner Personacontexts, presents as controlled, detached professional demeanor.',
     'Unrelenting Standards': 'The underlying belief that one must strive to meet very high internalized standards, usually to avoid criticism. In leadership, creates perfectionist demands.',
-    'Approval-Seeking': 'Excessive emphasis on gaining approval, recognition, or attention from others. In leadership contexts, manifests as image management and stakeholder focus.',
+    'Approval-Seeking': 'Excessive emphasis on gaining approval, recognition, or attention from others. In Inner Personacontexts, manifests as image management and stakeholder focus.',
     'Negativity/Pessimism': 'Pervasive focus on negative aspects of life while minimizing positive aspects. In leadership, manifests as problem-focused thinking and risk aversion.'
   };
   
@@ -1501,7 +1501,7 @@ function getClinicalBehaviors(schemaName: string): string[] {
       'Suppressed emotional expression in professional contexts',
       'Controlled, detached interpersonal style',
       'Difficulty with spontaneous positive feedback',
-      'Limited emotional range in leadership interactions'
+      'Limited emotional range in Inner Personainteractions'
     ]
   };
   

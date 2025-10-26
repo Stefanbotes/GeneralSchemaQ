@@ -18,7 +18,7 @@
 
 ## 🎯 Introduction
 
-Welcome! You're about to deploy your **NTAQV2 Leadership Questionnaire Application** to the internet using Vercel. 
+Welcome! You're about to deploy your **NTAQV2 Inner PersonaQuestionnaire Application** to the internet using Vercel. 
 
 **What is Vercel?**  
 Vercel is a hosting platform that makes it super easy to put your website online. Think of it as a home for your application on the internet, where people can access it 24/7.
@@ -1567,7 +1567,7 @@ Your app includes:
 
 ### Congratulations! 🎉
 
-Your NTAQV2 Leadership Questionnaire app is now live on the internet!
+Your NTAQV2 Inner PersonaQuestionnaire app is now live on the internet!
 
 ### What You've Accomplished ✅
 
@@ -1925,7 +1925,7 @@ Technology evolves rapidly. Stay curious:
 Your app can now help others:
 - Share with your intended audience
 - Gather feedback and iterate
-- Help others with their leadership development
+- Help others with their Inner Personadevelopment
 - Make a positive impact!
 
 ---
@@ -1951,7 +1951,7 @@ If something in this guide is unclear or doesn't work as described:
 
 **Version:** 1.0  
 **Last Updated:** October 21, 2025  
-**App:** NTAQV2 Leadership Questionnaire  
+**App:** NTAQV2 Inner PersonaQuestionnaire  
 **Platform:** Vercel  
 **Framework:** Next.js 14.2.28
 

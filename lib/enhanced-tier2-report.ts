@@ -22,7 +22,7 @@ export function generateEnhancedTier2Report(analysis: any, options: EnhancedRepo
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprehensive Leadership Report - ${options.participantName}</title>
+    <title>Comprehensive Inner PersonaReport - ${options.participantName}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -144,8 +144,8 @@ export function generateEnhancedTier2Report(analysis: any, options: EnhancedRepo
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="logo">Leadership Development Report</div>
-            <h1>Comprehensive Leadership Analysis</h1>
+            <div class="logo">Inner PersonaDevelopment Report</div>
+            <h1>Comprehensive Inner PersonaAnalysis</h1>
             <p>Professional coaching-focused insights and development planning</p>
         </div>
 
@@ -161,12 +161,12 @@ export function generateEnhancedTier2Report(analysis: any, options: EnhancedRepo
                 <div class="rank-badge">1</div>
                 <div>
                     <div class="persona-name">${primary.name}</div>
-                    <div class="persona-subtitle">Primary Leadership Pattern</div>
+                    <div class="persona-subtitle">Primary Inner PersonaPattern</div>
                 </div>
             </div>
             
             <div class="coaching-section">
-                <h4>🎯 Your Leadership Approach</h4>
+                <h4>🎯 Your Inner PersonaApproach</h4>
                 <p>${analysis.tier2.detailedAnalysis}</p>
             </div>
             
@@ -186,7 +186,7 @@ export function generateEnhancedTier2Report(analysis: any, options: EnhancedRepo
         </div>
 
         ${supporting && supporting.length > 0 ? `
-        <h3 style="margin-top: 40px; margin-bottom: 20px;">Supporting Leadership Patterns</h3>
+        <h3 style="margin-top: 40px; margin-bottom: 20px;">Supporting Inner PersonaPatterns</h3>
         <div class="supporting-personas">
             ${supporting.map((persona: any, index: number) => `
             <div class="supporting-card">
@@ -207,13 +207,13 @@ export function generateEnhancedTier2Report(analysis: any, options: EnhancedRepo
 
         <div style="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); padding: 25px; border-radius: 8px; margin: 30px 0; border: 1px solid #0284c7;">
             <h4>💡 Integration & Next Steps</h4>
-            <p>Your leadership profile shows a clear primary pattern complemented by supporting styles. This combination provides you with flexibility and depth in your leadership approach.</p>
+            <p>Your Inner Personaprofile shows a clear primary pattern complemented by supporting styles. This combination provides you with flexibility and depth in your Inner Personaapproach.</p>
             <p><strong>Key Integration Opportunity:</strong> Practice moving fluidly between your primary ${primary.name} approach and your supporting patterns based on situational needs.</p>
         </div>
 
         <div class="footer">
-            <p><strong>Leadership Development Report</strong></p>
-            <p>This Tier 2 report provides coaching-focused insights for leadership development planning.</p>
+            <p><strong>Inner PersonaDevelopment Report</strong></p>
+            <p>This Tier 2 report provides coaching-focused insights for Inner Personadevelopment planning.</p>
             <p>For clinical-level analysis, consider requesting a Tier 3 report from your coach or consultant.</p>
             <p>Report generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>

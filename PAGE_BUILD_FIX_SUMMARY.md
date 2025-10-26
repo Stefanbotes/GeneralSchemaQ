@@ -173,7 +173,7 @@ Use this directive when your page component:
 
 ### Pages Now Working on Vercel
 
-- ✅ `/assessment` - Take leadership assessment (main fix)
+- ✅ `/assessment` - Take Inner Personaassessment (main fix)
 - ✅ `/results` - View completed assessment reports
 - ✅ `/dashboard` - User dashboard with stats
 - ✅ `/profile` - User profile management
@@ -218,7 +218,7 @@ export const dynamic = 'force-dynamic';
 ## Contact & Support
 
 - **Repository:** https://github.com/Stefanbotes/InnerPersona
-- **App Name:** NTAQV2 (Leadership Questionnaire)
+- **App Name:** NTAQV2 (Inner PersonaQuestionnaire)
 - **Framework:** Next.js 14 (App Router)
 - **Database:** PostgreSQL with Prisma
 

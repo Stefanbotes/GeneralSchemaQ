@@ -64,7 +64,7 @@ Once 2-Factor Authentication is enabled:
 
 2. **Create a new App Password:**
    - **Select app:** Choose "Mail" or "Other (Custom name)"
-   - **Type name:** Enter "NTAQV2" or "Leadership App"
+   - **Type name:** Enter "NTAQV2" or "Inner PersonaApp"
    - Click "Generate"
 
 3. **Save the password:**

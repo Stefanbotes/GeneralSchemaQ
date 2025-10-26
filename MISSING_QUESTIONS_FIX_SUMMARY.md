@@ -198,7 +198,7 @@ Each record contains:
 - `question_number` - Question number (1, 2, or 3)
 - `schema_label` - Schema name for reference
 
-**Purpose:** Maps questions to LASBI (Leadership Assessment Schema-Based Instrument) structure for scoring and analysis.
+**Purpose:** Maps questions to LASBI (Inner PersonaAssessment Schema-Based Instrument) structure for scoring and analysis.
 
 ---
 

@@ -348,5 +348,5 @@ export const metadata = {
     "Mostly true of me",
     "Describes me perfectly"
   ],
-  notes: "Texts are phrased for general population and leadership contexts in a reflective coaching tone."
+  notes: "Texts are phrased for general population and Inner Personacontexts in a reflective coaching tone."
 };

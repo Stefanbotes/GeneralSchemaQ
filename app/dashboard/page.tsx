@@ -64,7 +64,7 @@ export default async function DashboardPage() {
             Welcome back, {user.firstName}!
           </h1>
           <p className="text-gray-600">
-            Track your leadership development journey and explore your growth opportunities.
+            Track your Inner Personadevelopment journey and explore your growth opportunities.
           </p>
         </div>
 
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                 Assessment Progress
               </CardTitle>
               <CardDescription>
-                Your current leadership assessment status
+                Your current Inner Personaassessment status
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Ready to Begin?</h3>
                     <p className="text-gray-600 mb-4">
-                      Start your leadership assessment to discover your unique Inner Persona.
+                      Start your Inner Personaassessment to discover your unique Inner Persona.
                     </p>
                   </div>
                   
@@ -251,7 +251,7 @@ export default async function DashboardPage() {
                   {user.assessments.slice(0, 5).map((assessment: any) => (
                     <div key={assessment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium">Leadership Assessment</p>
+                        <p className="font-medium">Inner PersonaAssessment</p>
                         <p className="text-sm text-gray-600">
                           {assessment.createdAt.toLocaleDateString()}
                         </p>
@@ -287,7 +287,7 @@ export default async function DashboardPage() {
                 <CardContent className="p-6 text-center">
                   <PlayCircle className="h-8 w-8 mx-auto mb-2 text-primary600" />
                   <h3 className="font-semibold">Start Assessment</h3>
-                  <p className="text-sm text-gray-600">Begin your leadership evaluation</p>
+                  <p className="text-sm text-gray-600">Begin your Inner Personaevaluation</p>
                 </CardContent>
               </Card>
             </Link>

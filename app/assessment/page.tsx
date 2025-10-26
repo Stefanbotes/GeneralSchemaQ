@@ -1,5 +1,5 @@
 
-// Assessment page for conducting leadership evaluation
+// Assessment page for conducting Inner Personaevaluation
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';

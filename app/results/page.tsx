@@ -55,7 +55,7 @@ export default async function ResultsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Assessment Results</h1>
           <p className="text-gray-600">
-            View and download your completed leadership assessment reports
+            View and download your completed Inner Personaassessment reports
           </p>
         </div>
 
@@ -68,7 +68,7 @@ export default async function ResultsPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">No Completed Assessments</h3>
               <p className="text-gray-600 mb-6">
-                You haven't completed any assessments yet. Start your leadership journey today!
+                You haven't completed any assessments yet. Start your Inner Personajourney today!
               </p>
               <Link href="/assessment">
                 <Button size="lg" className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700">
@@ -88,7 +88,7 @@ export default async function ResultsPage() {
                     <div>
                       <CardTitle className="flex items-center">
                         <Trophy className="h-5 w-5 mr-2 text-green-600" />
-                        Leadership Assessment Complete
+                        Inner PersonaAssessment Complete
                       </CardTitle>
                       <CardDescription className="flex items-center mt-2">
                         <Calendar className="h-4 w-4 mr-2" />
@@ -118,7 +118,7 @@ export default async function ResultsPage() {
                         {assessment.leadershipPersona}
                       </p>
                       <p className="text-sm text-primary700">
-                        This persona represents your primary leadership patterns and natural strengths.
+                        This persona represents your primary Inner Personapatterns and natural strengths.
                       </p>
                     </div>
                   )}
@@ -135,7 +135,7 @@ export default async function ResultsPage() {
                           <span className="font-medium text-green-800">Personal Summary Report</span>
                         </div>
                         <p className="text-sm text-green-700">
-                          Your personalized leadership summary with key strengths and growth opportunities.
+                          Your personalized Inner Personasummary with key strengths and growth opportunities.
                         </p>
                       </div>
                       <form action="/api/reports/generate-tier1" method="POST" className="ml-4">
@@ -177,7 +177,7 @@ export default async function ResultsPage() {
                     <Alert>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>Advanced Reports:</strong> Detailed leadership and clinical reports are available through your organization's admin. 
+                        <strong>Advanced Reports:</strong> Detailed Inner Personaand clinical reports are available through your organization's admin. 
                         Contact your administrator if you need access to comprehensive assessment analysis.
                       </AlertDescription>
                     </Alert>

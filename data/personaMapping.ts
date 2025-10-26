@@ -30,7 +30,7 @@ export const personaMapping: Record<string, PersonaInfo> = {
     publicName: "The Focus Leader",
     strengthFocus: "Results-Driven Clarity", 
     coachingDescription: "You excel at keeping teams focused on objectives without getting derailed by emotional distractions. Your clarity and task orientation help organizations maintain productivity and achieve their goals efficiently.",
-    developmentEdge: "Incorporating emotional awareness into your leadership toolkit can enhance team engagement and long-term performance.",
+    developmentEdge: "Incorporating emotional awareness into your Inner Personatoolkit can enhance team engagement and long-term performance.",
     domain: "Impaired Limits"
   },
 
@@ -52,7 +52,7 @@ export const personaMapping: Record<string, PersonaInfo> = {
   "The Self-Doubter": {
     publicName: "The Careful Evaluator", 
     strengthFocus: "Thorough Assessment & Quality Assurance",
-    coachingDescription: "Your careful consideration of decisions and attention to potential challenges helps organizations avoid costly mistakes. You bring valuable quality control and risk assessment to leadership decisions.",
+    coachingDescription: "Your careful consideration of decisions and attention to potential challenges helps organizations avoid costly mistakes. You bring valuable quality control and risk assessment to Inner Personadecisions.",
     developmentEdge: "Trust in your proven capabilities and consider moving forward with confidence when you've done thorough preparation."
   },
 
@@ -96,15 +96,15 @@ export const personaMapping: Record<string, PersonaInfo> = {
   "The Image Manager": {
     publicName: "The Relationship Cultivator",
     strengthFocus: "Stakeholder Engagement & Communication",
-    coachingDescription: "You have exceptional skills in building positive relationships and managing stakeholder perceptions. Your awareness of how others view leadership decisions helps organizations maintain strong external relationships.",
+    coachingDescription: "You have exceptional skills in building positive relationships and managing stakeholder perceptions. Your awareness of how others view Inner Personadecisions helps organizations maintain strong external relationships.",
     developmentEdge: "Your relationship skills are strong - consider balancing external focus with authentic self-expression and internal team development."
   },
 
   "The Power Broker": {
     publicName: "The Strategic Influencer",
     strengthFocus: "Organizational Navigation & Results",
-    coachingDescription: "You excel at understanding organizational dynamics and driving results through strategic influence. Your ability to navigate complex systems and make things happen is a valuable leadership asset.",
-    developmentEdge: "Your influence capabilities are impressive - consider how collaborative leadership approaches can amplify your already strong results."
+    coachingDescription: "You excel at understanding organizational dynamics and driving results through strategic influence. Your ability to navigate complex systems and make things happen is a valuable Inner Personaasset.",
+    developmentEdge: "Your influence capabilities are impressive - consider how collaborative Inner Personaapproaches can amplify your already strong results."
   },
 
   // OVERVIGILANCE & INHIBITION
@@ -139,7 +139,7 @@ export const personaMapping: Record<string, PersonaInfo> = {
   "The Unfiltered Reactor": {
     publicName: "The Authentic Communicator",
     strengthFocus: "Direct Communication & Genuine Expression", 
-    coachingDescription: "Your authentic, direct communication style brings clarity and transparency to leadership interactions. Teams appreciate knowing exactly where they stand and value your honest, straightforward approach.",
+    coachingDescription: "Your authentic, direct communication style brings clarity and transparency to Inner Personainteractions. Teams appreciate knowing exactly where they stand and value your honest, straightforward approach.",
     developmentEdge: "Your authenticity is refreshing - consider how strategic timing and context can make your direct communication even more effective and well-received."
   },
 
@@ -147,7 +147,7 @@ export const personaMapping: Record<string, PersonaInfo> = {
   "The Rigid Controller": {
     publicName: "The Systematic Leader",
     strengthFocus: "Structure & Process Excellence",
-    coachingDescription: "You bring valuable structure and systematic thinking to your leadership approach. Your commitment to proven methods helps teams maintain quality and consistency in their work.",
+    coachingDescription: "You bring valuable structure and systematic thinking to your Inner Personaapproach. Your commitment to proven methods helps teams maintain quality and consistency in their work.",
     developmentEdge: "Your systematic approach is valuable - consider how selective flexibility can help you adapt to changing circumstances while maintaining your high standards."
   },
 
@@ -170,8 +170,8 @@ export const personaMapping: Record<string, PersonaInfo> = {
 export const getPublicPersona = (researchPersona: string): PersonaInfo => {
   return personaMapping[researchPersona] || {
     publicName: "The Thoughtful Leader",
-    strengthFocus: "Unique Leadership Qualities",
-    coachingDescription: "You demonstrate distinctive leadership qualities that contribute to organizational success. Your approach brings value to your teams and organization in meaningful ways.",
-    developmentEdge: "Continue building on your natural strengths while exploring new approaches to expand your leadership impact."
+    strengthFocus: "Unique Inner PersonaQualities",
+    coachingDescription: "You demonstrate distinctive Inner Personaqualities that contribute to organizational success. Your approach brings value to your teams and organization in meaningful ways.",
+    developmentEdge: "Continue building on your natural strengths while exploring new approaches to expand your Inner Personaimpact."
   };
 };

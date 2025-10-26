@@ -158,7 +158,7 @@ function assessOverallClinicalSignificance(personaScores: PersonaScore[]): strin
   } else if (highSignificanceCount >= 1 || moderateSignificanceCount >= 4) {
     return "MODERATE - Some schema activations of clinical interest for development";
   } else {
-    return "LOW - Within normal range with standard leadership development appropriate";
+    return "LOW - Within normal range with standard Inner Personadevelopment appropriate";
   }
 }
 
@@ -168,8 +168,8 @@ function generateOrganizationalImpact(domainName: string, averageActivation: num
   const impacts: Record<string, string> = {
     "Disconnection & Rejection": `${impactLevel} impact on trust-building and relationship maintenance in organizational contexts`,
     "Impaired Autonomy & Performance": `${impactLevel} impact on decision-making independence and performance confidence`,
-    "Impaired Limits": `${impactLevel} impact on boundary-setting and sustainable leadership practices`,
-    "Other-Directedness": `${impactLevel} impact on authentic leadership expression and stakeholder management`,
+    "Impaired Limits": `${impactLevel} impact on boundary-setting and sustainable Inner Personapractices`,
+    "Other-Directedness": `${impactLevel} impact on authentic Inner Personaexpression and stakeholder management`,
     "Overvigilance & Inhibition": `${impactLevel} impact on innovation, risk-taking, and team psychological safety`
   };
 
@@ -180,7 +180,7 @@ function generateSchemaActivationSummary(personaScores: PersonaScore[], domainAn
   const primary = personaScores[0];
   const primaryDomain = domainAnalysis.find(d => d.domainName === primary.domain);
   
-  return `This leadership profile demonstrates primary activation in the ${primary.domain} domain (${primaryDomain?.averageActivation}% average activation) with ${primary.clinicalName} as the dominant pattern (${primary.percentage}% activation). This manifests as ${primary.strengthFocus.toLowerCase()} in organizational contexts, with clinical significance assessed as ${primary.clinicalSignificance}. The pattern suggests ${primary.clinicalSignificance === 'HIGH' ? 'significant therapeutic potential' : primary.clinicalSignificance === 'MODERATE' ? 'moderate development focus areas' : 'standard leadership development approaches'} would be most beneficial for optimal organizational functioning.`;
+  return `This Inner Personaprofile demonstrates primary activation in the ${primary.domain} domain (${primaryDomain?.averageActivation}% average activation) with ${primary.clinicalName} as the dominant pattern (${primary.percentage}% activation). This manifests as ${primary.strengthFocus.toLowerCase()} in organizational contexts, with clinical significance assessed as ${primary.clinicalSignificance}. The pattern suggests ${primary.clinicalSignificance === 'HIGH' ? 'significant therapeutic potential' : primary.clinicalSignificance === 'MODERATE' ? 'moderate development focus areas' : 'standard Inner Personadevelopment approaches'} would be most beneficial for optimal organizational functioning.`;
 }
 
 // Behavioral prediction model implementation
@@ -214,7 +214,7 @@ function predictStressResponse(persona: PersonaScore): string {
     "The Safety Strategist": "Under stress, likely to become more risk-averse and controlling, potentially stifling innovation and adaptability",
     "The Overgiver": "Under stress, likely to increase self-sacrifice behaviors, risking personal burnout and creating team dependency",
     "The Over-Adapter": "Under stress, likely to accommodate even more, potentially losing authentic voice and critical perspectives",
-    "The Suppressed Voice": "Under stress, likely to become even more diplomatically neutral, missing opportunities to provide valuable leadership input",
+    "The Suppressed Voice": "Under stress, likely to become even more diplomatically neutral, missing opportunities to provide valuable Inner Personainput",
     "The Image Manager": "Under stress, likely to increase concern with perception and approval, potentially compromising authentic decision-making",
     "The Power Broker": "Under stress, likely to increase control and dominance behaviors, potentially alienating team members and collaborators",
     "The Cautious Realist": "Under stress, likely to become more pessimistic and risk-focused, potentially demoralizing team and limiting opportunities",
@@ -284,11 +284,11 @@ function predictTeamDynamics(persona: PersonaScore): string {
     "The Withholder": "Creates efficient but potentially cold team environment, members may feel disconnected despite high performance",
     "The Guarded Strategist": "Team benefits from careful risk management but may become overly cautious and slow to innovate",
     "The Outsider": "Brings innovative thinking to team but may not build strong collaborative relationships",
-    "The Self-Doubter": "Team may lose confidence in leadership decisiveness, valuable insights may be discounted",
+    "The Self-Doubter": "Team may lose confidence in Inner Personadecisiveness, valuable insights may be discounted",
     "The Reluctant Rely-er": "Team may become dependent on leader's individual performance rather than developing own capabilities",
     "The Safety Strategist": "Creates stable team environment but may limit growth opportunities and innovation",
     "The Overgiver": "Team feels supported but may become dependent, leader risk of burnout affects team stability",
-    "The Over-Adapter": "Team enjoys harmony but may miss valuable leadership perspective and authentic challenge",
+    "The Over-Adapter": "Team enjoys harmony but may miss valuable Inner Personaperspective and authentic challenge",
     "The Suppressed Voice": "Team experiences smooth facilitation but misses leader's unique insights and perspectives",
     "The Image Manager": "Team benefits from strong stakeholder relationships but may question leader authenticity",
     "The Power Broker": "Team may achieve results through leader influence but could become disengaged from autonomous contribution",
@@ -333,7 +333,7 @@ export function generateSchemaCorrelates(analysis: CompleteAnalysis): string {
   const secondary = analysis.secondaryPersona;
   const tertiary = analysis.tertiaryPersona;
   
-  return `Schema therapy analysis reveals primary activation of ${primary.clinicalName.replace('The ', '').toLowerCase()} patterns (${primary.percentage}% activation) within the ${primary.domain} domain. This manifests organizationally as ${primary.strengthFocus.toLowerCase()} with ${primary.clinicalSignificance.toLowerCase()} clinical significance. Secondary activation patterns include ${secondary.clinicalName.replace('The ', '').toLowerCase()} (${secondary.percentage}%) and ${tertiary.clinicalName.replace('The ', '').toLowerCase()} (${tertiary.percentage}%), suggesting a complex interaction of schemas that requires integrated therapeutic and developmental approaches. The overall pattern indicates ${analysis.overallClinicalSignificance.toLowerCase()}, with particular attention needed for ${primary.domain.toLowerCase()} domain schemas in organizational leadership contexts.`;
+  return `Schema therapy analysis reveals primary activation of ${primary.clinicalName.replace('The ', '').toLowerCase()} patterns (${primary.percentage}% activation) within the ${primary.domain} domain. This manifests organizationally as ${primary.strengthFocus.toLowerCase()} with ${primary.clinicalSignificance.toLowerCase()} clinical significance. Secondary activation patterns include ${secondary.clinicalName.replace('The ', '').toLowerCase()} (${secondary.percentage}%) and ${tertiary.clinicalName.replace('The ', '').toLowerCase()} (${tertiary.percentage}%), suggesting a complex interaction of schemas that requires integrated therapeutic and developmental approaches. The overall pattern indicates ${analysis.overallClinicalSignificance.toLowerCase()}, with particular attention needed for ${primary.domain.toLowerCase()} domain schemas in organizational Inner Personacontexts.`;
 }
 
 // Clinical recommendations generator
@@ -390,7 +390,7 @@ function getClinicalFocusAreas(persona: PersonaScore): string[] {
     "The Safety Strategist": ["Risk tolerance", "Uncertainty management", "Flexibility development", "Innovation capacity"],
     "The Overgiver": ["Boundary setting", "Self-care prioritization", "Sustainable giving", "Resentment prevention"],
     "The Over-Adapter": ["Authentic expression", "Assertiveness skills", "Preference articulation", "Conflict tolerance"],
-    "The Suppressed Voice": ["Voice development", "Perspective sharing", "Authentic communication", "Leadership presence"],
+    "The Suppressed Voice": ["Voice development", "Perspective sharing", "Authentic communication", "Inner Personapresence"],
     "The Image Manager": ["Internal validation", "Authentic expression", "Genuine relationship building", "Self-acceptance"],
     "The Power Broker": ["Empathy development", "Collaborative leadership", "Humility building", "Influence ethics"],
     "The Cautious Realist": ["Optimism development", "Possibility thinking", "Positive focus", "Resilience building"],
@@ -415,11 +415,11 @@ function getInterventionApproaches(persona: PersonaScore): string[] {
     "The Safety Strategist": ["Controlled risk-taking", "Uncertainty tolerance building", "Flexibility practice", "Innovation encouragement"],
     "The Overgiver": ["Boundary-setting practice", "Self-care scheduling", "Reciprocity awareness", "Sustainable service"],
     "The Over-Adapter": ["Authentic expression exercises", "Assertiveness training", "Preference identification", "Conflict engagement practice"],
-    "The Suppressed Voice": ["Voice strengthening exercises", "Perspective articulation", "Communication confidence", "Leadership visibility"],
+    "The Suppressed Voice": ["Voice strengthening exercises", "Perspective articulation", "Communication confidence", "Inner Personavisibility"],
     "The Image Manager": ["Authenticity practice", "Internal validation building", "Genuine expression", "Self-acceptance work"],
-    "The Power Broker": ["Empathy exercises", "Collaborative leadership practice", "Humility building", "Ethical influence training"],
+    "The Power Broker": ["Empathy exercises", "Collaborative Inner Personapractice", "Humility building", "Ethical influence training"],
     "The Cautious Realist": ["Optimism exercises", "Positive focus training", "Possibility exploration", "Resilience building"],
-    "The Stoic Mask": ["Emotional expression practice", "Vulnerability exercises", "Connection deepening", "Authentic leadership development"],
+    "The Stoic Mask": ["Emotional expression practice", "Vulnerability exercises", "Connection deepening", "Authentic Inner Personadevelopment"],
     "The Perfectionist Driver": ["Flexibility training", "Good enough practice", "Self-compassion exercises", "Process appreciation"],
     "The Harsh Enforcer": ["Empathy building exercises", "Positive reinforcement training", "Compassionate accountability", "Patience development"],
     "The Unfiltered Reactor": ["Pause techniques", "Communication timing", "Emotional regulation skills", "Relationship repair training"]

@@ -45,7 +45,7 @@ export default function HomePage() {
             </CardTitle>
             <CardDescription className="text-gray-600 text-lg mb-6">
               Discover your Inner Persona through behavioral reflection statements. This assessment 
-              helps identify your natural leadership patterns and growth opportunities.
+              helps identify your natural Inner Personapatterns and growth opportunities.
             </CardDescription>
           </CardHeader>
           
@@ -55,7 +55,7 @@ export default function HomePage() {
               <p className="mb-4">By proceeding with this assessment, you agree that:</p>
               <ul className="list-disc pl-5 mb-6 space-y-2">
                 <li>Your responses will be kept confidential and secure.</li>
-                <li>The data will be used solely for leadership development and analysis.</li>
+                <li>The data will be used solely for Inner Personadevelopment and analysis.</li>
                 <li>Individual responses will not be shared without explicit consent.</li>
                 <li>Results will help identify your Inner Persona patterns.</li>
               </ul>
@@ -109,7 +109,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                Answer thoughtful questions about your leadership approach and decision-making patterns.
+                Answer thoughtful questions about your Inner Personaapproach and decision-making patterns.
               </p>
             </CardContent>
           </Card>

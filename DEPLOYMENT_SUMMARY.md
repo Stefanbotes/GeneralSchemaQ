@@ -52,7 +52,7 @@ The migration will create **11 tables** and **2 enums**:
 4. **verification_tokens** - Email verification tokens
 5. **password_reset_tokens** - Password reset tokens
 6. **rate_limit_records** - Security rate limiting
-7. **assessments** - Leadership assessment records
+7. **assessments** - Inner Personaassessment records
 8. **assessment_questions** - Question bank (currently 270 questions)
 9. **lasbi_items** - LASBI item metadata with stable identifiers
 10. **lasbi_responses** - Individual assessment responses
@@ -265,7 +265,7 @@ You'll know the fix worked when:
 ---
 
 **Created:** October 23, 2025  
-**Project:** NTAQV2 Leadership Questionnaire  
+**Project:** NTAQV2 Inner PersonaQuestionnaire  
 **Database:** PostgreSQL with Prisma ORM  
 **Platform:** Vercel  
 **Status:** ✅ Deployment-ready

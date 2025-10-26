@@ -449,7 +449,7 @@ export function generateAssessmentExport(
       // NOTE: No 'scores' field - removed per v1.0.0 spec (NO DERIVED DATA)
     },
     provenance: {
-      sourceApp: "Leadership Assessment Portal",
+      sourceApp: "Inner PersonaAssessment Portal",
       sourceAppVersion: "3.2.1",
       exportedAt
     }

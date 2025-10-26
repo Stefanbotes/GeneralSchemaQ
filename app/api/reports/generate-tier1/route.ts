@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Leadership Summary - ${escapeHtml(participantName)}</title>
+  <title>Inner PersonaSummary - ${escapeHtml(participantName)}</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f8fafc; }
     .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -237,7 +237,7 @@ export async function POST(req: NextRequest) {
 
     <div class="section">
       <h3>Assessment Results</h3>
-      <p>Your leadership assessment reveals distinct patterns that define your natural approach to leadership and team dynamics.</p>
+      <p>Your Inner Personaassessment reveals distinct patterns that define your natural approach to Inner Personaand team dynamics.</p>
     </div>
 
     <div class="primary">

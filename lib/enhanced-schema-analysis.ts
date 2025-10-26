@@ -1,7 +1,7 @@
 
 
 // Enhanced Schema Analysis System
-// Implements sophisticated clinical and leadership analysis based on uploaded protocols
+// Implements sophisticated clinical and Inner Personaanalysis based on uploaded protocols
 
 import { getPersonaDetails, ENHANCED_PERSONA_MAPPING, PersonaDetails } from '../data/enhanced-persona-mapping';
 
@@ -139,7 +139,7 @@ export function calculateEnhancedSchemaActivations(responses: Record<string, str
         schemaName: personaName,
         clinicalName: personaDetails?.clinicalName || personaName,
         publicName: personaDetails?.publicName || personaName,
-        domain: personaDetails?.domain || 'Leadership Patterns',
+        domain: personaDetails?.domain || 'Inner PersonaPatterns',
         activationLevel: Math.round(activationLevel * 10) / 10,
         severity,
         questions: questionIds,
@@ -183,9 +183,9 @@ export function calculateEnhancedPersonaActivations(responses: Record<string, st
         clinicalName: personaDetails?.clinicalName || personaName,
         activationLevel: Math.round(activationLevel * 10) / 10,
         rank: 0, // Will be set after sorting
-        strengthFocus: personaDetails?.strengthFocus || 'Leadership Qualities',
+        strengthFocus: personaDetails?.strengthFocus || 'Inner PersonaQualities',
         developmentEdge: personaDetails?.developmentEdge || 'Continue developing skills',
-        domain: personaDetails?.domain || 'Leadership Patterns',
+        domain: personaDetails?.domain || 'Inner PersonaPatterns',
         behavioralMarkers: personaDetails?.behaviors?.behavioral_markers || [],
         integrationPatterns: personaDetails?.integration_patterns?.with_high_scores || [],
         adaptiveSignificance
@@ -207,7 +207,7 @@ function generateClinicalSignificance(personaName: string, activationLevel: numb
   const details = getPersonaDetails(personaName);
   
   if (activationLevel >= 75) {
-    return `${severity} clinical significance requiring immediate attention. This pattern strongly influences leadership behavior and interpersonal effectiveness.`;
+    return `${severity} clinical significance requiring immediate attention. This pattern strongly influences Inner Personabehavior and interpersonal effectiveness.`;
   } else if (activationLevel >= 65) {
     return `${severity} clinical significance with notable impact on workplace functioning. Therapeutic intervention recommended.`;
   } else if (activationLevel >= 50) {
@@ -222,11 +222,11 @@ function generateFunctionalImpact(personaName: string, activationLevel: number):
   const details = getPersonaDetails(personaName);
   
   if (activationLevel >= 70) {
-    return `Significant impact on leadership effectiveness and team dynamics. Primary driver of leadership behavior patterns.`;
+    return `Significant impact on Inner Personaeffectiveness and team dynamics. Primary driver of Inner Personabehavior patterns.`;
   } else if (activationLevel >= 60) {
-    return `Moderate impact on workplace functioning. Contributes to leadership style complexity and effectiveness.`;
+    return `Moderate impact on workplace functioning. Contributes to Inner Personastyle complexity and effectiveness.`;
   } else {
-    return `Minimal functional impact. May provide supporting influence on leadership approach.`;
+    return `Minimal functional impact. May provide supporting influence on Inner Personaapproach.`;
   }
 }
 
@@ -283,7 +283,7 @@ function generateBehaviorPredictionModel(primary: EnhancedSchemaActivation, seco
       `Organizations with clear performance standards and accountability systems`,
       `Projects requiring ${primaryDetails?.strengthFocus?.toLowerCase() || 'focused leadership'}`,
       `Situations where ${primary.clinicalName.toLowerCase()} provides adaptive advantage`,
-      `Contexts that reward ${primaryDetails?.strengthFocus?.toLowerCase() || 'distinctive leadership qualities'}`
+      `Contexts that reward ${primaryDetails?.strengthFocus?.toLowerCase() || 'distinctive Inner Personaqualities'}`
     ],
     challengeAreas: [
       `Ambiguous or highly collaborative decision-making environments`,
@@ -301,7 +301,7 @@ function generateNeurobiologicalConsiderations(primary: EnhancedSchemaActivation
   return `
 <strong>Communication Patterns:</strong>
 - Prefrontal cortex engagement: ${primary.activationLevel >= 70 ? 'MODERATE' : 'HIGH'} (${primary.activationLevel >= 70 ? 'schema activation may limit executive function' : 'maintained executive control'})
-- Amygdala regulation: ${primary.severity === 'High' ? 'CHALLENGED' : 'ADAPTIVE'} (${primary.severity === 'High' ? 'heightened threat detection in leadership contexts' : 'appropriate emotional regulation'})
+- Amygdala regulation: ${primary.severity === 'High' ? 'CHALLENGED' : 'ADAPTIVE'} (${primary.severity === 'High' ? 'heightened threat detection in Inner Personacontexts' : 'appropriate emotional regulation'})
 - Mirror neuron activity: ${secondary.some(s => s.domain.includes('Rejection')) ? 'MODERATE' : 'HIGH'} (${secondary.some(s => s.domain.includes('Rejection')) ? 'reduced empathic attunement' : 'maintained social cognition'})
 
 <strong>Influence Mechanisms:</strong>
@@ -333,7 +333,7 @@ function generateEnhancedTier1Analysis(primaryPersona: EnhancedPersonaActivation
   const organizationalContribution = generateOrganizationalContribution(primaryPersona, topPersonas);
   
   return {
-    summary: `Your leadership style demonstrates strong ${primaryPersona.strengthFocus.toLowerCase()} with ${primaryPersona.activationLevel.toFixed(1)}% alignment to ${primaryPersona.publicName} patterns. You bring valuable combination of ${strengthsList} that creates distinctive organizational impact. ${organizationalContribution}`,
+    summary: `Your Inner Personastyle demonstrates strong ${primaryPersona.strengthFocus.toLowerCase()} with ${primaryPersona.activationLevel.toFixed(1)}% alignment to ${primaryPersona.publicName} patterns. You bring valuable combination of ${strengthsList} that creates distinctive organizational impact. ${organizationalContribution}`,
     keyStrengths: topPersonas.slice(0, 4).map(p => p.strengthFocus),
     growthAreas: topPersonas.slice(0, 3).map(p => generateGrowthArea(p))
   };
@@ -362,14 +362,14 @@ function generateDetailedPersonaAnalysis(primary: EnhancedPersonaActivation, sup
   const primaryDetails = getPersonaDetails(primary.personaName);
   
   if (!primaryDetails) {
-    return `As ${primary.publicName} (${primary.activationLevel}% activation), your leadership demonstrates ${primary.strengthFocus.toLowerCase()} that creates value for your organization and teams.`;
+    return `As ${primary.publicName} (${primary.activationLevel}% activation), your Inner Personademonstrates ${primary.strengthFocus.toLowerCase()} that creates value for your organization and teams.`;
   }
   
   const supportingText = supporting.length > 0 
-    ? ` Your supporting personas (${supporting.slice(0, 3).map(p => p.publicName).join(', ')}) add complexity and depth to your leadership style, creating unique synergies and development opportunities.`
+    ? ` Your supporting personas (${supporting.slice(0, 3).map(p => p.publicName).join(', ')}) add complexity and depth to your Inner Personastyle, creating unique synergies and development opportunities.`
     : '';
   
-  return `${primaryDetails.publicDescription} This ${primary.strengthFocus.toLowerCase()} orientation, at ${primary.activationLevel}% activation, creates a distinctive leadership approach that emphasizes ${primary.strengthFocus.toLowerCase()} while maintaining focus on organizational success.${supportingText}`;
+  return `${primaryDetails.publicDescription} This ${primary.strengthFocus.toLowerCase()} orientation, at ${primary.activationLevel}% activation, creates a distinctive Inner Personaapproach that emphasizes ${primary.strengthFocus.toLowerCase()} while maintaining focus on organizational success.${supportingText}`;
 }
 
 // Enhanced Tier 3 Analysis
@@ -404,17 +404,17 @@ function generateSophisticatedLeadershipPattern(primary: EnhancedPersonaActivati
 
 function generateComplexPatternAnalysis(primary: EnhancedPersonaActivation, supporting: EnhancedPersonaActivation[]): string {
   if (supporting.length < 2) {
-    return `Your leadership is primarily characterized by ${primary.strengthFocus.toLowerCase()}, creating a focused and consistent approach.`;
+    return `Your Inner Personais primarily characterized by ${primary.strengthFocus.toLowerCase()}, creating a focused and consistent approach.`;
   }
   
-  return `Your leadership represents a sophisticated integration of ${primary.strengthFocus.toLowerCase()} (primary), ${supporting[0].strengthFocus.toLowerCase()}, and ${supporting[1]?.strengthFocus?.toLowerCase() || 'additional capabilities'}. This creates a leadership presence that is both ${primary.strengthFocus.split(' ')[0].toLowerCase()} and ${supporting[0].strengthFocus.split(' ')[0].toLowerCase()}, enabling unique organizational impact.`;
+  return `Your Inner Personarepresents a sophisticated integration of ${primary.strengthFocus.toLowerCase()} (primary), ${supporting[0].strengthFocus.toLowerCase()}, and ${supporting[1]?.strengthFocus?.toLowerCase() || 'additional capabilities'}. This creates a Inner Personapresence that is both ${primary.strengthFocus.split(' ')[0].toLowerCase()} and ${supporting[0].strengthFocus.split(' ')[0].toLowerCase()}, enabling unique organizational impact.`;
 }
 
 function generateIntegrationDynamics(primary: EnhancedPersonaActivation, supporting: EnhancedPersonaActivation[]): string {
   const primaryDetails = getPersonaDetails(primary.personaName);
   
   if (!primaryDetails || supporting.length === 0) {
-    return "Your leadership dynamics create consistent patterns that teams can rely on.";
+    return "Your Inner Personadynamics create consistent patterns that teams can rely on.";
   }
   
   const integrationPatterns = primaryDetails.integration_patterns?.with_high_scores || [];
@@ -428,10 +428,10 @@ This complex integration means your team experiences you as simultaneously ${pri
 
 function generatePowerfulSynergies(primary: EnhancedPersonaActivation, supporting: EnhancedPersonaActivation[]): string[] {
   return [
-    `Your ${primary.strengthFocus.toLowerCase()} provides the foundation for all your leadership interactions`,
+    `Your ${primary.strengthFocus.toLowerCase()} provides the foundation for all your Inner Personainteractions`,
     `${supporting[0]?.strengthFocus || 'Supporting capabilities'} add depth and complexity to your approach`,
     `${supporting[1]?.strengthFocus || 'Additional strengths'} create unique problem-solving capabilities`,
-    `The integration of multiple personas allows for sophisticated adaptation to different leadership contexts`
+    `The integration of multiple personas allows for sophisticated adaptation to different Inner Personacontexts`
   ];
 }
 
@@ -440,7 +440,7 @@ function generateLeadershipImpact(primary: EnhancedPersonaActivation, supporting
     `Creates ${primary.strengthFocus.toLowerCase()} that elevates organizational performance standards`,
     `Develops team capabilities through ${supporting[0]?.strengthFocus?.toLowerCase() || 'focused leadership'}`,
     `Provides ${supporting[1]?.strengthFocus?.toLowerCase() || 'valuable perspective'} that enhances strategic thinking`,
-    `Demonstrates leadership complexity that adapts to organizational needs while maintaining core strengths`
+    `Demonstrates Inner Personacomplexity that adapts to organizational needs while maintaining core strengths`
   ];
 }
 
@@ -448,21 +448,21 @@ function generateEnhancedActionPlan(primary: EnhancedPersonaActivation, supporti
   return {
     immediate: [
       `Conduct self-assessment of your ${primary.strengthFocus.toLowerCase()} patterns and their current impact`,
-      `Engage in three specific conversations where you explain your leadership intentions and approach`,
+      `Engage in three specific conversations where you explain your Inner Personaintentions and approach`,
       `Identify situations where your ${primary.personaName} response serves you well vs. creates challenges`,
-      `Begin transparent communication about your leadership style: "My approach is ${primary.strengthFocus.toLowerCase()}, and here's why..."`
+      `Begin transparent communication about your Inner Personastyle: "My approach is ${primary.strengthFocus.toLowerCase()}, and here's why..."`
     ],
     mediumTerm: [
       `Develop integrated systems that leverage your ${primary.strengthFocus.toLowerCase()} while incorporating ${supporting[0]?.strengthFocus?.toLowerCase() || 'supporting capabilities'}`,
-      `Create feedback mechanisms that help you understand the full impact of your leadership style`,
+      `Create feedback mechanisms that help you understand the full impact of your Inner Personastyle`,
       `Build collaborative approaches that enhance rather than replace your natural ${primary.strengthFocus.toLowerCase()}`,
       `Establish mentoring relationships to develop your coaching and development capabilities`
     ],
     longTerm: [
       `Evolve toward mastery integration where your ${primary.strengthFocus.toLowerCase()} becomes a development tool for others`,
-      `Create organizational systems that institutionalize your leadership strengths`,
+      `Create organizational systems that institutionalize your Inner Personastrengths`,
       `Develop expertise in leading others with similar or complementary persona patterns`,
-      `Build a leadership legacy that combines your natural gifts with enhanced interpersonal and developmental effectiveness`
+      `Build a Inner Personalegacy that combines your natural gifts with enhanced interpersonal and developmental effectiveness`
     ]
   };
 }
@@ -481,9 +481,9 @@ function generateEnhancedRiskAssessment(primary: EnhancedSchemaActivation, secon
     protectiveFactors: [
       `High investment in organizational success and performance`,
       `Strong work ethic and commitment to results`,
-      `${primaryDetails?.strengthFocus || 'Leadership capabilities'} that create value`,
+      `${primaryDetails?.strengthFocus || 'Inner Personacapabilities'} that create value`,
       `Professional context provides structure for intervention`,
-      `Apparent motivation for leadership effectiveness`
+      `Apparent motivation for Inner Personaeffectiveness`
     ],
     interventionPriorities: [
       `Immediate schema awareness training for ${primary.clinicalName} triggers`,
@@ -504,15 +504,15 @@ function generateEnhancedClinicalRecommendations(primary: EnhancedSchemaActivati
     ],
     intermediate: [
       `${primary.clinicalName} schema processing with licensed schema therapy specialist`,
-      `Interpersonal effectiveness skills development for leadership contexts`,
+      `Interpersonal effectiveness skills development for Inner Personacontexts`,
       `Integration work addressing multiple schema activations: ${secondary.slice(0,2).map(s => s.clinicalName).join(', ')}`,
       `Workplace behavior modification planning with clinical supervision`
     ],
     longTerm: [
       `Comprehensive schema integration therapy addressing ${primary.domain} concerns`,
-      `Leadership coaching with ongoing clinical supervision and consultation`,
+      `Inner Personacoaching with ongoing clinical supervision and consultation`,
       `Long-term monitoring of workplace interpersonal effectiveness and team impact`,
-      `Development of healthy leadership templates that integrate multiple schema modifications`
+      `Development of healthy Inner Personatemplates that integrate multiple schema modifications`
     ],
     therapyModality: `Schema-Focused Cognitive Behavioral Therapy with executive coaching integration. Individual therapy for schema processing, group work for interpersonal skills, and organizational consultation for systemic support.`,
     supervisionRequirements: [
@@ -541,11 +541,11 @@ function generateGrowthArea(persona: EnhancedPersonaActivation): string {
 
 // Generate schema interaction dynamics
 function generateSchemaInteractionDynamics(primary: EnhancedSchemaActivation, secondary: EnhancedSchemaActivation[]): string {
-  return `The ${primary.clinicalName} schema interacts with secondary activations to create complex leadership behavioral patterns:
+  return `The ${primary.clinicalName} schema interacts with secondary activations to create complex Inner Personabehavioral patterns:
 
 ${secondary.slice(0, 3).map(schema => 
   `- <strong>${schema.clinicalName} (${schema.activationLevel}%):</strong> ${schema.clinicalSignificance}`
 ).join('\n')}
 
-This multi-schema activation pattern requires integrated therapeutic approach addressing both primary ${primary.clinicalName.toLowerCase()} concerns and secondary schema interactions that reinforce maladaptive leadership patterns.`;
+This multi-schema activation pattern requires integrated therapeutic approach addressing both primary ${primary.clinicalName.toLowerCase()} concerns and secondary schema interactions that reinforce maladaptive Inner Personapatterns.`;
 }

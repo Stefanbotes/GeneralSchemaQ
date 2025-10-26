@@ -12,15 +12,15 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Leadership Personas Assessment",
+  title: "Inner PersonaPersonas Assessment",
   description:
-    "Discover your leadership persona through behavioral reflection statements and identify growth opportunities.",
-  keywords: "leadership, assessment, personas, behavioral reflection, leadership development",
-  authors: [{ name: "Leadership Personas Assessment" }],
+    "Discover your Inner Personapersona through behavioral reflection statements and identify growth opportunities.",
+  keywords: "leadership, assessment, personas, behavioral reflection, Inner Personadevelopment",
+  authors: [{ name: "Inner PersonaPersonas Assessment" }],
   openGraph: {
-    title: "Leadership Personas Assessment",
+    title: "Inner PersonaPersonas Assessment",
     description:
-      "Discover your leadership persona through behavioral reflection statements and identify growth opportunities.",
+      "Discover your Inner Personapersona through behavioral reflection statements and identify growth opportunities.",
     type: "website",
   },
 };

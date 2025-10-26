@@ -77,7 +77,7 @@ export const SCHEMA_MAPPINGS: SchemaMapping[] = [
     clinicalDescription: "The feeling that one is defective, bad, unwanted, inferior, or invalid in important respects",
     adaptiveExpression: "Independent innovation, unique problem-solving, creative approaches",
     maladaptiveExpression: "Hiding authentic self, avoiding visibility, minimizing contributions",
-    leadershipManifestation: "Brings innovative solutions but may limit leadership visibility and influence",
+    leadershipManifestation: "Brings innovative solutions but may limit Inner Personavisibility and influence",
     interventionApproaches: ["Self-worth building", "Visibility training", "Strengths recognition"]
   },
   {
@@ -86,7 +86,7 @@ export const SCHEMA_MAPPINGS: SchemaMapping[] = [
     clinicalDescription: "The belief that one is incompetent or inadequate in areas of achievement",
     adaptiveExpression: "Thorough preparation, careful evaluation, risk-aware decision making",
     maladaptiveExpression: "Excessive self-doubt, paralysis by analysis, avoiding challenging decisions",
-    leadershipManifestation: "Ensures thorough evaluation but may lack confidence in leadership decisions",
+    leadershipManifestation: "Ensures thorough evaluation but may lack confidence in Inner Personadecisions",
     interventionApproaches: ["Competence building", "Decision confidence training", "Success recognition"]
   },
   {
@@ -112,8 +112,8 @@ export const SCHEMA_MAPPINGS: SchemaMapping[] = [
     domain: "Impaired Limits",
     clinicalDescription: "Excessive focus on voluntarily meeting the needs of others at the expense of one's own needs",
     adaptiveExpression: "Service leadership, team support, generous development of others",
-    maladaptiveExpression: "Burnout patterns, boundary violations, neglect of leadership needs",
-    leadershipManifestation: "Strong team support but may sacrifice leadership effectiveness through over-giving",
+    maladaptiveExpression: "Burnout patterns, boundary violations, neglect of Inner Personaneeds",
+    leadershipManifestation: "Strong team support but may sacrifice Inner Personaeffectiveness through over-giving",
     interventionApproaches: ["Boundary development", "Self-care integration", "Sustainable service"]
   },
   {
@@ -122,8 +122,8 @@ export const SCHEMA_MAPPINGS: SchemaMapping[] = [
     clinicalDescription: "Excessive surrendering of control to others because one feels coerced",
     adaptiveExpression: "Collaborative leadership, consensus building, harmonious team dynamics",
     maladaptiveExpression: "Loss of authentic voice, excessive accommodation, decision avoidance",
-    leadershipManifestation: "Builds harmony but may sacrifice valuable perspective and leadership authority",
-    interventionApproaches: ["Voice development", "Authentic expression training", "Leadership presence building"]
+    leadershipManifestation: "Builds harmony but may sacrifice valuable perspective and Inner Personaauthority",
+    interventionApproaches: ["Voice development", "Authentic expression training", "Inner Personapresence building"]
   },
   {
     schemaName: "Emotional Inhibition",
@@ -131,8 +131,8 @@ export const SCHEMA_MAPPINGS: SchemaMapping[] = [
     clinicalDescription: "Excessive inhibition of spontaneous action, feeling, or communication",
     adaptiveExpression: "Diplomatic communication, smooth team interactions, conflict resolution",
     maladaptiveExpression: "Suppressed authentic expression, limited emotional range, disconnection",
-    leadershipManifestation: "Facilitates smooth interactions but may limit authentic leadership connection",
-    interventionApproaches: ["Authentic expression development", "Emotional integration", "Leadership presence"]
+    leadershipManifestation: "Facilitates smooth interactions but may limit authentic Inner Personaconnection",
+    interventionApproaches: ["Authentic expression development", "Emotional integration", "Inner Personapresence"]
   },
   {
     schemaName: "Approval-Seeking/Recognition-Seeking",
@@ -140,7 +140,7 @@ export const SCHEMA_MAPPINGS: SchemaMapping[] = [
     clinicalDescription: "Excessive emphasis on gaining approval, recognition, or attention from other people",
     adaptiveExpression: "Professional relationship building, stakeholder awareness, organizational sensitivity",
     maladaptiveExpression: "Image management over authenticity, external validation dependence",
-    leadershipManifestation: "Strong relationship skills but may limit authentic leadership expression",
+    leadershipManifestation: "Strong relationship skills but may limit authentic Inner Personaexpression",
     interventionApproaches: ["Authentic relationship building", "Internal validation development", "Values-based decision making"]
   },
   {
@@ -149,8 +149,8 @@ export const SCHEMA_MAPPINGS: SchemaMapping[] = [
     clinicalDescription: "The belief that one is superior to other people; entitled to special rights and privileges",
     adaptiveExpression: "Strategic influence, organizational navigation, results-driven leadership",
     maladaptiveExpression: "Dominance seeking, limited collaboration, control concentration",
-    leadershipManifestation: "Strong influence capabilities but may limit collaborative leadership development",
-    interventionApproaches: ["Collaborative leadership training", "Empowerment skill building", "Shared power development"]
+    leadershipManifestation: "Strong influence capabilities but may limit collaborative Inner Personadevelopment",
+    interventionApproaches: ["Collaborative Inner Personatraining", "Empowerment skill building", "Shared power development"]
   },
   {
     schemaName: "Negativity/Pessimism",
@@ -192,7 +192,7 @@ export const SCHEMA_MAPPINGS: SchemaMapping[] = [
     schemaName: "Insufficient Self-Control",
     domain: "Overvigilance & Inhibition",
     clinicalDescription: "Pervasive difficulty or refusal to exercise sufficient self-control",
-    adaptiveExpression: "Authentic communication, direct feedback, transparent leadership style",
+    adaptiveExpression: "Authentic communication, direct feedback, transparent Inner Personastyle",
     maladaptiveExpression: "Emotional reactivity, impulsive responses, lack of communication filters",
     leadershipManifestation: "Provides authenticity and clarity but may create relationship challenges",
     interventionApproaches: ["Strategic communication training", "Emotional regulation", "Context sensitivity"]
@@ -490,7 +490,7 @@ export function assessLeadershipRisk(personaScores: PersonaScore[]): RiskAssessm
   if (highActivationPersonas.length >= 3) {
     riskLevel = 'HIGH';
     factors.push("Multiple high-activation patterns suggest significant behavioral rigidity");
-    recommendations.push("Comprehensive leadership development program recommended");
+    recommendations.push("Comprehensive Inner Personadevelopment program recommended");
     monitoring.push("Monitor for stress-related escalation of patterns");
   } else if (highActivationPersonas.length === 2) {
     riskLevel = 'MODERATE';
@@ -543,7 +543,7 @@ export function identifyProblematicCombinations(personaScores: PersonaScore[]): 
   const hasIndependent = topThree.some(p => p.publicName === "The Independent Innovator");
   
   if (hasPowerBroker && hasIndependent) {
-    combinations.push("Control orientation combined with independence seeking may create internal tension and inconsistent leadership signals");
+    combinations.push("Control orientation combined with independence seeking may create internal tension and inconsistent Inner Personasignals");
   }
 
   return combinations;
@@ -577,9 +577,9 @@ export function generateTreatmentPlan(personaScores: PersonaScore[]): TreatmentP
 
 function determineInterventionType(primaryScore: number, secondaryScore: number): string {
   if (primaryScore > 75) return "Intensive Schema-Focused Therapy";
-  if (primaryScore > 60) return "Cognitive-Behavioral Leadership Coaching";
+  if (primaryScore > 60) return "Cognitive-Behavioral Inner PersonaCoaching";
   if (primaryScore > 40) return "Strengths-Based Development Program";
-  return "Supportive Leadership Enhancement";
+  return "Supportive Inner PersonaEnhancement";
 }
 
 function determineTreatmentDuration(primaryScore: number): string {
@@ -612,22 +612,22 @@ function getExpectedOutcomes(primary: string, secondary: string): string[] {
     "The Excellence Champion": ["Flexible excellence standards", "Improved team morale", "Balanced achievement focus"],
     "The Standards Leader": ["Positive team culture", "Increased psychological safety", "Growth-oriented feedback"],
     "The Relationship Champion": ["Healthy professional boundaries", "Balanced team connection", "Enhanced autonomy support"],
-    "The Harmony Builder": ["Authentic voice expression", "Healthy conflict engagement", "Decisive leadership confidence"],
+    "The Harmony Builder": ["Authentic voice expression", "Healthy conflict engagement", "Decisive Inner Personaconfidence"],
     "The Relationship Cultivator": ["Authentic stakeholder relationships", "Internal confidence building", "Values-driven decision making"],
     "The Focus Leader": ["Enhanced emotional intelligence", "Improved team engagement", "Balanced task-relationship focus"],
-    "The Service Leader": ["Sustainable leadership practices", "Healthy boundary maintenance", "Balanced self-care modeling"],
+    "The Service Leader": ["Sustainable Inner Personapractices", "Healthy boundary maintenance", "Balanced self-care modeling"],
     "The Careful Evaluator": ["Increased decision confidence", "Recognition of competence", "Balanced evaluation approach"],
     "The Authentic Communicator": ["Improved emotional regulation", "Enhanced communication effectiveness", "Context-sensitive expression"]
   };
   
-  return outcomes[primary] || ["Enhanced adaptive expression", "Improved leadership effectiveness", "Better team dynamics"];
+  return outcomes[primary] || ["Enhanced adaptive expression", "Improved Inner Personaeffectiveness", "Better team dynamics"];
 }
 
 function getContraindications(primary: string, secondary: string): string[] {
   const contraindications: Record<string, string[]> = {
     "The Strategic Influencer": ["Avoid power reduction without skill building", "Don't suppress influence capabilities", "Maintain achievement orientation"],
     "The Excellence Champion": ["Don't eliminate standards entirely", "Avoid perfectionism shaming", "Maintain excellence focus"],
-    "The Standards Leader": ["Avoid accountability elimination", "Don't suppress leadership authority", "Maintain performance standards"],
+    "The Standards Leader": ["Avoid accountability elimination", "Don't suppress Inner Personaauthority", "Maintain performance standards"],
     "The Harmony Builder": ["Avoid conflict elimination", "Don't suppress harmony skills", "Maintain collaboration strengths"],
     "The Relationship Cultivator": ["Avoid relationship avoidance", "Don't eliminate stakeholder awareness", "Maintain networking abilities"],
     "The Focus Leader": ["Don't eliminate task focus", "Avoid productivity reduction", "Maintain goal orientation"],
@@ -679,11 +679,11 @@ function assessClinicalValue(personaScores: PersonaScore[]): string {
 function assessResearchContribution(domainDistribution: Record<string, number>): string {
   const dominantDomains = Object.entries(domainDistribution).filter(([_, count]) => count > 2);
   if (dominantDomains.length > 1) {
-    return "Cross-domain activation patterns contribute to leadership schema integration research";
+    return "Cross-domain activation patterns contribute to Inner Personaschema integration research";
   } else if (dominantDomains.length === 1) {
-    return "Single-domain concentration provides insight into specialized leadership patterns";
+    return "Single-domain concentration provides insight into specialized Inner Personapatterns";
   }
-  return "Balanced domain distribution offers general leadership development insights";
+  return "Balanced domain distribution offers general Inner Personadevelopment insights";
 }
 
 function generateFollowUpRecommendation(personaScores: PersonaScore[]): string {
@@ -693,7 +693,7 @@ function generateFollowUpRecommendation(personaScores: PersonaScore[]): string {
   } else if (primary.percentage > 60) {
     return "3-month follow-up recommended to monitor development progress and adaptive changes";
   }
-  return "Annual follow-up sufficient for general leadership development tracking";
+  return "Annual follow-up sufficient for general Inner Personadevelopment tracking";
 }
 
 // Additional exports (main functions are already exported above)

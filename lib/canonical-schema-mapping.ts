@@ -2,7 +2,7 @@
 
 // ✅ CANONICAL SCHEMA MAPPING - MATCHES STUDIO
 // Single source of truth for schema → persona → domain relationships
-// This mapping ensures Clinical and Leadership reports match Studio exactly
+// This mapping ensures Clinical and Inner Personareports match Studio exactly
 
 export type SchemaDomain = 
   | "Disconnection & Rejection"

@@ -32,7 +32,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     strengthFocus: "Connection & Loyalty",
     clinicalDescription: "Excessive dependency, fear of abandonment, clinging behavior in professional relationships",
     publicDescription: "You excel at building strong, loyal relationships and creating deep connections with team members. Your investment in relationships drives collaboration and trust.",
-    developmentEdge: "Your relationship focus builds trust - consider how maintaining healthy boundaries can strengthen both your leadership effectiveness and team autonomy.",
+    developmentEdge: "Your relationship focus builds trust - consider how maintaining healthy boundaries can strengthen both your Inner Personaeffectiveness and team autonomy.",
     questionIds: ['1.1.1', '1.1.2', '1.1.3'],
     behaviors: {
       behavioral_markers: [
@@ -56,7 +56,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     },
     integration_patterns: {
       with_high_scores: [
-        "Creates intense, emotionally demanding leadership relationships",
+        "Creates intense, emotionally demanding Inner Personarelationships",
         "May struggle with appropriate professional boundaries",
         "Uses control and demands as means of preventing abandonment"
       ],
@@ -73,7 +73,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     domain: "Disconnection & Rejection",
     strengthFocus: "Careful Planning & Analysis", 
     clinicalDescription: "Social withdrawal, avoidance of visibility, hiding behavior due to shame",
-    publicDescription: "You bring careful analysis and strategic thinking to leadership challenges. Your thoughtful approach helps teams avoid hasty decisions and consider important details.",
+    publicDescription: "You bring careful analysis and strategic thinking to Inner Personachallenges. Your thoughtful approach helps teams avoid hasty decisions and consider important details.",
     developmentEdge: "Your analytical depth is valuable - consider how sharing your insights more visibly can multiply your impact and help others benefit from your strategic thinking.",
     questionIds: ['1.2.1', '1.2.2', '1.2.3'],
     behaviors: {
@@ -98,13 +98,13 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     },
     integration_patterns: {
       with_high_scores: [
-        "Creates pattern of underutilized leadership potential",
+        "Creates pattern of underutilized Inner Personapotential",
         "May avoid opportunities that require visibility",
         "Valuable insights may remain hidden from organization"
       ],
       with_specific_personas: {
         "The Perfectionist Driver": "Perfectionism combined with hiding creates private high standards",
-        "The Self-Doubter": "Amplifies self-doubt and reduces willingness to take visible leadership roles"
+        "The Self-Doubter": "Amplifies self-doubt and reduces willingness to take visible Inner Personaroles"
       }
     }
   },
@@ -243,7 +243,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     strengthFocus: "Thorough Assessment & Consideration",
     clinicalDescription: "Incompetence beliefs, excessive self-doubt, performance anxiety, difficulty making decisions independently",
     publicDescription: "You bring thorough evaluation and careful consideration to decisions. Your attention to multiple perspectives and potential outcomes helps teams make well-informed choices.",
-    developmentEdge: "Your careful evaluation prevents mistakes - consider how trusting your expertise and communicating your insights with confidence can enhance your leadership influence.",
+    developmentEdge: "Your careful evaluation prevents mistakes - consider how trusting your expertise and communicating your insights with confidence can enhance your Inner Personainfluence.",
     questionIds: ['2.1.1', '2.1.2', '2.1.3'],
     behaviors: {
       behavioral_markers: [
@@ -268,12 +268,12 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     integration_patterns: {
       with_high_scores: [
         "Valuable caution may be undermined by excessive self-doubt",
-        "Teams may lose confidence in leadership decisiveness",
+        "Teams may lose confidence in Inner Personadecisiveness",
         "Important insights may be discounted due to delivery uncertainty"
       ],
       with_specific_personas: {
         "The Perfectionist Driver": "Creates paralysis - high standards combined with self-doubt prevents action",
-        "The Invisible Operator": "Double-pattern of hiding and self-doubt severely limits leadership visibility"
+        "The Invisible Operator": "Double-pattern of hiding and self-doubt severely limits Inner Personavisibility"
       }
     }
   },
@@ -441,7 +441,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
         "Leader burnout from chronic self-suppression"
       ],
       with_specific_personas: {
-        "The Invisible Operator": "Double-pattern of hiding and adapting creates very minimal leadership presence",
+        "The Invisible Operator": "Double-pattern of hiding and adapting creates very minimal Inner Personapresence",
         "The Overgiver": "Creates pattern of giving and adapting that eliminates personal needs entirely"
       }
     }
@@ -453,7 +453,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     domain: "Other-Directedness",
     strengthFocus: "Collaborative Decision-Making",
     clinicalDescription: "Emotional inhibition in interpersonal contexts, voice suppression, difficulty expressing authentic reactions",
-    publicDescription: "You bring diplomatic skills and collaborative approaches that help teams navigate complex situations with grace. Your ability to facilitate smooth interactions is a valuable leadership asset.",
+    publicDescription: "You bring diplomatic skills and collaborative approaches that help teams navigate complex situations with grace. Your ability to facilitate smooth interactions is a valuable Inner Personaasset.",
     developmentEdge: "Your diplomatic skills create smooth collaboration - consider how sharing your authentic perspective can add valuable insight while maintaining your excellent relationship-building abilities.",
     questionIds: ['4.1.1', '4.1.2', '4.1.3'],
     behaviors: {
@@ -478,13 +478,13 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     },
     integration_patterns: {
       with_high_scores: [
-        "Teams miss valuable leadership perspective and insight",
+        "Teams miss valuable Inner Personaperspective and insight",
         "May create pseudo-harmony without real resolution",
         "Leader authenticity and influence may be compromised"
       ],
       with_specific_personas: {
         "The Over-Adapter": "Creates complete self-suppression in service of group harmony",
-        "The Invisible Operator": "Double-pattern of hiding and voice suppression creates minimal leadership presence"
+        "The Invisible Operator": "Double-pattern of hiding and voice suppression creates minimal Inner Personapresence"
       }
     }
   },
@@ -521,7 +521,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     },
     integration_patterns: {
       with_high_scores: [
-        "Authentic leadership voice may be compromised",
+        "Authentic Inner Personavoice may be compromised",
         "Decision-making may be driven by approval rather than merit",
         "Team may sense inauthentic or performative leadership"
       ],
@@ -538,8 +538,8 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     domain: "Other-Directedness",
     strengthFocus: "Organizational Navigation",
     clinicalDescription: "Grandiosity patterns, dominance-seeking, control and status focus, entitlement beliefs",
-    publicDescription: "You excel at understanding organizational dynamics and driving results through strategic influence. Your ability to navigate complex systems and make things happen is a valuable leadership asset.",
-    developmentEdge: "Your influence capabilities are impressive - consider how collaborative leadership approaches can amplify your already strong results and develop others' strategic capabilities.",
+    publicDescription: "You excel at understanding organizational dynamics and driving results through strategic influence. Your ability to navigate complex systems and make things happen is a valuable Inner Personaasset.",
+    developmentEdge: "Your influence capabilities are impressive - consider how collaborative Inner Personaapproaches can amplify your already strong results and develop others' strategic capabilities.",
     questionIds: ['4.3.1', '4.3.2', '4.3.3'],
     behaviors: {
       behavioral_markers: [
@@ -568,7 +568,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
         "Organizational impact may be limited by self-focus"
       ],
       with_specific_personas: {
-        "The Punitive Controller": "Creates authoritarian leadership style with punishment for non-compliance",
+        "The Punitive Controller": "Creates authoritarian Inner Personastyle with punishment for non-compliance",
         "The Image Manager": "Uses image management to support grandiose self-presentation"
       }
     }
@@ -612,7 +612,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
       ],
       with_specific_personas: {
         "The Guarded Strategist": "Double-layer of pessimism and mistrust creates very defensive leadership",
-        "The Self-Doubter": "Pessimism reinforces self-doubt creating leadership paralysis"
+        "The Self-Doubter": "Pessimism reinforces self-doubt creating Inner Personaparalysis"
       }
     }
   },
@@ -623,7 +623,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     domain: "Overvigilance & Inhibition",
     strengthFocus: "Emotional Stability & Reliability", 
     clinicalDescription: "Emotional inhibition, suppression of authentic expression, controlled emotional presentation",
-    publicDescription: "You provide emotional stability and steady presence that teams can rely on during challenging times. Your composed leadership helps others maintain focus and confidence.",
+    publicDescription: "You provide emotional stability and steady presence that teams can rely on during challenging times. Your composed Inner Personahelps others maintain focus and confidence.",
     developmentEdge: "Your steadiness provides security - consider how appropriate emotional expression and vulnerability can deepen trust and create even stronger team connections.",
     questionIds: ['5.2.1', '5.2.2', '5.2.3'],
     behaviors: {
@@ -636,7 +636,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
       cognitive_patterns: [
         "Believes emotional expression is unprofessional or weakness",
         "Values control and predictability in interpersonal interactions",
-        "Sees vulnerability as dangerous to leadership credibility",
+        "Sees vulnerability as dangerous to Inner Personacredibility",
         "Focuses on maintaining composure above authentic expression"
       ],
       emotional_regulation: [
@@ -649,11 +649,11 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     integration_patterns: {
       with_high_scores: [
         "Team may feel disconnected from leader's authentic experience",
-        "Important emotional data may be missing from leadership decisions",
+        "Important emotional data may be missing from Inner Personadecisions",
         "Leader burnout from chronic emotional suppression"
       ],
       with_specific_personas: {
-        "The Withholder": "Creates extremely controlled and potentially cold leadership presence",
+        "The Withholder": "Creates extremely controlled and potentially cold Inner Personapresence",
         "The Perfectionist Driver": "Emotional perfectionism adds pressure to never show weakness"
       }
     }
@@ -749,7 +749,7 @@ export const ENHANCED_PERSONA_MAPPING: Record<string, PersonaDetails> = {
     domain: "Overvigilance & Inhibition",
     strengthFocus: "Direct Communication & Honesty",
     clinicalDescription: "Emotional dysregulation, impulsive expression, lack of filters, immediate emotional reactions",
-    publicDescription: "Your authentic, direct communication style brings clarity and transparency to leadership interactions. Teams appreciate knowing exactly where they stand and value your honest, straightforward approach.",
+    publicDescription: "Your authentic, direct communication style brings clarity and transparency to Inner Personainteractions. Teams appreciate knowing exactly where they stand and value your honest, straightforward approach.",
     developmentEdge: "Your authenticity is refreshing - consider how strategic timing and context can make your direct communication even more effective and well-received.",
     questionIds: ['2.4.1', '2.4.2', '2.4.3'],
     behaviors: {

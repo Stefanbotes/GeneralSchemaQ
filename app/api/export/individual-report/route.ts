@@ -171,7 +171,7 @@ function generateHTMLReport(bioData: any, topPersonas: any[], responses: any, co
     <div class="report-container">
         <div class="header">
             <div class="logo">Inner Personas Assessment</div>
-            <h1>Personal Leadership Report</h1>
+            <h1>Personal Inner PersonaReport</h1>
             <p>Behavioral Pattern Analysis & Growth Insights</p>
         </div>
 
@@ -200,15 +200,15 @@ function generateHTMLReport(bioData: any, topPersonas: any[], responses: any, co
         </div>
 
         <h2>Your Inner Personas</h2>
-        <p>Based on your responses to ${totalQuestions} behavioral reflection statements, here are your strongest leadership patterns:</p>
+        <p>Based on your responses to ${totalQuestions} behavioral reflection statements, here are your strongest Inner Personapatterns:</p>
 
         ${topPersonas.map((persona, index) => {
           // Import the persona mapping here or pass it through
           const personaMap = getPersonaMapping();
           const publicPersona = (personaMap as any)[persona.persona] || {
             publicName: persona.persona,
-            strengthFocus: "Leadership Qualities",
-            coachingDescription: "You demonstrate distinctive leadership qualities.",
+            strengthFocus: "Inner PersonaQualities",
+            coachingDescription: "You demonstrate distinctive Inner Personaqualities.",
             developmentEdge: "Continue building on your natural strengths."
           };
           
@@ -261,7 +261,7 @@ function getPersonaMapping() {
       publicName: "The Focus Leader",
       strengthFocus: "Results-Driven Clarity", 
       coachingDescription: "You excel at keeping teams focused on objectives without getting derailed by emotional distractions. Your clarity and task orientation help organizations maintain productivity and achieve their goals efficiently.",
-      developmentEdge: "Incorporating emotional awareness into your leadership toolkit can enhance team engagement and long-term performance."
+      developmentEdge: "Incorporating emotional awareness into your Inner Personatoolkit can enhance team engagement and long-term performance."
     },
     "The Guarded Strategist": {
       publicName: "The Protective Planner",
@@ -280,7 +280,7 @@ function getPersonaMapping() {
     "The Self-Doubter": {
       publicName: "The Careful Evaluator", 
       strengthFocus: "Thorough Assessment & Quality Assurance",
-      coachingDescription: "Your careful consideration of decisions and attention to potential challenges helps organizations avoid costly mistakes. You bring valuable quality control and risk assessment to leadership decisions.",
+      coachingDescription: "Your careful consideration of decisions and attention to potential challenges helps organizations avoid costly mistakes. You bring valuable quality control and risk assessment to Inner Personadecisions.",
       developmentEdge: "Trust in your proven capabilities and consider moving forward with confidence when you've done thorough preparation."
     },
     "The Reluctant Rely-er": {
@@ -306,13 +306,13 @@ function getPersonaMapping() {
     "The Power Broker": {
       publicName: "The Strategic Influencer",
       strengthFocus: "Organizational Navigation & Results",
-      coachingDescription: "You excel at understanding organizational dynamics and driving results through strategic influence. Your ability to navigate complex systems and make things happen is a valuable leadership asset.",
-      developmentEdge: "Your influence capabilities are impressive - consider how collaborative leadership approaches can amplify your already strong results."
+      coachingDescription: "You excel at understanding organizational dynamics and driving results through strategic influence. Your ability to navigate complex systems and make things happen is a valuable Inner Personaasset.",
+      developmentEdge: "Your influence capabilities are impressive - consider how collaborative Inner Personaapproaches can amplify your already strong results."
     },
     "The Unfiltered Reactor": {
       publicName: "The Authentic Communicator",
       strengthFocus: "Direct Communication & Genuine Expression", 
-      coachingDescription: "Your authentic, direct communication style brings clarity and transparency to leadership interactions. Teams appreciate knowing exactly where they stand and value your honest, straightforward approach.",
+      coachingDescription: "Your authentic, direct communication style brings clarity and transparency to Inner Personainteractions. Teams appreciate knowing exactly where they stand and value your honest, straightforward approach.",
       developmentEdge: "Your authenticity is refreshing - consider how strategic timing and context can make your direct communication even more effective and well-received."
     },
 
@@ -332,7 +332,7 @@ function getPersonaMapping() {
     "The Image Manager": {
       publicName: "The Relationship Cultivator",
       strengthFocus: "Stakeholder Engagement & Communication",
-      coachingDescription: "You have exceptional skills in building positive relationships and managing stakeholder perceptions. Your awareness of how others view leadership decisions helps organizations maintain strong external relationships.",
+      coachingDescription: "You have exceptional skills in building positive relationships and managing stakeholder perceptions. Your awareness of how others view Inner Personadecisions helps organizations maintain strong external relationships.",
       developmentEdge: "Your relationship skills are strong - consider balancing external focus with authentic self-expression and internal team development."
     },
 
@@ -366,7 +366,7 @@ function getPersonaMapping() {
     "The Rigid Controller": {
       publicName: "The Systematic Leader",
       strengthFocus: "Structure & Process Excellence",
-      coachingDescription: "You bring valuable structure and systematic thinking to your leadership approach. Your commitment to proven methods helps teams maintain quality and consistency in their work.",
+      coachingDescription: "You bring valuable structure and systematic thinking to your Inner Personaapproach. Your commitment to proven methods helps teams maintain quality and consistency in their work.",
       developmentEdge: "Your systematic approach is valuable - consider how selective flexibility can help you adapt to changing circumstances while maintaining your high standards."
     },
     "The Recognition Seeker": {

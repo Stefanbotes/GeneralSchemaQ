@@ -90,7 +90,7 @@ This migration will create 11 tables in your production database:
 | `verification_tokens` | Email verification |
 | `password_reset_tokens` | Password resets |
 | `rate_limit_records` | Security rate limiting |
-| `assessments` | Leadership assessments |
+| `assessments` | Inner Personaassessments |
 | `assessment_questions` | Question bank |
 | `lasbi_items` | LASBI item metadata |
 | `lasbi_responses` | Assessment responses |
