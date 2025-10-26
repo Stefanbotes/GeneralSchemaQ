@@ -1,203 +1,115 @@
+'use client';
 
-// Results page for users to view and download their assessment reports
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { db } from '@/lib/db';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useRef, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Download, 
-  FileText, 
-  Trophy, 
-  Calendar,
-  CheckCircle,
-  AlertCircle,
-  BarChart3,
-  User,
-  Database
-} from 'lucide-react';
-import Link from 'next/link';
-import { JsonExportButton } from '@/components/JsonExportButton';
+import { toast } from 'sonner';
 
+// Ensure this page is always rendered on-demand (no static 404s)
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-export default async function ResultsPage() {
-  const session = await getServerSession(authOptions);
+export default function ResultsPage() {
+  const search = useSearchParams();
+  const router = useRouter();
 
-  if (!session?.user) {
-    redirect('/auth/login?callbackUrl=/results');
-  }
+  const justCompleted = search.get('justCompleted') === '1';
+  const assessmentId = search.get('id') || '';
+  const [downloading, setDownloading] = useState(false);
+  const didAuto = useRef(false);
 
-  // Fetch user's completed assessments
-  const user = await db.users.findUnique({
-    where: { id: session.user.id },
-    include: {
-      assessments: {
-        where: { status: 'COMPLETED' },
-        orderBy: { completedAt: 'desc' },
-      },
-    },
-  });
+  useEffect(() => {
+    // Auto-download once if we just completed and have an id
+    if (justCompleted && assessmentId && !didAuto.current) {
+      didAuto.current = true;
+      void downloadTier1(assessmentId);
+    }
+  }, [justCompleted, assessmentId]);
 
-  if (!user) {
-    redirect('/auth/login');
-  }
+  const downloadTier1 = async (id: string) => {
+    try {
+      setDownloading(true);
+      toast.loading('Generating your Inner Persona summary...');
+      const res = await fetch('/api/reports/generate-tier1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assessmentId: id }),
+      });
 
-  const completedAssessments = user.assessments || [];
+      if (!res.ok) {
+        const err = await safeJson(res);
+        throw new Error(err?.error || 'Failed to generate report');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Leadership_Summary_${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success('Summary downloaded!');
+    } catch (e: any) {
+      toast.dismiss();
+      toast.error(e?.message || 'Failed to download report.');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Assessment Results</h1>
-          <p className="text-gray-600">
-            View and download your completed Inner Personaassessment reports
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-slate-100 p-6">
+      <div className="max-w-2xl mx-auto">
+        <Card className="bg-white shadow-xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">Thank you!</CardTitle>
+            <CardDescription>
+              {justCompleted
+                ? 'Your assessment is complete. Your Tier-1 summary should download automatically.'
+                : 'You can download your Tier-1 summary again below.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex justify-center">
+              <Button
+                onClick={() => assessmentId && downloadTier1(assessmentId)}
+                disabled={!assessmentId || downloading}
+                className="px-6"
+              >
+                {downloading ? 'Generating…' : 'Download summary again'}
+              </Button>
+            </div>
 
-        {completedAssessments.length === 0 ? (
-          /* No Completed Assessments */
-          <Card className="bg-white shadow-lg">
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 bg-primary100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="h-8 w-8 text-primary600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No Completed Assessments</h3>
-              <p className="text-gray-600 mb-6">
-                You haven't completed any assessments yet. Start your Inner Personajourney today!
+            {!assessmentId && (
+              <p className="text-sm text-center text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
+                We couldn’t detect an assessment ID. Please return to the dashboard/results and open this page with the correct link, e.g. <code>/results?id=&lt;assessmentId&gt;</code>.
               </p>
-              <Link href="/assessment">
-                <Button size="lg" className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Start Assessment
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ) : (
-          /* Display Completed Assessments */
-          <div className="space-y-6">
-            {completedAssessments.map((assessment: any) => (
-              <Card key={assessment.id} className="bg-white shadow-lg">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center">
-                        <Trophy className="h-5 w-5 mr-2 text-green-600" />
-                        Inner PersonaAssessment Complete
-                      </CardTitle>
-                      <CardDescription className="flex items-center mt-2">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Completed on {assessment.completedAt ? new Date(assessment.completedAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        }) : 'Unknown'}
-                      </CardDescription>
-                    </div>
-                    <Badge variant="default" className="bg-green-100 text-green-800">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Completed
-                    </Badge>
-                  </div>
-                </CardHeader>
-                
-                <CardContent>
-                  {/* Inner Persona Result */}
-                  {assessment.leadershipPersona && (
-                    <div className="mb-6 p-4 bg-gradient-to-r bg-primary)50 to-indigo-50 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-primary800 mb-2 flex items-center">
-                        <User className="h-4 w-4 mr-2" />
-                        Your Inner Persona
-                      </h4>
-                      <p className="text-lg font-bold text-primary900 mb-2">
-                        {assessment.leadershipPersona}
-                      </p>
-                      <p className="text-sm text-primary700">
-                        This persona represents your primary Inner Personapatterns and natural strengths.
-                      </p>
-                    </div>
-                  )}
+            )}
 
-                  {/* Download Reports Section */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-800 mb-3">Available Reports:</h4>
-                    
-                    {/* Tier 1 Report - Always available for completed assessments */}
-                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-2">
-                          <FileText className="h-4 w-4 text-green-600 mr-2" />
-                          <span className="font-medium text-green-800">Personal Summary Report</span>
-                        </div>
-                        <p className="text-sm text-green-700">
-                          Your personalized Inner Personasummary with key strengths and growth opportunities.
-                        </p>
-                      </div>
-                      <form action="/api/reports/generate-tier1" method="POST" className="ml-4">
-                        <input type="hidden" name="userId" value={session.user.id} />
-                        <input type="hidden" name="assessmentId" value={assessment.id} />
-                        <Button 
-                          type="submit"
-                          size="sm" 
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download Report
-                        </Button>
-                      </form>
-                    </div>
+            <div className="text-xs text-gray-500 text-center">
+              If your browser blocked the download, click “Download summary again”.
+            </div>
 
-                    {/* JSON Export */}
-                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-2">
-                          <Database className="h-4 w-4 text-green-600 mr-2" />
-                          <span className="font-medium text-green-800">Assessment Data Export</span>
-                        </div>
-                        <p className="text-sm text-green-700">
-                          Structured JSON export of your assessment data for research or personal analysis.
-                        </p>
-                      </div>
-                      <div className="ml-4">
-                        <JsonExportButton 
-                          userId={session.user.id}
-                          assessmentId={assessment.id}
-                          userName={`${user.firstName || 'User'} ${user.lastName || ''}`}
-                          size="sm"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Info about advanced reports */}
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>Advanced Reports:</strong> Detailed Inner Personaand clinical reports are available through your organization's admin. 
-                        Contact your administrator if you need access to comprehensive assessment analysis.
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Back to Dashboard */}
-        <div className="mt-8 text-center">
-          <Link href="/dashboard">
-            <Button variant="outline">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-        </div>
+            <div className="text-center">
+              <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                Back to dashboard
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
+}
+
+async function safeJson(res: Response) {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
