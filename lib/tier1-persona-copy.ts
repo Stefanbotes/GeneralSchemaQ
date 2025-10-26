@@ -1,18 +1,19 @@
-
 // app/lib/tier1-persona-copy.ts
 // Canonical Tier-1 (leadership) copy deck, aligned to scorer schema labels.
 // Keys MUST match the scorer's schemaLabel exactly.
 
+import type { VariableId } from "@/app/lib/shared-lasbi-mapping";
+
 export interface Tier1PersonaCopy {
-  variableId: string;                 // "1.1" ..."5.4"
-  domain: string;                     // "Disconnection/Rejection", etc.
-  leadershipPersona: string;          // Tier-1 public name
-  healthyPersona: string;             // Healthy expression label
-  leadershipId?: string;              // Optional internal key
-  clinicalId?: string;                // Optional internal key
-  publicDescription: string;          // 1-liner blurb for Tier-1
-  strengthFocus: string;              // short strength phrase
-  developmentEdge: string;            // gentle growth nudge
+  variableId: VariableId;          // "1.1" ..."5.4"
+  domain: string;                  // "Disconnection/Rejection", etc.
+  leadershipPersona: string;       // Tier-1 public name
+  healthyPersona: string;          // Healthy expression label
+  leadershipId?: string;           // Optional internal key
+  clinicalId?: string;             // Optional canonical clinical id
+  publicDescription: string;       // 1-liner blurb for Tier-1
+  strengthFocus: string;           // short strength phrase
+  developmentEdge: string;         // gentle growth nudge
 }
 
 export const TIER1_PERSONA_BY_SCHEMA: Record<string, Tier1PersonaCopy> = {
@@ -79,7 +80,7 @@ export const TIER1_PERSONA_BY_SCHEMA: Record<string, Tier1PersonaCopy> = {
     domain: "Impaired Autonomy/Performance",
     leadershipPersona: "The Empowered Decision-Maker",
     healthyPersona: "The Empowered Decision-Maker",
-    leadershipId: "the_reluctant_rely_er",
+    leadershipId: "the_reluctant_relyer",
     clinicalId: "dependence_incompetence",
     publicDescription: "You build skills steadily and ask for help strategically.",
     strengthFocus: "Resourcefulness",
@@ -103,7 +104,7 @@ export const TIER1_PERSONA_BY_SCHEMA: Record<string, Tier1PersonaCopy> = {
     healthyPersona: "The Differentiated Leader",
     leadershipId: "the_over_adapter",
     clinicalId: "enmeshment_undeveloped_self",
-    publicDescription: "You maintain healthy autonomy and a distinct Inner Personavoice.",
+    publicDescription: "You maintain healthy autonomy and a distinct leadership voice.",
     strengthFocus: "Identity & clarity",
     developmentEdge: "Name your stance first; collaborate from clear ownership."
   },
@@ -225,7 +226,7 @@ export const TIER1_PERSONA_BY_SCHEMA: Record<string, Tier1PersonaCopy> = {
   }
 };
 
-// ---------- Helpers (stable names, zero drift) ----------------------
+// ---------- Helpers (stable names) ----------------------
 
 export function schemaToPublic(schema: string): string {
   return TIER1_PERSONA_BY_SCHEMA[schema]?.leadershipPersona ?? schema;
@@ -248,11 +249,12 @@ export function personaCopy(schema: string): Tier1PersonaCopy | null {
   return TIER1_PERSONA_BY_SCHEMA[schema] ?? null;
 }
 
-/** Score-aware blurb: positive description + tone line */
-export function narrativeFor(schema: string, displayIndex: number): string {
-  const base = TIER1_PERSONA_BY_SCHEMA[schema]?.publicDescription
-    ?? "You can leverage this tendency to lead more effectively.";
-  const idx = Number(displayIndex) || 0;
+/** Score-aware blurb: positive description + tone line (expects 0–100 index) */
+export function narrativeFor(schema: string, index0to100: number): string {
+  const base =
+    TIER1_PERSONA_BY_SCHEMA[schema]?.publicDescription ??
+    "You can leverage this tendency to lead more effectively.";
+  const idx = Number(index0to100) || 0;
   const tone =
     idx >= 80 ? "This is a distinctive strength right now." :
     idx >= 60 ? "This is an active capability to keep cultivating." :
