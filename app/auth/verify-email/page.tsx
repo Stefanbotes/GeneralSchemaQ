@@ -81,11 +81,11 @@ function VerifyEmailForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to login button */}
         <div className="mb-6">
-          <Link href="/auth/login" className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors">
+          <Link href="/auth/login" className="inline-flex items-center text-primary600 hover:text-primary700 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Sign In
           </Link>
@@ -96,7 +96,7 @@ function VerifyEmailForm() {
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
               Email Verification
             </CardTitle>
             <CardDescription>
@@ -111,8 +111,8 @@ function VerifyEmailForm() {
             {status === 'pending' && !token && (
               <div className="text-center">
                 <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Mail className="h-8 w-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-primary100 rounded-full flex items-center justify-center">
+                    <Mail className="h-8 w-8 text-primary600" />
                   </div>
                 </div>
                 <p className="text-gray-600 mb-4">
@@ -144,7 +144,7 @@ function VerifyEmailForm() {
             {status === 'verifying' && (
               <div className="text-center">
                 <div className="flex justify-center mb-4">
-                  <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+                  <Loader2 className="h-12 w-12 text-primary600 animate-spin" />
                 </div>
                 <p className="text-gray-600">Verifying your email address...</p>
               </div>
@@ -164,7 +164,7 @@ function VerifyEmailForm() {
                 </p>
                 <Button
                   onClick={() => router.push('/auth/login')}
-                  className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="w-full mt-4 bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700"
                 >
                   Continue to Sign In
                 </Button>
@@ -220,14 +220,14 @@ function VerifyEmailForm() {
 // Loading component for suspense fallback
 function VerifyEmailPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
               Email Verification
             </CardTitle>
             <CardDescription>
@@ -235,7 +235,7 @@ function VerifyEmailPageLoading() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary600" />
           </CardContent>
         </Card>
       </div>

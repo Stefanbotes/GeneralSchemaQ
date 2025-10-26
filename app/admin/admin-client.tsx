@@ -75,7 +75,7 @@ export function AdminClient({ stats }: AdminClientProps) {
       <Card className="bg-white shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Database className="h-5 w-5 mr-2 text-blue-600" />
+            <Database className="h-5 w-5 mr-2 text-primary600" />
             Data Export Tools
           </CardTitle>
           <CardDescription>
@@ -113,7 +113,7 @@ export function AdminClient({ stats }: AdminClientProps) {
             
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
-                <FileText className="h-4 w-4 text-blue-600" />
+                <FileText className="h-4 w-4 text-primary600" />
                 <h4 className="font-semibold">CSV Export</h4>
               </div>
               <p className="text-sm text-gray-600">
@@ -122,7 +122,7 @@ export function AdminClient({ stats }: AdminClientProps) {
               <Button
                 onClick={() => handleExport('csv')}
                 disabled={exporting === 'csv'}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full bg-primary600 hover:bg-primary700 text-white"
               >
                 {exporting === 'csv' ? (
                   <div className="flex items-center">
@@ -139,9 +139,9 @@ export function AdminClient({ stats }: AdminClientProps) {
             </div>
           </div>
           
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">Export Contents Include:</h4>
-            <ul className="text-sm text-blue-700 space-y-1">
+          <div className="mt-6 p-4 bg-primary50 rounded-lg">
+            <h4 className="font-semibold text-primary800 mb-2">Export Contents Include:</h4>
+            <ul className="text-sm text-primary700 space-y-1">
               <li>• All user registration data and verification status</li>
               <li>• Complete assessment responses and scores</li>
               <li>• Leadership persona mappings and results</li>

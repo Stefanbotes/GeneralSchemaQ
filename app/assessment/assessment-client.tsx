@@ -296,7 +296,7 @@ export function AssessmentClient() {
   // Loading
   if (questionsLoading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br bg-primary)50 to-indigo-100">
         <Card className="bg-white shadow-xl max-w-md w-full">
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -310,14 +310,14 @@ export function AssessmentClient() {
   // Bio
   if (!bioCompleted)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6">
         <div className="max-w-2xl mx-auto">
           <Card className="bg-white shadow-xl">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                 <AnimatedLogo />
               </div>
-              <CardTitle className="text-2xl font-bold text-blue-700">Personal Information</CardTitle>
+              <CardTitle className="text-2xl font-bold text-primary700">Personal Information</CardTitle>
               <CardDescription>Please provide your details to begin the Inner Personas Assessment</CardDescription>
             </CardHeader>
             <CardContent>
@@ -334,7 +334,7 @@ export function AssessmentClient() {
                   <Label htmlFor="team">Team/Organization *</Label>
                   <Input id="team" name="team" value={bioData.team} onChange={handleBioChange} required />
                 </div>
-                <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" size="lg">
+                <Button type="submit" className="w-full bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700" size="lg">
                   Begin Assessment
                 </Button>
               </form>
@@ -346,12 +346,12 @@ export function AssessmentClient() {
 
   // Questions
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6">
       <div className="max-w-4xl mx-auto">
         <Card className="bg-white shadow-xl">
           <CardHeader>
             <div className="flex items-center justify-between mb-4">
-              <CardTitle className="text-xl font-bold text-blue-700">Inner Personas Assessment</CardTitle>
+              <CardTitle className="text-xl font-bold text-primary700">Inner Personas Assessment</CardTitle>
               <div className="text-sm text-gray-600">Page {currentPage + 1} of {totalPages}</div>
             </div>
             <div className="space-y-2">
@@ -419,7 +419,7 @@ export function AssessmentClient() {
                 <Button
                   onClick={handleNext}
                   disabled={answeredOnPage !== currentQuestions.length}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 flex items-center space-x-2"
+                  className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700 flex items-center space-x-2"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-4 h-4" />

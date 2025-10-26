@@ -66,7 +66,7 @@ export function RoleManagement({ users: initialUsers }: RoleManagementProps) {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'ADMIN': return 'bg-red-100 text-red-800';
-      case 'COACH': return 'bg-blue-100 text-blue-800';
+      case 'COACH': return 'bg-primary100 text-primary800';
       case 'CLIENT': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }

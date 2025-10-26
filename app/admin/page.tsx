@@ -27,7 +27,7 @@ export default async function AdminPage() {
   
   if (!isAdminAccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6 flex items-center justify-center">
         <Card className="bg-white shadow-lg max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center text-red-600">
@@ -108,7 +108,7 @@ export default async function AdminPage() {
     });
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -126,7 +126,7 @@ export default async function AdminPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{totalUsers}</div>
+                <div className="text-2xl font-bold text-primary600">{totalUsers}</div>
               </CardContent>
             </Card>
 
@@ -200,9 +200,9 @@ export default async function AdminPage() {
                       <strong>Tier 1: Summary</strong>
                       <p className="text-green-700 text-xs mt-1">Auto-downloaded on completion. Gentle, strengths-focused (2-3 paragraphs)</p>
                     </div>
-                    <div className="p-3 bg-blue-100 rounded">
+                    <div className="p-3 bg-primary100 rounded">
                       <strong>Tier 2: Leadership</strong>
-                      <p className="text-blue-700 text-xs mt-1">Professional development focus. Inner Personas (8-12 pages)</p>
+                      <p className="text-primary700 text-xs mt-1">Professional development focus. Inner Personas (8-12 pages)</p>
                     </div>
                     <div className="p-3 bg-red-100 rounded">
                       <strong>Tier 3: Clinical</strong>
@@ -220,7 +220,7 @@ export default async function AdminPage() {
           <Card className="bg-white shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2 text-blue-600" />
+                <User className="h-5 w-5 mr-2 text-primary600" />
                 Recent Users
               </CardTitle>
               <CardDescription>
@@ -282,7 +282,7 @@ export default async function AdminPage() {
     console.error('Admin dashboard error:', error);
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6 flex items-center justify-center">
         <Card className="bg-white shadow-lg max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center text-red-600">

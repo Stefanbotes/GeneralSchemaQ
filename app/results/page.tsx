@@ -49,7 +49,7 @@ export default async function ResultsPage() {
   const completedAssessments = user.assessments || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -63,15 +63,15 @@ export default async function ResultsPage() {
           /* No Completed Assessments */
           <Card className="bg-white shadow-lg">
             <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="h-8 w-8 text-blue-600" />
+              <div className="w-16 h-16 bg-primary100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="h-8 w-8 text-primary600" />
               </div>
               <h3 className="text-xl font-semibold mb-2">No Completed Assessments</h3>
               <p className="text-gray-600 mb-6">
                 You haven't completed any assessments yet. Start your leadership journey today!
               </p>
               <Link href="/assessment">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                <Button size="lg" className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Start Assessment
                 </Button>
@@ -109,15 +109,15 @@ export default async function ResultsPage() {
                 <CardContent>
                   {/* Leadership Persona Result */}
                   {assessment.leadershipPersona && (
-                    <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+                    <div className="mb-6 p-4 bg-gradient-to-r bg-primary)50 to-indigo-50 rounded-lg border border-blue-200">
+                      <h4 className="font-semibold text-primary800 mb-2 flex items-center">
                         <User className="h-4 w-4 mr-2" />
                         Your Leadership Persona
                       </h4>
-                      <p className="text-lg font-bold text-blue-900 mb-2">
+                      <p className="text-lg font-bold text-primary900 mb-2">
                         {assessment.leadershipPersona}
                       </p>
-                      <p className="text-sm text-blue-700">
+                      <p className="text-sm text-primary700">
                         This persona represents your primary leadership patterns and natural strengths.
                       </p>
                     </div>

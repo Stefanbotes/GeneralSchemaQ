@@ -33,14 +33,14 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-800 p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 text-gray-800 p-6">
       <div className="max-w-4xl mx-auto">
         <Card className="bg-white p-8 rounded-xl shadow-lg mb-8 text-center">
           <CardHeader>
             <div className="flex justify-center mb-6">
               <AnimatedLogo />
             </div>
-            <CardTitle className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold mb-4 bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
               Inner Personas Assessment
             </CardTitle>
             <CardDescription className="text-gray-600 text-lg mb-6">
@@ -50,7 +50,7 @@ export default function HomePage() {
           </CardHeader>
           
           <CardContent>
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg shadow-inner mb-6 text-left">
+            <div className="bg-gradient-to-r bg-primary)50 to-indigo-50 p-6 rounded-lg shadow-inner mb-6 text-left">
               <h2 className="text-xl font-semibold mb-4 text-center">Confidentiality Agreement</h2>
               <p className="mb-4">By proceeding with this assessment, you agree that:</p>
               <ul className="list-disc pl-5 mb-6 space-y-2">
@@ -76,7 +76,7 @@ export default function HomePage() {
               onClick={handleStartAssessment}
               disabled={!agreedToTerms}
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
             >
               {session ? 'Start Assessment' : 'Sign Up & Start Assessment'}
             </Button>
@@ -87,7 +87,7 @@ export default function HomePage() {
                 <Button 
                   variant="link" 
                   onClick={() => router.push('/auth/login?callbackUrl=/assessment')}
-                  className="text-blue-600 hover:text-blue-700 p-0 h-auto font-semibold"
+                  className="text-primary600 hover:text-primary700 p-0 h-auto font-semibold"
                 >
                   Sign in here
                 </Button>
@@ -100,9 +100,9 @@ export default function HomePage() {
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 hover:shadow-md">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-blue-700 flex items-center">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-blue-600 font-bold">1</span>
+              <CardTitle className="text-lg font-semibold text-primary700 flex items-center">
+                <div className="w-8 h-8 bg-primary100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-primary600 font-bold">1</span>
                 </div>
                 Behavioral Reflection
               </CardTitle>

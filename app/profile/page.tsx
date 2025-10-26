@@ -21,7 +21,7 @@ export default async function ProfilePage() {
   const { user } = session;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -34,7 +34,7 @@ export default async function ProfilePage() {
           <Card className="bg-white shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2 text-blue-600" />
+                <User className="h-5 w-5 mr-2 text-primary600" />
                 Profile Information
               </CardTitle>
               <CardDescription>
@@ -110,7 +110,7 @@ export default async function ProfilePage() {
         <Card className="bg-white shadow-lg mt-6">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+              <Calendar className="h-5 w-5 mr-2 text-primary600" />
               Assessment History
             </CardTitle>
             <CardDescription>

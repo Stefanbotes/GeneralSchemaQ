@@ -304,30 +304,30 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
 
       {/* Report Generation Buttons */}
       {!selectedUser && users.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-          <p className="text-blue-800">👆 Select a user with a completed assessment above to generate their Tier 2 or Tier 3 reports</p>
+        <div className="bg-primary50 border border-blue-200 rounded-lg p-4 text-center">
+          <p className="text-primary800">👆 Select a user with a completed assessment above to generate their Tier 2 or Tier 3 reports</p>
         </div>
       )}
       
       {selectedUser && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Tier 2: Leadership Report */}
-          <div className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
+          <div className="p-4 border-2 border-blue-200 rounded-lg bg-primary50">
             <div className="flex items-center mb-3">
-              <FileText className="h-5 w-5 text-blue-600 mr-2" />
-              <h4 className="font-semibold text-blue-800">Tier 2: Leadership Report</h4>
+              <FileText className="h-5 w-5 text-primary600 mr-2" />
+              <h4 className="font-semibold text-primary800">Tier 2: Leadership Report</h4>
             </div>
-            <p className="text-sm text-blue-700 mb-4">
+            <p className="text-sm text-primary700 mb-4">
               Comprehensive leadership development report using personas framework. 
               Ideal for coaching and professional development contexts.
             </p>
-            <div className="text-xs text-blue-600 mb-3">
+            <div className="text-xs text-primary600 mb-3">
               <strong>Contains:</strong> Primary persona analysis, supporting patterns, development action plans, leadership pattern integration
             </div>
             <Button 
               onClick={() => handleGenerateReport(2, selectedUser)}
               disabled={!selectedUser || (generating?.tier === 2 && generating?.userId === selectedUser)}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-primary600 hover:bg-primary700"
             >
               {generating?.tier === 2 && generating?.userId === selectedUser ? (
                 <>Generating Tier 2...</>

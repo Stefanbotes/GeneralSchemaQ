@@ -104,11 +104,11 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to home button */}
         <div className="mb-6">
-          <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors">
+          <Link href="/" className="inline-flex items-center text-primary600 hover:text-primary700 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Assessment
           </Link>
@@ -119,7 +119,7 @@ function RegisterForm() {
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
               Create Account
             </CardTitle>
             <CardDescription>
@@ -257,7 +257,7 @@ function RegisterForm() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                className="w-full bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -269,7 +269,7 @@ function RegisterForm() {
                 Already have an account?{' '}
                 <Link 
                   href="/auth/login" 
-                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                  className="text-primary600 hover:text-primary700 font-semibold transition-colors"
                 >
                   Sign in
                 </Link>
@@ -285,14 +285,14 @@ function RegisterForm() {
 // Loading component for suspense fallback
 function RegisterPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
               Create Account
             </CardTitle>
             <CardDescription>
@@ -300,7 +300,7 @@ function RegisterPageLoading() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary600" />
           </CardContent>
         </Card>
       </div>

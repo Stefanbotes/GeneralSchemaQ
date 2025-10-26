@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Header */}
         <div className="mb-8">
@@ -79,8 +79,8 @@ export default async function DashboardPage() {
                     {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Shield className="h-6 w-6 text-blue-600" />
+                <div className="p-3 bg-primary100 rounded-full">
+                  <Shield className="h-6 w-6 text-primary600" />
                 </div>
               </div>
             </CardContent>
@@ -183,7 +183,7 @@ export default async function DashboardPage() {
                   <div className="flex gap-2">
                     {latestAssessment.status !== 'COMPLETED' ? (
                       <Link href="/assessment">
-                        <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                        <Button className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700">
                           <PlayCircle className="h-4 w-4 mr-2" />
                           Continue Assessment
                         </Button>
@@ -214,8 +214,8 @@ export default async function DashboardPage() {
               ) : (
                 <div className="text-center py-6">
                   <div className="mb-4">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <PlayCircle className="h-8 w-8 text-blue-600" />
+                    <div className="w-16 h-16 bg-primary100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <PlayCircle className="h-8 w-8 text-primary600" />
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Ready to Begin?</h3>
                     <p className="text-gray-600 mb-4">
@@ -224,7 +224,7 @@ export default async function DashboardPage() {
                   </div>
                   
                   <Link href="/assessment">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                    <Button size="lg" className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700">
                       <PlayCircle className="h-4 w-4 mr-2" />
                       Start Assessment
                     </Button>
@@ -285,7 +285,7 @@ export default async function DashboardPage() {
             <Link href="/assessment">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
-                  <PlayCircle className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                  <PlayCircle className="h-8 w-8 mx-auto mb-2 text-primary600" />
                   <h3 className="font-semibold">Start Assessment</h3>
                   <p className="text-sm text-gray-600">Begin your leadership evaluation</p>
                 </CardContent>

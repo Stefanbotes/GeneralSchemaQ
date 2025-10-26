@@ -72,10 +72,10 @@ export default function ForgotPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="mb-6">
-            <Link href="/auth/login" className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors">
+            <Link href="/auth/login" className="inline-flex items-center text-primary600 hover:text-primary700 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Sign In
             </Link>
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
               <div className="pt-4">
                 <Button
                   onClick={() => router.push('/auth/login')}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="w-full bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700"
                 >
                   Return to Sign In
                 </Button>
@@ -123,11 +123,11 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to login button */}
         <div className="mb-6">
-          <Link href="/auth/login" className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors">
+          <Link href="/auth/login" className="inline-flex items-center text-primary600 hover:text-primary700 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Sign In
           </Link>
@@ -138,7 +138,7 @@ export default function ForgotPasswordPage() {
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
               Reset Password
             </CardTitle>
             <CardDescription>
@@ -175,7 +175,7 @@ export default function ForgotPasswordPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                className="w-full bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700"
                 disabled={isLoading}
               >
                 {isLoading ? 'Sending...' : 'Send Reset Instructions'}
@@ -187,7 +187,7 @@ export default function ForgotPasswordPage() {
                 Remember your password?{' '}
                 <Link 
                   href="/auth/login" 
-                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                  className="text-primary600 hover:text-primary700 font-semibold transition-colors"
                 >
                   Sign in
                 </Link>
