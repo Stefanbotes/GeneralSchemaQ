@@ -1,4 +1,3 @@
-
 // Login page with comprehensive validation and security features
 'use client';
 
@@ -71,26 +70,29 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-accent flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to home button */}
         <div className="mb-6">
-          <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors">
+          <Link
+            href="/"
+            className="inline-flex items-center text-primary hover:text-primary/80 transition-colors"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Assessment
           </Link>
         </div>
 
-        <Card className="bg-white shadow-xl">
+        <Card className="bg-card shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Sign In
             </CardTitle>
             <CardDescription>
-              Access your Leadership Personas Assessment account
+              Access your Inner Personas Assessment account
             </CardDescription>
           </CardHeader>
 
@@ -106,7 +108,7 @@ function LoginForm() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
@@ -117,14 +119,14 @@ function LoginForm() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email.message}</p>
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -137,22 +139,23 @@ function LoginForm() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password.message}</p>
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
               </div>
 
               <div className="flex justify-end">
-                <Link 
-                  href="/auth/forgot-password" 
-                  className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary hover:text-primary/80 transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -160,7 +163,7 @@ function LoginForm() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 disabled={isLoading}
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
@@ -168,11 +171,11 @@ function LoginForm() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Don't have an account?{' '}
-                <Link 
-                  href="/auth/register" 
-                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                <Link
+                  href="/auth/register"
+                  className="text-primary hover:text-primary/80 font-semibold transition-colors"
                 >
                   Sign up
                 </Link>
@@ -188,22 +191,20 @@ function LoginForm() {
 // Loading component for suspense fallback
 function LoginPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-accent flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <Card className="bg-white shadow-xl">
+        <Card className="bg-card shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Sign In
             </CardTitle>
-            <CardDescription>
-              Loading...
-            </CardDescription>
+            <CardDescription>Loading...</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </CardContent>
         </Card>
       </div>
@@ -219,3 +220,4 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+
