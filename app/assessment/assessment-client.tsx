@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 
 interface Question {
   id: string;
-  order: number;
+  order: number; // retained for data compatibility – not shown
   domain: string;
   schema: string;
   persona: string;
@@ -39,15 +39,17 @@ interface BioData {
 
 /**
  * Hardened cleaner for leading numbering (handles weird spaces, BOMs, fullwidth digits, and numbers wrapped in tags).
+ * Examples removed: "13. ", "13:", "(13) ", "[13] -", "<strong>13.</strong> ", "１３．", "&nbsp;13 –", "13 . " etc.
  */
 const stripLeadingNumberOnce = (input: string): string => {
   if (!input) return '';
   let s = input
     .normalize('NFKC')
-    .replace(/\uFEFF/g, '')
-    .replace(/\u00A0/g, ' ')
-    .replace(/[\u2000-\u200D\u2060]/g, '');
+    .replace(/\uFEFF/g, '')                 // BOM
+    .replace(/\u00A0/g, ' ')                // NBSP
+    .replace(/[\u2000-\u200D\u2060]/g, ''); // zero-widths
 
+  // Remove optional tags then number + optional trailing punctuation/space
   s = s.replace(
     new RegExp(
       '^\\s*(?:<(?:\\/)?[a-zA-Z][^>]*>\\s*)*' +
@@ -59,10 +61,13 @@ const stripLeadingNumberOnce = (input: string): string => {
     ''
   );
 
+  // Safety fallback
   s = s.replace(/^\s*[0-9\uFF10-\uFF19]{1,3}\s*[\.\uFF0E:–—\-]?\s*/, '');
+
   return s.trim();
 };
 
+// Idempotent
 const cleanQuestionText = (raw: string) => stripLeadingNumberOnce(stripLeadingNumberOnce(raw || ''));
 
 export function AssessmentClient() {
@@ -134,6 +139,7 @@ export function AssessmentClient() {
           }));
           setQuestions(sanitized);
 
+          // Optional diagnostics
           console.log('[Questions]', {
             originalExample: (data.questions[0] as Question)?.statement,
             sanitizedExample: sanitized[0]?.statement
@@ -230,15 +236,20 @@ export function AssessmentClient() {
       setShowResults(true);
       toast.success('Assessment completed and saved successfully!');
 
-      // ✅ Generate Tier-1 based on the saved assessment when possible
-      setTimeout(() => handleDownloadReport(assessmentId), 1000);
+      // ✅ Navigate to results page (auto-download happens there)
+      if (assessmentId) {
+        router.push(`/results?justCompleted=1&id=${encodeURIComponent(assessmentId)}`);
+      } else {
+        // Fallback: still try to generate immediately using client responses
+        setTimeout(() => handleDownloadReport(), 600);
+      }
     } catch (e) {
       console.error(e);
       toast.error('Failed to submit assessment.');
     }
   };
 
-  // Report
+  // Report (kept as fallback / manual trigger)
   const handleDownloadReport = async (assessmentId?: string) => {
     try {
       toast.loading('Generating your Inner Persona summary...');
@@ -251,7 +262,6 @@ export function AssessmentClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-
       if (!res.ok) throw new Error();
 
       const blob = await res.blob();
@@ -372,6 +382,7 @@ export function AssessmentClient() {
                     <div className="text-xs text-gray-500 mb-1">
                       Question {displayNumber} of {questions.length}
                     </div>
+                    {/* Clean AGAIN at render for extra safety */}
                     <CardTitle className="text-lg font-medium text-gray-800">
                       {cleanQuestionText(q.statement)}
                     </CardTitle>
