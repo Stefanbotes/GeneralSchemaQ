@@ -1,319 +1,240 @@
-// app/api/<your-tier1-path>/route.ts
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { db } from '@/lib/db'; // 🔧 adjust to your DB access
 
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { scoreAssessmentResponses, pickTop3 } from '@/lib/shared-schema-scoring';
-import {
-  schemaToPublic,
-  schemaToHealthy,
-  narrativeFor,
-  personaCopy,
-} from '@/lib/tier1-persona-copy';
-
-export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-// Accepts POST with either:
-// 1) { responses: Record<string, {value, timestamp} | string | number>, participant?: {...} }
-// 2) { assessmentId: string, userId?: string }
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json().catch(() => ({} as any));
+const PayloadSchema = z.object({
+  assessmentId: z.string().min(1).optional(),
+  // Accept either array<number> or object map of { value, timestamp }
+  responses: z
+    .union([
+      z.array(z.number()).nonempty().optional(),
+      z
+        .record(
+          z.object({
+            value: z.number(),
+            timestamp: z.string().optional(),
+          })
+        )
+        .optional(),
+    ])
+    .optional(),
+  participantData: z.any().optional(), // kept for compatibility when called client-side
+});
 
-    const url = new URL(req.url);
-    const format = url.searchParams.get('format');
+/** Core validation: 6-point Likert (1..6) */
+const isValidLikert6 = (n: unknown): n is number =>
+  typeof n === 'number' && Number.isFinite(n) && Number.isInteger(n) && n >= 1 && n <= 6;
 
-    let responses: Record<string, string | number> | undefined;
-    let participantName = 'User';
+/**
+ * Normalizes input into a clean 1..6 numeric array in the correct order.
+ * - If `arr` is already numeric, validates each entry 1..6
+ * - If `map` is provided, we order by `questionsOrder`, extract `.value`, and validate 1..6
+ */
+function normalizeResponsesToArray6(opts: {
+  arr?: number[] | undefined;
+  map?: Record<string, { value: number; timestamp?: string }> | undefined;
+  questionsOrder: string[]; // the order to render/report in
+}): number[] {
+  const { arr, map, questionsOrder } = opts;
 
-    console.log('🔍 Tier 1 API called with:', {
-      hasResponses: !!body?.responses,
-      hasAssessmentId: !!body?.assessmentId,
-      hasUserId: !!body?.userId,
-      bodyKeys: Object.keys(body || {}),
-    });
-
-    // -------- Pattern 1: direct responses payload --------
-    if (body?.responses) {
-      console.log('📝 Processing direct responses payload');
-      const rawResponses = body.responses as Record<string, any>;
-      const processed: Record<string, string | number> = {};
-
-      for (const [key, val] of Object.entries(rawResponses)) {
-        if (val && typeof val === 'object' && 'value' in val) {
-          const v = (val as any).value;
-          if (typeof v === 'number' || typeof v === 'string') processed[key] = v;
-        } else if (typeof val === 'number' || typeof val === 'string') {
-          processed[key] = val;
-        }
+  if (arr && Array.isArray(arr)) {
+    const out = arr.map((v, i) => {
+      if (!isValidLikert6(v)) {
+        throw new Error(`Bad value at index ${i}: ${String(v)} (expected 1..6)`);
       }
+      return v;
+    });
+    return out;
+  }
 
-      responses = processed;
-      participantName =
-        body?.participantData?.name ||
-        body?.participant?.name ||
-        'User';
+  if (map && typeof map === 'object') {
+    const out: number[] = questionsOrder.map((qid, i) => {
+      const entry = map[qid];
+      const v = entry?.value;
+      if (!isValidLikert6(v)) {
+        throw new Error(
+          `Bad value for question "${qid}" at ordered index ${i}: ${String(v)} (expected 1..6)`
+        );
+      }
+      return v;
+    });
+    return out;
+  }
 
-      console.log('✅ Direct responses processed:', {
-        originalCount: Object.keys(rawResponses || {}).length,
-        processedCount: Object.keys(processed).length,
-        participantName,
-      });
+  throw new Error('Either numeric responses array or responses map is required.');
+}
+
+/** Example scoring that supports 1..6. Replace with your real scoring logic. */
+function scoreBySchema(responses6: number[], schemaKeys: string[]): Record<string, number> {
+  // Example: average per schema bucket. You likely have a map question -> schema.
+  // This example assumes schemaKeys.length === responses6.length and is 1:1; adapt as needed.
+  const buckets = new Map<string, { sum: number; count: number }>();
+  responses6.forEach((v, i) => {
+    const key = schemaKeys[i] ?? 'unknown';
+    const cur = buckets.get(key) ?? { sum: 0, count: 0 };
+    cur.sum += v;
+    cur.count += 1;
+    buckets.set(key, cur);
+  });
+
+  const out: Record<string, number> = {};
+  for (const [k, { sum, count }] of buckets.entries()) {
+    out[k] = count ? sum / count : 0;
+  }
+  return out;
+}
+
+/** Example mapping to 0..100 if your HTML expects a percentage scale */
+function toPercentFromLikert6(n: number): number {
+  // map 1..6 to 0..100 linearly: (n-1)/5 * 100
+  return Math.round(((n - 1) / 5) * 100);
+}
+
+/** Minimal HTML – replace with your real template */
+function renderHtmlReport(opts: {
+  participantName?: string;
+  categoryScores: Record<string, number>;
+}) {
+  const rows = Object.entries(opts.categoryScores)
+    .map(
+      ([k, v]) => `<tr>
+      <td style="padding:6px 12px;border:1px solid #ddd">${k}</td>
+      <td style="padding:6px 12px;border:1px solid #ddd;text-align:right">${v.toFixed(2)}</td>
+      <td style="padding:6px 12px;border:1px solid #ddd;text-align:right">${toPercentFromLikert6(v)}%</td>
+    </tr>`
+    )
+    .join('');
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Tier-1 Summary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px;">
+  <h1 style="margin: 0 0 8px;">Tier-1 Summary</h1>
+  <div style="color:#555;margin-bottom:16px">Participant: ${opts.participantName || '—'}</div>
+  <table style="border-collapse:collapse;width:100%;max-width:760px">
+    <thead>
+      <tr>
+        <th style="text-align:left;padding:6px 12px;border:1px solid #ddd">Category</th>
+        <th style="text-align:right;padding:6px 12px;border:1px solid #ddd">Mean (1..6)</th>
+        <th style="text-align:right;padding:6px 12px;border:1px solid #ddd">Scaled (0..100)</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+}
+
+export async function POST(req: Request) {
+  try {
+    const raw = await req.json().catch(() => ({}));
+    const parsed = PayloadSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
+    const { assessmentId, responses, participantData } = parsed.data;
 
-    // -------- Pattern 2: lookup by assessmentId (userId optional) --------
-    else if (body?.assessmentId) {
-      console.log('🔎 Looking up assessment by ID');
+    // 1) Pull responses + question order (and schema keys) from DB if assessmentId is provided
+    let responsesArray6: number[] | undefined;
+    let participantName: string | undefined = participantData?.name;
+    let schemaKeys: string[] = []; // parallel array to responses for category mapping
+    let questionsOrder: string[] = []; // parallel array of question IDs (order)
 
-      // Fetch the assessment first
-      const assessment = await db.assessments.findUnique({
-        where: { id: body.assessmentId },
+    if (assessmentId) {
+      // 🔧 Replace with your schema:
+      // - fetch the saved assessment (includes stored responses and the order in which questions were asked)
+      // - also fetch question metadata to know which schema/category each question belongs to
+      const assessment = await db.assessment.findUnique({
+        where: { id: assessmentId },
+        select: {
+          id: true,
+          bioData: true, // name,email,team,...
+          responses: true, // e.g. { [questionId]: { value, timestamp } }
+          // If you store the order used at the time of the assessment, grab it here:
+          questionsOrder: true, // e.g. string[]
+        },
       });
 
       if (!assessment) {
         return NextResponse.json({ error: 'Assessment not found' }, { status: 404 });
       }
 
-      if (assessment.status !== 'COMPLETED') {
-        return NextResponse.json({ error: 'Assessment not completed' }, { status: 400 });
-      }
+      participantName = participantName || assessment.bioData?.name;
 
-      // Try to enrich participantName:
-      // 1) If userId provided, use that
-      // 2) Else, use assessment.userId
-      const userIdToLoad = body.userId || assessment.userId || null;
-      if (userIdToLoad) {
-        const user = await db.users.findUnique({ where: { id: userIdToLoad } });
-        participantName =
-          `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
-          user?.email ||
-          participantName;
-      }
+      // You need an order to deterministically map the responses map -> array.
+      // If you don't store it on the assessment, you can derive it from your questions table.
+      questionsOrder = Array.isArray(assessment.questionsOrder)
+        ? assessment.questionsOrder
+        : await deriveDefaultOrderFromDB(); // 🔧 implement this to return string[] of question IDs in a consistent order
 
-      // Prefer already-saved results.report.rawScores108 (fast path)
-      let rawFromResults: Record<string, any> | undefined;
-      try {
-        const results = typeof assessment.results === 'string'
-          ? JSON.parse(assessment.results)
-          : (assessment.results as any);
+      // You also need a schema key per question (same length/order as questionsOrder)
+      schemaKeys = await loadSchemaKeysInOrder(questionsOrder); // 🔧 implement this; returns string[] of schema keys per questionId
 
-        rawFromResults = results?.report?.rawScores108 as Record<string, any> | undefined;
-      } catch {
-        // ignore parse errors and fall back
-      }
+      responsesArray6 = normalizeResponsesToArray6({
+        arr: Array.isArray(responses) ? (responses as number[]) : undefined,
+        map: !Array.isArray(responses) && responses ? (responses as Record<string, { value: number }>) : (assessment.responses as any),
+        questionsOrder,
+      });
+    } else {
+      // 2) No assessmentId → must have `responses`
+      // We still need an order and schema keys. For client-side fallback, derive a default order from DB.
+      questionsOrder = await deriveDefaultOrderFromDB(); // 🔧 implement
+      schemaKeys = await loadSchemaKeysInOrder(questionsOrder); // 🔧 implement
 
-      if (rawFromResults && Object.keys(rawFromResults).length > 0) {
-        responses = rawFromResults; // Ex: { "1.1.1": 4, ... }
-        console.log('✅ Using results.report.rawScores108 from DB');
-      } else {
-        // Fallback: derive from assessment.responses
-        let rawResponses: Record<string, any>;
-        try {
-          rawResponses = typeof assessment.responses === 'string'
-            ? JSON.parse(assessment.responses)
-            : (assessment.responses as Record<string, any>);
-        } catch (parseError) {
-          return NextResponse.json({ error: 'Invalid response format in assessment' }, { status: 400 });
-        }
-
-        const processed: Record<string, string | number> = {};
-        for (const [key, val] of Object.entries(rawResponses)) {
-          if (val && typeof val === 'object' && 'value' in val) {
-            const v = (val as any).value;
-            if (typeof v === 'number' || typeof v === 'string') processed[key] = v;
-          } else if (typeof val === 'number' || typeof val === 'string') {
-            processed[key] = val;
-          }
-        }
-
-        responses = processed;
-        console.log('✅ Derived responses from assessment.responses');
-      }
-    }
-
-    // -------- Pattern 3: missing required input --------
-    else {
-      console.log('❌ Missing required parameters (need responses OR assessmentId)');
-      return NextResponse.json(
-        { error: 'Either responses or assessmentId is required for Tier 1 report generation' },
-        { status: 400 }
-      );
-    }
-
-    // Basic guard
-    if (!responses || !Object.keys(responses).length) {
-      return NextResponse.json({ error: 'No responses available for scoring' }, { status: 400 });
-    }
-
-    // -------- Canonical scoring (shared with Tier 2/3) --------
-    const { rankedScores, display } = await scoreAssessmentResponses(responses);
-    if (!rankedScores.length) {
-      return NextResponse.json(
-        { error: 'No scores computed (check item IDs vs mapping)' },
-        { status: 400 }
-      );
-    }
-
-    const { primary, secondary, tertiary } = pickTop3(rankedScores, 60);
-
-    console.log('🎯 Tier 1 Results: ', {
-      primary: primary?.schemaLabel,
-      primaryIdx: Math.round(primary?.index0to100 || 0),
-      secondary: secondary?.schemaLabel,
-      secondaryIdx: Math.round(secondary?.index0to100 || 0),
-      tertiary: tertiary?.schemaLabel,
-      tertiaryIdx: Math.round(tertiary?.index0to100 || 0),
-    });
-
-    const pName = primary ? schemaToPublic(primary.schemaLabel) : '—';
-    const sName = secondary ? schemaToPublic(secondary.schemaLabel) : null;
-    const tName = tertiary ? schemaToPublic(tertiary.schemaLabel) : null;
-
-    const pHealthy = primary ? schemaToHealthy(primary.schemaLabel) : null;
-    const sHealthy = secondary ? schemaToHealthy(secondary.schemaLabel) : null;
-    const tHealthy = tertiary ? schemaToHealthy(tertiary.schemaLabel) : null;
-
-    // -------- Debug JSON if requested --------
-    if (format === 'json') {
-      return NextResponse.json({
-        ok: true,
-        counts: { ranked: rankedScores.length, display: display.length },
-        primary: primary && {
-          schema: primary.schemaLabel,
-          publicName: pName,
-          idx: Math.round(primary.index0to100),
-        },
-        secondary: secondary && {
-          schema: secondary.schemaLabel,
-          publicName: sName,
-          idx: Math.round(secondary.index0to100),
-          emerging: (secondary as any).caution || false,
-        },
-        tertiary: tertiary && {
-          schema: tertiary.schemaLabel,
-          publicName: tName,
-          idx: Math.round(tertiary.index0to100),
-          emerging: (tertiary as any).caution || false,
-        },
-        top5: display.slice(0, 5).map((d) => ({
-          schemaLabel: d.schemaLabel,
-          publicName: schemaToPublic(d.schemaLabel),
-          displayIndex: d.displayIndex,
-          n: d.n,
-        })),
-        participantName,
+      responsesArray6 = normalizeResponsesToArray6({
+        arr: Array.isArray(responses) ? (responses as number[]) : undefined,
+        map: !Array.isArray(responses) && responses ? (responses as Record<string, { value: number }>) : undefined,
+        questionsOrder,
       });
     }
 
-    // -------- HTML report (download as .html) --------
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Inner PersonaSummary - ${escapeHtml(participantName)}</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f8fafc; }
-    .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .header { text-align: center; border-bottom: 3px solid #4f46e5; padding-bottom: 20px; margin-bottom: 30px; }
-    .section { margin: 30px 0; }
-    .primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-    .secondary { background: #f1f5f9; padding: 15px; border-left: 4px solid #64748b; margin: 15px 0; }
-    .score { font-size: 24px; font-weight: bold; color: #4f46e5; }
-    .label { font-size: 18px; margin-bottom: 10px; }
-    ul { padding-left: 20px; }
-    li { margin: 8px 0; line-height: 1.6; }
-    .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 14px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Inner Personas Assessment</h1>
-      <h2>Summary Report</h2>
-      <p><strong>${escapeHtml(participantName)}</strong></p>
-      <p>Generated: ${new Date().toLocaleDateString()}</p>
-    </div>
+    if (!responsesArray6 || responsesArray6.length === 0) {
+      return NextResponse.json({ error: 'No responses found to generate report' }, { status: 400 });
+    }
 
-    <div class="section">
-      <h3>Assessment Results</h3>
-      <p>Your Inner Personaassessment reveals distinct patterns that define your natural approach to Inner Personaand team dynamics.</p>
-    </div>
+    // 3) Score on a 6-point basis
+    const categoryScores = scoreBySchema(responsesArray6, schemaKeys);
 
-    <div class="primary">
-      <div class="label">Primary Inner Persona</div>
-      <div class="score">${escapeHtml(pName)}</div>
-      ${pHealthy ? `<div style="margin: 10px 0; font-size: 16px; opacity: 0.9;">Healthy expression: ${escapeHtml(pHealthy)}</div>` : ''}
-      <div style="color: rgba(255,255,255,0.7); font-size: 14px; margin: 5px 0;">(${escapeHtml(primary?.schemaLabel || '')})</div>
-      <div>Activation Index: ${Math.round(primary?.index0to100 || 0)}/100</div>
-      ${(primary?.index0to100 ?? 0) < 60 ? '<div style="margin-top: 10px; font-size: 14px; opacity: 0.9;">⚠️ Emerging pattern - may benefit from development focus</div>' : ''}
-    </div>
-
-    ${secondary ? `
-    <div class="secondary">
-      <div class="label">Secondary Inner Persona</div>
-      <div style="font-size: 18px; font-weight: bold; color: #374151;">${escapeHtml(sName || '')}</div>
-      ${sHealthy ? `<div style="margin: 8px 0; font-size: 14px; color: #6b7280;">Healthy expression: ${escapeHtml(sHealthy)}</div>` : ''}
-      <div style="color: #9CA3AF; font-size: 13px; margin: 5px 0;">(${escapeHtml(secondary.schemaLabel)})</div>
-      <div>Activation Index: ${Math.round(secondary.index0to100)}/100</div>
-      ${secondary.index0to100 < 60 ? '<div style="margin-top: 8px; font-size: 14px; color: #6b7280;">⚠️ Emerging pattern</div>' : ''}
-    </div>` : ''}
-
-    ${tertiary ? `
-    <div class="secondary">
-      <div class="label">Tertiary Inner Persona</div>
-      <div style="font-size: 18px; font-weight: bold; color: #374151;">${escapeHtml(tName || '')}</div>
-      ${tHealthy ? `<div style="margin: 8px 0; font-size: 14px; color: #6b7280;">Healthy expression: ${escapeHtml(tHealthy)}</div>` : ''}
-      <div style="color: #9CA3AF; font-size: 13px; margin: 5px 0;">(${escapeHtml(tertiary.schemaLabel)})</div>
-      <div>Activation Index: ${Math.round(tertiary.index0to100)}/100</div>
-      ${tertiary.index0to100 < 60 ? '<div style="margin-top: 8px; font-size: 14px; color: #6b7280;">⚠️ Emerging pattern</div>' : ''}
-    </div>` : ''}
-
-    <div class="section">
-      <h3>Complete Ranking</h3>
-      <div style="font-size: 14px; color: #64748b; margin-bottom: 15px;">All Inner Personas (Top 5):</div>
-      <ol>
-        ${display.slice(0, 5).map(item => `
-          <li>
-            <strong>${escapeHtml(schemaToPublic(item.schemaLabel))}</strong>
-            <span style="color:#9CA3AF">(${escapeHtml(item.schemaLabel)})</span>:
-            ${item.displayIndex}/100
-          </li>
-        `).join('')}
-      </ol>
-    </div>
-
-    <div class="footer">
-      <p>This summary report uses the same canonical scoring methodology as Tier 2 and Tier 3 clinical reports.</p>
-      <p>© ${new Date().getFullYear()} Inner Personas Assessment. Confidential.</p>
-    </div>
-  </div>
-</body>
-</html>`.trim();
-
-    console.log('✅ Generated Tier 1 report successfully');
+    // 4) Render HTML
+    const html = renderHtmlReport({
+      participantName,
+      categoryScores,
+    });
 
     return new NextResponse(html, {
       status: 200,
       headers: {
-        'Content-Type': 'text/html',
-        'Content-Disposition': `attachment; filename="Leadership_Summary_${safeFilename(participantName)}_${new Date().toISOString().slice(0,10)}.html"`,
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
       },
     });
   } catch (e: any) {
-    console.error('❌ Tier1 error:', e);
-    return NextResponse.json({ error: e?.message || 'Failed to generate report' }, { status: 500 });
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
   }
 }
 
-// ---------- small helpers ----------
-function escapeHtml(s: string) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+/** 🔧 Implement these for your data model */
+
+// If you don't persist the exact question order on the assessment row,
+// decide on a stable default (e.g., by original import order).
+async function deriveDefaultOrderFromDB(): Promise<string[]> {
+  // Example:
+  // const qs = await db.question.findMany({ orderBy: { order: 'asc' }, select: { id: true } });
+  // return qs.map(q => q.id);
+  return []; // TODO: implement
 }
-function safeFilename(s: string) {
-  return String(s).replace(/[^a-zA-Z0-9_-]/g, '_');
+
+async function loadSchemaKeysInOrder(questionIds: string[]): Promise<string[]> {
+  // Example:
+  // const qs = await db.question.findMany({ where: { id: { in: questionIds } }, select: { id: true, schema: true } });
+  // const byId = new Map(qs.map(q => [q.id, q.schema || 'unknown']));
+  // return questionIds.map(id => byId.get(id) ?? 'unknown');
+  return questionIds.map(() => 'unknown'); // TODO: implement
 }
