@@ -168,7 +168,7 @@ Each record contains:
 - `order` - Display order (1-108)
 - `domain` - Domain name (5 total)
 - `schema` - Schema name (18 total)
-- `persona` - Leadership persona
+- `persona` - Inner Persona
 - `healthyPersona` - Healthy alternative persona
 - `statement` - Question text
 - `isActive` - Boolean flag

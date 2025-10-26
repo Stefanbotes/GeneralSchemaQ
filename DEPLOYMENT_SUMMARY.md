@@ -56,7 +56,7 @@ The migration will create **11 tables** and **2 enums**:
 8. **assessment_questions** - Question bank (currently 270 questions)
 9. **lasbi_items** - LASBI item metadata with stable identifiers
 10. **lasbi_responses** - Individual assessment responses
-11. **leadership_personas** - Leadership persona definitions
+11. **leadership_personas** - Inner Persona definitions
 
 ### Enums Created:
 - **AssessmentStatus**: NOT_STARTED, IN_PROGRESS, COMPLETED

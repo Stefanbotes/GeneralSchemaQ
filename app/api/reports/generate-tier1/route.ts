@@ -241,7 +241,7 @@ export async function POST(req: NextRequest) {
     </div>
 
     <div class="primary">
-      <div class="label">Primary Leadership Persona</div>
+      <div class="label">Primary Inner Persona</div>
       <div class="score">${escapeHtml(pName)}</div>
       ${pHealthy ? `<div style="margin: 10px 0; font-size: 16px; opacity: 0.9;">Healthy expression: ${escapeHtml(pHealthy)}</div>` : ''}
       <div style="color: rgba(255,255,255,0.7); font-size: 14px; margin: 5px 0;">(${escapeHtml(primary?.schemaLabel || '')})</div>
@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
 
     ${secondary ? `
     <div class="secondary">
-      <div class="label">Secondary Leadership Persona</div>
+      <div class="label">Secondary Inner Persona</div>
       <div style="font-size: 18px; font-weight: bold; color: #374151;">${escapeHtml(sName || '')}</div>
       ${sHealthy ? `<div style="margin: 8px 0; font-size: 14px; color: #6b7280;">Healthy expression: ${escapeHtml(sHealthy)}</div>` : ''}
       <div style="color: #9CA3AF; font-size: 13px; margin: 5px 0;">(${escapeHtml(secondary.schemaLabel)})</div>
@@ -261,7 +261,7 @@ export async function POST(req: NextRequest) {
 
     ${tertiary ? `
     <div class="secondary">
-      <div class="label">Tertiary Leadership Persona</div>
+      <div class="label">Tertiary Inner Persona</div>
       <div style="font-size: 18px; font-weight: bold; color: #374151;">${escapeHtml(tName || '')}</div>
       ${tHealthy ? `<div style="margin: 8px 0; font-size: 14px; color: #6b7280;">Healthy expression: ${escapeHtml(tHealthy)}</div>` : ''}
       <div style="color: #9CA3AF; font-size: 13px; margin: 5px 0;">(${escapeHtml(tertiary.schemaLabel)})</div>

@@ -175,7 +175,7 @@ export default async function DashboardPage() {
                         <span className="font-semibold text-green-800">Assessment Complete!</span>
                       </div>
                       <p className="text-sm text-green-700">
-                        Your leadership persona: <strong>{latestAssessment.leadershipPersona}</strong>
+                        Your Inner Persona: <strong>{latestAssessment.leadershipPersona}</strong>
                       </p>
                     </div>
                   )}
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Ready to Begin?</h3>
                     <p className="text-gray-600 mb-4">
-                      Start your leadership assessment to discover your unique leadership persona.
+                      Start your leadership assessment to discover your unique Inner Persona.
                     </p>
                   </div>
                   

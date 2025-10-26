@@ -967,7 +967,7 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
                 <thead>
                     <tr style="background: #f1f5f9;">
                         <th style="border: 1px solid #cbd5e0; padding: 12px; text-align: left;">Rank</th>
-                        <th style="border: 1px solid #cbd5e0; padding: 12px; text-align: left;">Leadership Persona</th>
+                        <th style="border: 1px solid #cbd5e0; padding: 12px; text-align: left;">Inner Persona</th>
                         <th style="border: 1px solid #cbd5e0; padding: 12px; text-align: left;">Score</th>
                         <th style="border: 1px solid #cbd5e0; padding: 12px; text-align: left;">Key Focus</th>
                     </tr>

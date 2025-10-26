@@ -107,12 +107,12 @@ export default async function ResultsPage() {
                 </CardHeader>
                 
                 <CardContent>
-                  {/* Leadership Persona Result */}
+                  {/* Inner Persona Result */}
                   {assessment.leadershipPersona && (
                     <div className="mb-6 p-4 bg-gradient-to-r bg-primary)50 to-indigo-50 rounded-lg border border-blue-200">
                       <h4 className="font-semibold text-primary800 mb-2 flex items-center">
                         <User className="h-4 w-4 mr-2" />
-                        Your Leadership Persona
+                        Your Inner Persona
                       </h4>
                       <p className="text-lg font-bold text-primary900 mb-2">
                         {assessment.leadershipPersona}

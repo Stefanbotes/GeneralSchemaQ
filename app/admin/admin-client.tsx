@@ -144,7 +144,7 @@ export function AdminClient({ stats }: AdminClientProps) {
             <ul className="text-sm text-primary700 space-y-1">
               <li>• All user registration data and verification status</li>
               <li>• Complete assessment responses and scores</li>
-              <li>• Leadership persona mappings and results</li>
+              <li>• Inner Persona mappings and results</li>
               <li>• Timestamps and completion statistics</li>
               <li>• Anonymized unique identifiers for privacy</li>
             </ul>

@@ -448,7 +448,7 @@ export function generateEnhancedTier2Report(analysis: EnhancedThreeTierAnalysis,
                 <thead>
                     <tr>
                         <th>Rank</th>
-                        <th>Leadership Persona</th>
+                        <th>Inner Persona</th>
                         <th>Score</th>
                         <th>Key Insight</th>
                     </tr>

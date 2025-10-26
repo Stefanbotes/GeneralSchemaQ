@@ -44,7 +44,7 @@ export default function HomePage() {
               Inner Personas Assessment
             </CardTitle>
             <CardDescription className="text-gray-600 text-lg mb-6">
-              Discover your leadership persona through behavioral reflection statements. This assessment 
+              Discover your Inner Persona through behavioral reflection statements. This assessment 
               helps identify your natural leadership patterns and growth opportunities.
             </CardDescription>
           </CardHeader>
@@ -57,7 +57,7 @@ export default function HomePage() {
                 <li>Your responses will be kept confidential and secure.</li>
                 <li>The data will be used solely for leadership development and analysis.</li>
                 <li>Individual responses will not be shared without explicit consent.</li>
-                <li>Results will help identify your leadership persona patterns.</li>
+                <li>Results will help identify your Inner Persona patterns.</li>
               </ul>
               <div className="flex items-center justify-center space-x-3">
                 <Checkbox
@@ -125,7 +125,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                Receive insights into your unique leadership persona and natural strengths.
+                Receive insights into your unique Inner Persona and natural strengths.
               </p>
             </CardContent>
           </Card>
