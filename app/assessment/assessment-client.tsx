@@ -127,7 +127,7 @@ export function AssessmentClient() {
     const loadQuestions = async () => {
       try {
         setQuestionsLoading(true);
-        const res = await fetch('/api/assessment/questions');
+        const res = await fetch('/api/assessment/questions', { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to load questions');
 
         const data = await res.json();
@@ -216,9 +216,11 @@ export function AssessmentClient() {
         topScore: topCategory[1],
         completedAt: new Date().toISOString()
       };
+
       const res = await fetch('/api/assessment/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // ✅ ensure cookies/session are sent
         body: JSON.stringify(submissionData)
       });
       if (!res.ok) throw new Error('Failed to save assessment');
@@ -260,9 +262,14 @@ export function AssessmentClient() {
       const res = await fetch('/api/reports/generate-tier1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // ✅ send cookies
         body: JSON.stringify(body)
       });
-      if (!res.ok) throw new Error();
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(txt || 'Failed to generate report');
+      }
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -277,9 +284,9 @@ export function AssessmentClient() {
       URL.revokeObjectURL(url);
       toast.dismiss();
       toast.success('Inner Persona summary downloaded!');
-    } catch {
+    } catch (e: any) {
       toast.dismiss();
-      toast.error('Failed to download report.');
+      toast.error(e?.message || 'Failed to download report.');
     }
   };
 
