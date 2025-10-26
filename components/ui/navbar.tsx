@@ -1,4 +1,4 @@
-// components/navbar.tsx
+// components/ui/navbar.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -15,7 +15,6 @@ export function Navbar() {
   useEffect(() => {
     setIsHydrated(true);
 
-    // Close user menu when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       if (showUserMenu && !target.closest('.relative')) {
@@ -31,10 +30,10 @@ export function Navbar() {
     await signOut({ callbackUrl: '/' });
   };
 
-  // Skeleton (pre-hydration) – keep visuals consistent with theme
+  // Skeleton while hydrating (no gradient)
   if (!isHydrated) {
     return (
-      <nav className="bg-gradient-to-r from-primary to-accent shadow-lg">
+      <nav className="bg-primary shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex space-x-8">
@@ -56,8 +55,9 @@ export function Navbar() {
     );
   }
 
+  // Main navbar
   return (
-    <nav className="bg-gradient-to-r from-primary to-accent shadow-lg">
+    <nav className="bg-primary shadow-lg text-primary-foreground">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left links */}
@@ -102,8 +102,6 @@ export function Navbar() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   aria-haspopup="menu"
                   aria-expanded={showUserMenu}
-                  aria-label={`User menu for ${session.user.firstName}`}
-                  title={`Open user menu for ${session.user.firstName} ${session.user.lastName}`}
                 >
                   <User className="h-4 w-4 mr-2" />
                   {session.user.firstName}
@@ -204,3 +202,4 @@ export function Navbar() {
     </nav>
   );
 }
+
