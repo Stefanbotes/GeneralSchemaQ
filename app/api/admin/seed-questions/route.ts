@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
             order,                  // 1..108
             domain: cleanDomain,    // "DISCONNECTION & REJECTION"
             schema: sch.name,       // "Abandonment / Instability"
-            persona: null,          // general set -> no leadership personas
+            persona: null,          // general set -> no Inner Personas
             healthyPersona: null,
             statement: it.text,     // <-- general wording
             isActive: true,

@@ -41,7 +41,7 @@ export default function HomePage() {
               <AnimatedLogo />
             </div>
             <CardTitle className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Leadership Personas Assessment
+              Inner Personas Assessment
             </CardTitle>
             <CardDescription className="text-gray-600 text-lg mb-6">
               Discover your leadership persona through behavioral reflection statements. This assessment 

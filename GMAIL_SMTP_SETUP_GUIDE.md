@@ -179,7 +179,7 @@ After redeploying, test that emails are working correctly.
 4. Click **"Register"** or **"Sign Up"**
 5. You should see a message: *"Registration successful! Please check your email to verify your account."*
 6. **Check the email inbox** you used for registration
-7. You should receive an email from your Gmail address with the subject: **"Verify Your Email - Leadership Personas Assessment"**
+7. You should receive an email from your Gmail address with the subject: **"Verify Your Email - Inner Personas Assessment"**
 8. Click the **"Verify Email Address"** button in the email
 9. You should be redirected to the app and see: *"Email verified successfully!"*
 
@@ -190,7 +190,7 @@ After redeploying, test that emails are working correctly.
 3. Enter a registered email address
 4. Click **"Send Reset Link"**
 5. Check the email inbox
-6. You should receive an email with subject: **"Password Reset - Leadership Personas Assessment"**
+6. You should receive an email with subject: **"Password Reset - Inner Personas Assessment"**
 7. Click the **"Reset Password"** button
 8. Enter a new password and confirm
 9. You should be able to log in with the new password

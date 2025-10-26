@@ -218,8 +218,8 @@ async function main() {
   }
   */
   
-  // Create leadership personas - Enhanced 18 Personas from Schema-Based Mapping
-  console.log('🎭 Creating enhanced leadership personas (18 schema-based personas)...');
+  // Create Inner Personas - Enhanced 18 Personas from Schema-Based Mapping
+  console.log('🎭 Creating enhanced Inner Personas (18 schema-based personas)...');
   const personas = [
     {
       name: 'The Relationship Champion',
@@ -738,7 +738,7 @@ async function main() {
   console.log('📊 Summary:');
   console.log(`   - ${await prisma.users.count()} users created`);
   console.log(`   - ${await prisma.assessment_questions.count()} assessment questions created`);
-  console.log(`   - ${await prisma.leadership_personas.count()} leadership personas created`);
+  console.log(`   - ${await prisma.leadership_personas.count()} Inner Personas created`);
   console.log(`   - ${await prisma.assessments.count()} sample assessments created`);
   console.log('🔐 Test admin credentials: john@doe.com / johndoe123 (HIDDEN FROM USER)');
 }

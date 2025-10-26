@@ -43,7 +43,7 @@ function generateHTMLReport(bioData: any, topPersonas: any[], responses: any, co
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leadership Personas Assessment Report - ${bioData.name}</title>
+    <title>Inner Personas Assessment Report - ${bioData.name}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -170,7 +170,7 @@ function generateHTMLReport(bioData: any, topPersonas: any[], responses: any, co
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="logo">Leadership Personas Assessment</div>
+            <div class="logo">Inner Personas Assessment</div>
             <h1>Personal Leadership Report</h1>
             <p>Behavioral Pattern Analysis & Growth Insights</p>
         </div>
@@ -199,7 +199,7 @@ function generateHTMLReport(bioData: any, topPersonas: any[], responses: any, co
             </div>
         </div>
 
-        <h2>Your Leadership Personas</h2>
+        <h2>Your Inner Personas</h2>
         <p>Based on your responses to ${totalQuestions} behavioral reflection statements, here are your strongest leadership patterns:</p>
 
         ${topPersonas.map((persona, index) => {
@@ -234,7 +234,7 @@ function generateHTMLReport(bioData: any, topPersonas: any[], responses: any, co
 
         <div class="footer">
             <p>This report is confidential and intended for personal development purposes.</p>
-            <p>Generated on ${new Date().toLocaleDateString()} | Leadership Personas Assessment &copy; ${new Date().getFullYear()}</p>
+            <p>Generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment &copy; ${new Date().getFullYear()}</p>
         </div>
     </div>
 </body>

@@ -9,7 +9,7 @@
 // FOR PRESENTATION: This file's getPersonaForTier() helper can still be used for display names
 //
 // Enhanced Persona Mapping System for 18 Schema-Based Personas
-// Maps 54 assessment questions to comprehensive leadership personas
+// Maps 54 assessment questions to comprehensive Inner Personas
 
 // ⚠️ INTERFACE REMOVED ⚠️
 // PersonaMapping interface was used by the removed shadow mapping.

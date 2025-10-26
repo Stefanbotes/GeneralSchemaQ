@@ -215,7 +215,7 @@ export function generateEnhancedTier2Report(analysis: any, options: EnhancedRepo
             <p><strong>Leadership Development Report</strong></p>
             <p>This Tier 2 report provides coaching-focused insights for leadership development planning.</p>
             <p>For clinical-level analysis, consider requesting a Tier 3 report from your coach or consultant.</p>
-            <p>Report generated on ${new Date().toLocaleDateString()} | Leadership Personas Assessment © 2025</p>
+            <p>Report generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>
     </div>
 </body>

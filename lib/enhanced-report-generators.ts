@@ -93,7 +93,7 @@ export function generateEnhancedTier2Report(analysis: EnhancedThreeTierAnalysis,
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprehensive Leadership Personas Report - ${participant.name}</title>
+    <title>Comprehensive Inner Personas Report - ${participant.name}</title>
     <style>
         body {
             font-family: Georgia, 'Times New Roman', serif;
@@ -230,7 +230,7 @@ export function generateEnhancedTier2Report(analysis: EnhancedThreeTierAnalysis,
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="professional-logo">Comprehensive Leadership Personas Report</div>
+            <div class="professional-logo">Comprehensive Inner Personas Report</div>
             <h1>${participant.name}${participant.organization ? ` - ${participant.organization}` : ''}</h1>
             <h2>Assessment Analysis</h2>
         </div>
@@ -245,7 +245,7 @@ export function generateEnhancedTier2Report(analysis: EnhancedThreeTierAnalysis,
             <p><strong>Total Questions:</strong> 54 | <strong>All Questions Answered:</strong> ✓</p>
             ${participant.organization ? `<p><strong>Organization:</strong> ${participant.organization}</p>` : ''}
             <p><strong>Primary Persona:</strong> ${primary.publicName} (${primary.activationLevel}% alignment)</p>
-            <p><strong>Top 5 Leadership Personas:</strong></p>
+            <p><strong>Top 5 Inner Personas:</strong></p>
             <ol>
                 <li>${primary.publicName} - ${primary.activationLevel}%</li>
                 ${supporting.slice(0, 4).map(p => `<li>${p.publicName} - ${p.activationLevel}%</li>`).join('')}
@@ -480,9 +480,9 @@ export function generateEnhancedTier2Report(analysis: EnhancedThreeTierAnalysis,
         </div>
 
         <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b; font-size: 14px;">
-            <p><strong>This detailed analysis is based on the Leadership Personas Assessment framework.</strong></p>
+            <p><strong>This detailed analysis is based on the Inner Personas Assessment framework.</strong></p>
             <p>Your complex profile represents the intersection of ${primary.strengthFocus.toLowerCase()} with sophisticated interpersonal dynamics - a powerful combination that, when optimized, creates exceptional leadership impact.</p>
-            <p>Report generated on ${new Date().toLocaleDateString()} | Leadership Personas Assessment © 2025</p>
+            <p>Report generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>
     </div>
 </body>

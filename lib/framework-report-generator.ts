@@ -29,7 +29,7 @@ export class FrameworkReportGenerator {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leadership Personas Assessment - Tier 2 Detailed Coaching Report</title>
+    <title>Inner Personas Assessment - Tier 2 Detailed Coaching Report</title>
     <style>
         body {
             font-family: Georgia, 'Times New Roman', serif;
@@ -135,7 +135,7 @@ export class FrameworkReportGenerator {
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="professional-logo">LEADERSHIP PERSONAS ASSESSMENT</div>
+            <div class="professional-logo">Inner Personas ASSESSMENT</div>
             <h1>TIER 2 DETAILED COACHING REPORT</h1>
             <p><strong>${options.participantName}</strong></p>
             <p>Assessment Date: ${options.assessmentDate}</p>
@@ -253,9 +253,9 @@ export class FrameworkReportGenerator {
         </div>
 
         <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b; font-size: 14px;">
-            <p><strong>This detailed analysis is based on the Leadership Personas Assessment framework.</strong></p>
+            <p><strong>This detailed analysis is based on the Inner Personas Assessment framework.</strong></p>
             <p>Assessment ID: ${options.assessmentId} | Report generated on ${new Date().toLocaleDateString()}</p>
-            <p>Leadership Personas Assessment © 2025 | Tier 2 Professional Development Report</p>
+            <p>Inner Personas Assessment © 2025 | Tier 2 Professional Development Report</p>
         </div>
     </div>
 </body>
@@ -274,7 +274,7 @@ export class FrameworkReportGenerator {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leadership Personas Assessment - Clinical Analysis Report</title>
+    <title>Inner Personas Assessment - Clinical Analysis Report</title>
     <style>
         body {
             font-family: 'Times New Roman', Times, serif;
@@ -377,7 +377,7 @@ export class FrameworkReportGenerator {
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="clinical-logo">LEADERSHIP PERSONAS ASSESSMENT</div>
+            <div class="clinical-logo">Inner Personas ASSESSMENT</div>
             <h1>CLINICAL ANALYSIS REPORT</h1>
             <p><strong>RESEARCH PARTICIPANT DATA</strong></p>
         </div>

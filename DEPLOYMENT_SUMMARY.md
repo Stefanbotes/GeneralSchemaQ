@@ -218,7 +218,7 @@ Files committed:
    This will populate:
    - Assessment questions (270 items)
    - LASBI items metadata
-   - Leadership personas
+   - Inner Personas
 
 2. **Set up database backups** on your PostgreSQL provider
 

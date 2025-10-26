@@ -306,4 +306,4 @@ Your NTAQV2 app has professional email functionality built-in. Follow `GMAIL_SET
 ---
 
 *Generated on October 22, 2025*  
-*App: NTAQV2 - Leadership Personas Assessment*
+*App: NTAQV2 - Inner Personas Assessment*

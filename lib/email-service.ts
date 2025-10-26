@@ -68,7 +68,7 @@ export class EmailService {
 
     await this.sendEmail({
       to: email,
-      subject: 'Verify Your Email - Leadership Personas Assessment',
+      subject: 'Verify Your Email - Inner Personas Assessment',
       html,
       text,
     });
@@ -98,7 +98,7 @@ export class EmailService {
 
     await this.sendEmail({
       to: email,
-      subject: 'Password Reset - Leadership Personas Assessment',
+      subject: 'Password Reset - Inner Personas Assessment',
       html,
       text,
     });
@@ -113,7 +113,7 @@ export class EmailService {
 
     await this.sendEmail({
       to: email,
-      subject: 'Password Changed - Leadership Personas Assessment',
+      subject: 'Password Changed - Inner Personas Assessment',
       html,
       text,
     });
@@ -155,7 +155,7 @@ export class EmailService {
             </div>
             <div class="content">
               <h2>Hi ${safeName},</h2>
-              <p>Welcome to Leadership Personas Assessment! Please verify your email address to complete your registration.</p>
+              <p>Welcome to Inner Personas Assessment! Please verify your email address to complete your registration.</p>
               <p>Click the button below to verify your email:</p>
               <a href="${safeUrl}" class="button">Verify Email Address</a>
               <p>If the button doesn't work, copy and paste this link into your browser:</p>
@@ -164,7 +164,7 @@ export class EmailService {
               <p>If you didn't create an account, please ignore this email.</p>
             </div>
             <div class="footer">
-              <p>© 2025 Leadership Personas Assessment. All rights reserved.</p>
+              <p>© 2025 Inner Personas Assessment. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -176,7 +176,7 @@ export class EmailService {
     return `
 Hi ${firstName},
 
-Welcome to Leadership Personas Assessment! Please verify your email address to complete your registration.
+Welcome to Inner Personas Assessment! Please verify your email address to complete your registration.
 
 Click this link to verify your email:
 ${verificationUrl}
@@ -185,7 +185,7 @@ This link will expire in 24 hours.
 
 If you didn't create an account, please ignore this email.
 
-© 2025 Leadership Personas Assessment. All rights reserved.
+© 2025 Inner Personas Assessment. All rights reserved.
     `.trim();
   }
 
@@ -216,7 +216,7 @@ If you didn't create an account, please ignore this email.
             </div>
             <div class="content">
               <h2>Hi ${safeName},</h2>
-              <p>We received a request to reset your password for your Leadership Personas Assessment account.</p>
+              <p>We received a request to reset your password for your Inner Personas Assessment account.</p>
               <p>Click the button below to reset your password:</p>
               <a href="${safeUrl}" class="button">Reset Password</a>
               <p>If the button doesn't work, copy and paste this link into your browser:</p>
@@ -231,7 +231,7 @@ If you didn't create an account, please ignore this email.
               </div>
             </div>
             <div class="footer">
-              <p>© 2025 Leadership Personas Assessment. All rights reserved.</p>
+              <p>© 2025 Inner Personas Assessment. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -243,7 +243,7 @@ If you didn't create an account, please ignore this email.
     return `
 Hi ${firstName},
 
-We received a request to reset your password for your Leadership Personas Assessment account.
+We received a request to reset your password for your Inner Personas Assessment account.
 
 Click this link to reset your password:
 ${resetUrl}
@@ -253,7 +253,7 @@ SECURITY NOTICE:
 - If you didn't request this reset, please ignore this email
 - Your password will remain unchanged until you create a new one
 
-© 2025 Leadership Personas Assessment. All rights reserved.
+© 2025 Inner Personas Assessment. All rights reserved.
     `.trim();
   }
 
@@ -289,7 +289,7 @@ SECURITY NOTICE:
               <p>For your security, you may be asked to log in again on your devices.</p>
             </div>
             <div class="footer">
-              <p>© 2025 Leadership Personas Assessment. All rights reserved.</p>
+              <p>© 2025 Inner Personas Assessment. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -307,7 +307,7 @@ If you didn't make this change, please contact our support team immediately.
 
 For your security, you may be asked to log in again on your devices.
 
-© 2025 Leadership Personas Assessment. All rights reserved.
+© 2025 Inner Personas Assessment. All rights reserved.
     `.trim();
   }
 }

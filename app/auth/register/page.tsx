@@ -123,7 +123,7 @@ function RegisterForm() {
               Create Account
             </CardTitle>
             <CardDescription>
-              Join Leadership Personas Assessment to discover your leadership potential
+              Join Inner Personas Assessment to discover your leadership potential
             </CardDescription>
           </CardHeader>
 

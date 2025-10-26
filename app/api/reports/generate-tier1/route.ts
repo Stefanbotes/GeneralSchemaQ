@@ -229,7 +229,7 @@ export async function POST(req: NextRequest) {
 <body>
   <div class="container">
     <div class="header">
-      <h1>Leadership Personas Assessment</h1>
+      <h1>Inner Personas Assessment</h1>
       <h2>Summary Report</h2>
       <p><strong>${escapeHtml(participantName)}</strong></p>
       <p>Generated: ${new Date().toLocaleDateString()}</p>
@@ -271,7 +271,7 @@ export async function POST(req: NextRequest) {
 
     <div class="section">
       <h3>Complete Ranking</h3>
-      <div style="font-size: 14px; color: #64748b; margin-bottom: 15px;">All leadership personas (Top 5):</div>
+      <div style="font-size: 14px; color: #64748b; margin-bottom: 15px;">All Inner Personas (Top 5):</div>
       <ol>
         ${display.slice(0, 5).map(item => `
           <li>
@@ -285,7 +285,7 @@ export async function POST(req: NextRequest) {
 
     <div class="footer">
       <p>This summary report uses the same canonical scoring methodology as Tier 2 and Tier 3 clinical reports.</p>
-      <p>© ${new Date().getFullYear()} Leadership Personas Assessment. Confidential.</p>
+      <p>© ${new Date().getFullYear()} Inner Personas Assessment. Confidential.</p>
     </div>
   </div>
 </body>

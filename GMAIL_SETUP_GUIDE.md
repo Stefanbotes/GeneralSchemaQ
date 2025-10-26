@@ -1,7 +1,7 @@
 # Gmail SMTP Setup Guide for Vercel
 
 **Last Updated:** October 22, 2025  
-**App:** NTAQV2 - Leadership Personas Assessment  
+**App:** NTAQV2 - Inner Personas Assessment  
 **Purpose:** Configure Gmail to send verification and password reset emails on Vercel
 
 ---

@@ -155,7 +155,7 @@ Visit: https://1571c35e96.preview.abacusai.app
 - ✅ Should load with full UI
 - ✅ Should show styled components
 - ✅ Should have working navigation
-- ✅ Should display the Leadership Personas Assessment homepage
+- ✅ Should display the Inner Personas Assessment homepage
 
 ### 3. Check Process
 ```bash

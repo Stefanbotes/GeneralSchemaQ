@@ -62,10 +62,10 @@ async function main() {
     const deletedUsers = await prisma.users.deleteMany({});
     console.log(`✓ Deleted ${deletedUsers.count} users`);
 
-    // 11. Clear leadership personas (optional)
-    console.log('Clearing leadership personas...');
+    // 11. Clear Inner Personas (optional)
+    console.log('Clearing Inner Personas...');
     const deletedPersonas = await prisma.leadership_personas.deleteMany({});
-    console.log(`✓ Deleted ${deletedPersonas.count} leadership personas`);
+    console.log(`✓ Deleted ${deletedPersonas.count} Inner Personas`);
 
     console.log('\n✅ Database cleared successfully!');
     console.log('📝 Ready for fresh seeding with new questions.');

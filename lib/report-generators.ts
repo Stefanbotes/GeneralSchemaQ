@@ -264,7 +264,7 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="logo">Leadership Personas Assessment</div>
+            <div class="logo">Inner Personas Assessment</div>
             <h1>Your Leadership Summary</h1>
             <p>Personal Leadership Insights & Strengths</p>
         </div>
@@ -322,9 +322,9 @@ export function generateCanonicalTier1Report(analysis: any, participant: any): s
         </div>
 
         <div class="footer">
-            <p><strong>Thank you for completing the Leadership Personas Assessment!</strong></p>
+            <p><strong>Thank you for completing the Inner Personas Assessment!</strong></p>
             <p>This summary is derived from the same canonical scoring framework used in professional analysis. For detailed development planning, consider working with a qualified leadership coach.</p>
-            <p>Report generated on ${new Date().toLocaleDateString()} | Leadership Personas Assessment © 2025</p>
+            <p>Report generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>
     </div>
 </body>
@@ -721,7 +721,7 @@ export function generateEnhancedTier1Report(analysis: any, participant: Particip
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="logo">Leadership Personas Assessment</div>
+            <div class="logo">Inner Personas Assessment</div>
             <h1>Your Leadership Summary</h1>
             <p>Personal Leadership Insights & Strengths</p>
         </div>
@@ -766,9 +766,9 @@ export function generateEnhancedTier1Report(analysis: any, participant: Particip
         </div>
 
         <div class="footer">
-            <p><strong>Thank you for completing the Leadership Personas Assessment!</strong></p>
+            <p><strong>Thank you for completing the Inner Personas Assessment!</strong></p>
             <p>This summary provides an overview of your leadership patterns. For more detailed development planning, consider working with a qualified leadership coach.</p>
-            <p>Report generated on ${new Date().toLocaleDateString()} | Leadership Personas Assessment © 2025</p>
+            <p>Report generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>
     </div>
 </body>
@@ -885,7 +885,7 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
               month: 'long', 
               day: 'numeric' 
             })}</p>
-            <p><strong>Assessment Protocol:</strong> Leadership Personas Assessment (108-item)</p>
+            <p><strong>Assessment Protocol:</strong> Inner Personas Assessment (108-item)</p>
             <p><strong>Completion Status:</strong> 100% (All items completed)</p>
         </div>
 
@@ -910,7 +910,7 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
         </div>
 
         ${supporting.length > 0 ? `
-        <h2>🔍 Supporting Leadership Personas (60%+ Alignment)</h2>
+        <h2>🔍 Supporting Inner Personas (60%+ Alignment)</h2>
         <p>Your high scores across multiple personas create a complex, nuanced leadership profile:</p>
         
         ${supporting.map((persona, index) => `
@@ -992,13 +992,13 @@ export function generateTier2Report(analysis: ThreeTierAnalysis, participant: Pa
         </div>
 
         <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
-            <p style="margin: 0;"><strong>This detailed analysis is based on the Leadership Personas Assessment framework. Your leadership profile represents unique strengths and development opportunities that can create exceptional leadership impact when optimized.</strong></p>
+            <p style="margin: 0;"><strong>This detailed analysis is based on the Inner Personas Assessment framework. Your leadership profile represents unique strengths and development opportunities that can create exceptional leadership impact when optimized.</strong></p>
         </div>
 
         <div class="footer">
             <p>This report is confidential and intended for leadership development purposes.</p>
             <p>For additional development support, consider working with a qualified leadership coach.</p>
-            <p>Generated on ${new Date().toLocaleDateString()} | Leadership Personas Assessment © 2025</p>
+            <p>Generated on ${new Date().toLocaleDateString()} | Inner Personas Assessment © 2025</p>
         </div>
     </div>
 </body>
@@ -1079,7 +1079,7 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
 <body>
     <div class="report-container">
         <div class="header">
-            <div class="professional-logo">Comprehensive Leadership Personas Report</div>
+            <div class="professional-logo">Comprehensive Inner Personas Report</div>
             <h1>${participant.name}${participant.organization ? ` - ${participant.organization}` : ''}</h1>
             <h2>Assessment Analysis</h2>
         </div>
@@ -1094,7 +1094,7 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
             <p><strong>Total Questions:</strong> 108 | <strong>All Questions Answered:</strong> ✓</p>
             ${participant.organization ? `<p><strong>Organization:</strong> ${participant.organization}</p>` : ''}
             <p><strong>Primary Persona:</strong> ${primary.personaName} (${primary.activationLevel}% alignment)</p>
-            <p><strong>Top 5 Leadership Personas:</strong></p>
+            <p><strong>Top 5 Inner Personas:</strong></p>
             <ol>
                 <li>${primary.personaName} - ${primary.activationLevel}%</li>
                 ${supporting.slice(0, 4).map(p => `<li>${p.personaName} - ${p.activationLevel}%</li>`).join('')}
@@ -1195,7 +1195,7 @@ export function generateTier2DetailedReport(analysis: ThreeTierAnalysis, partici
         </div>
 
         <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #2d3748; color: #4a5568; font-size: 14px;">
-            <p>This detailed analysis is based on the Leadership Personas Assessment framework.</p>
+            <p>This detailed analysis is based on the Inner Personas Assessment framework.</p>
             <p>Your complex profile represents unique leadership capabilities that, when optimized, create exceptional organizational impact.</p>
             <p>For implementation support, consider working with a qualified leadership coach or development professional.</p>
         </div>
@@ -1457,7 +1457,7 @@ export function generateTier3ClinicalReport(analysis: ThreeTierAnalysis, partici
         </div>
 
         <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #2d3748; color: #4a5568; font-size: 12px;">
-            <p>Report prepared by: Leadership Personas Assessment System</p>
+            <p>Report prepared by: Inner Personas Assessment System</p>
             <p>Assessment ID: ${participant.assessmentId} | Generated: ${new Date().toLocaleDateString()}</p>
             <p><strong>Requires clinical supervision for interpretation and application</strong></p>
         </div>

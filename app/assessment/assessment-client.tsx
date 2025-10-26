@@ -1,4 +1,4 @@
-// Client component for the Leadership Personas Assessment – Ultra-Clean Version
+// Client component for the Inner Personas Assessment – Ultra-Clean Version
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -318,7 +318,7 @@ export function AssessmentClient() {
                 <AnimatedLogo />
               </div>
               <CardTitle className="text-2xl font-bold text-blue-700">Personal Information</CardTitle>
-              <CardDescription>Please provide your details to begin the Leadership Personas Assessment</CardDescription>
+              <CardDescription>Please provide your details to begin the Inner Personas Assessment</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleBioSubmit} className="space-y-6">
@@ -351,7 +351,7 @@ export function AssessmentClient() {
         <Card className="bg-white shadow-xl">
           <CardHeader>
             <div className="flex items-center justify-between mb-4">
-              <CardTitle className="text-xl font-bold text-blue-700">Leadership Personas Assessment</CardTitle>
+              <CardTitle className="text-xl font-bold text-blue-700">Inner Personas Assessment</CardTitle>
               <div className="text-sm text-gray-600">Page {currentPage + 1} of {totalPages}</div>
             </div>
             <div className="space-y-2">
