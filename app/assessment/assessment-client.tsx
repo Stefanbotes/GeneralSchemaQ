@@ -11,12 +11,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AnimatedLogo } from '@/components/ui/animated-logo';
-import { ChevronLeft, ChevronRight, CheckCircle, BarChart3, Trophy, Download, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Question {
   id: string;
-  order: number; // retained for data compatibility – not shown
+  order: number;
   domain: string;
   schema: string;
   persona: string;
@@ -39,42 +39,30 @@ interface BioData {
 
 /**
  * Hardened cleaner for leading numbering (handles weird spaces, BOMs, fullwidth digits, and numbers wrapped in tags).
- * Examples removed:
- *  "13. ", "13:", "(13) ", "[13] -", "<strong>13.</strong> ", "１３．", "&nbsp;13 –", "13 . " (NBSP) etc.
  */
 const stripLeadingNumberOnce = (input: string): string => {
   if (!input) return '';
-  // Normalize and remove invisible/odd spaces
   let s = input
     .normalize('NFKC')
-    .replace(/\uFEFF/g, '')                 // BOM
-    .replace(/\u00A0/g, ' ')                // NBSP
-    .replace(/[\u2000-\u200D\u2060]/g, ''); // zero-widths
+    .replace(/\uFEFF/g, '')
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\u2000-\u200D\u2060]/g, '');
 
-  // Allow a few opening tags/spaces before the number (e.g. <strong>13.</strong> Foo)
-  // This consumes sequences like "<b>", "</b>", "<span ...>" that might wrap the number.
-  // We only strip them if a number immediately follows them.
   s = s.replace(
     new RegExp(
-      // start + optional spaces/tags many times
       '^\\s*(?:<(?:\\/)?[a-zA-Z][^>]*>\\s*)*' +
-      // the number itself (ASCII+fullwidth), up to 3 digits
-      '(?:[0-9\\uFF10-\\uFF19]{1,3})' +
-      // optional closing bracket/paren, optional punctuation after
-      '(?:\\s*[\\)\\]]\\s*)?' +
-      '(?:\\s*[\\.\\uFF0E\\u2024\\u2027\\u3002:\\-–—]\\s*)?',
+        '(?:[0-9\\uFF10-\\uFF19]{1,3})' +
+        '(?:\\s*[\\)\\]]\\s*)?' +
+        '(?:\\s*[\\.\\uFF0E\\u2024\\u2027\\u3002:\\-–—]\\s*)?',
       'u'
     ),
     ''
   );
 
-  // Safety fallback: if it still starts with digits + whitespace/punct, strip again.
   s = s.replace(/^\s*[0-9\uFF10-\uFF19]{1,3}\s*[\.\uFF0E:–—\-]?\s*/, '');
-
   return s.trim();
 };
 
-// Idempotent: call twice to be extra safe with nested tags/prefixes
 const cleanQuestionText = (raw: string) => stripLeadingNumberOnce(stripLeadingNumberOnce(raw || ''));
 
 export function AssessmentClient() {
@@ -140,14 +128,12 @@ export function AssessmentClient() {
         const data = await res.json();
         if (data.success && data.questions) {
           const shuffled = shuffleArray(data.questions as Question[]);
-          // SANITIZE HERE so state is clean
           const sanitized = shuffled.map(q => ({
             ...q,
             statement: cleanQuestionText(String(q.statement ?? ''))
           }));
           setQuestions(sanitized);
 
-          // Optional diagnostics (check one example in DevTools)
           console.log('[Questions]', {
             originalExample: (data.questions[0] as Question)?.statement,
             sanitizedExample: sanitized[0]?.statement
@@ -230,10 +216,22 @@ export function AssessmentClient() {
         body: JSON.stringify(submissionData)
       });
       if (!res.ok) throw new Error('Failed to save assessment');
+
+      // ✅ Use the real assessmentId returned by the server
+      let assessmentId: string | undefined;
+      try {
+        const data = await res.json();
+        assessmentId = data?.assessmentId;
+      } catch {
+        // If parsing fails, we'll fall back to client-side responses in handleDownloadReport
+      }
+
       setIsSubmitted(true);
       setShowResults(true);
       toast.success('Assessment completed and saved successfully!');
-      setTimeout(() => handleDownloadReport(), 1000);
+
+      // ✅ Generate Tier-1 based on the saved assessment when possible
+      setTimeout(() => handleDownloadReport(assessmentId), 1000);
     } catch (e) {
       console.error(e);
       toast.error('Failed to submit assessment.');
@@ -241,19 +239,21 @@ export function AssessmentClient() {
   };
 
   // Report
-  const handleDownloadReport = async () => {
+  const handleDownloadReport = async (assessmentId?: string) => {
     try {
-      toast.loading('Generating your Inner Personasummary...');
+      toast.loading('Generating your Inner Persona summary...');
+      const body = assessmentId
+        ? { assessmentId } // ✅ lookup mode from DB (preferred)
+        : { responses, participantData: bioData }; // fallback to direct responses
+
       const res = await fetch('/api/reports/generate-tier1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          responses,
-          participantData: bioData,
-          assessmentId: `assess_${Date.now()}`
-        })
+        body: JSON.stringify(body)
       });
+
       if (!res.ok) throw new Error();
+
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -266,7 +266,7 @@ export function AssessmentClient() {
       a.remove();
       URL.revokeObjectURL(url);
       toast.dismiss();
-      toast.success('Inner Personasummary downloaded!');
+      toast.success('Inner Persona summary downloaded!');
     } catch {
       toast.dismiss();
       toast.error('Failed to download report.');
@@ -301,7 +301,7 @@ export function AssessmentClient() {
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Loading Assessment</h3>
-            <p className="text-gray-500">Preparing your 108-question Inner Personaassessment...</p>
+            <p className="text-gray-500">Preparing your 108-question Inner Persona assessment...</p>
           </CardContent>
         </Card>
       </div>
@@ -364,7 +364,7 @@ export function AssessmentClient() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {currentQuestions.map((q, index) => {
+            {getCurrentPageQuestions().map((q, index) => {
               const displayNumber = currentPage * questionsPerPage + index + 1;
               return (
                 <Card key={q.id} className="border border-gray-200">
@@ -372,7 +372,6 @@ export function AssessmentClient() {
                     <div className="text-xs text-gray-500 mb-1">
                       Question {displayNumber} of {questions.length}
                     </div>
-                    {/* Clean AGAIN at render for extra safety */}
                     <CardTitle className="text-lg font-medium text-gray-800">
                       {cleanQuestionText(q.statement)}
                     </CardTitle>
@@ -404,7 +403,7 @@ export function AssessmentClient() {
                 <span>Previous</span>
               </Button>
               <div className="text-sm text-gray-600">
-                {answeredOnPage} of {currentQuestions.length} answered on this page
+                {getCurrentPageQuestions().filter(q => responses[q.id]).length} of {getCurrentPageQuestions().length} answered on this page
               </div>
               {currentPage === Math.ceil(questions.length / questionsPerPage) - 1 ? (
                 <Button
@@ -418,7 +417,7 @@ export function AssessmentClient() {
               ) : (
                 <Button
                   onClick={handleNext}
-                  disabled={answeredOnPage !== currentQuestions.length}
+                  disabled={getCurrentPageQuestions().filter(q => responses[q.id]).length !== getCurrentPageQuestions().length}
                   className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700 flex items-center space-x-2"
                 >
                   <span>Next</span>
