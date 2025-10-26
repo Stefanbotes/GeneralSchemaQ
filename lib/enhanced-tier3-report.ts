@@ -1,83 +1,73 @@
-// app/lib/tier3-report.ts
-// Enhanced Tier 3 Clinical Report Generation (standalone, no external imports)
-// - Domain-aligned with the 18-schema model
-// - Accepts analysis.tier3.canonicalTop5 or falls back to analysis.rankedScores
-// - Positive, development-oriented framing (not diagnostic language)
-// - 6-point Likert → 0–100 index; 6 items per schema
+// app/lib/enhanced-tier3-report.ts
+// Tier 3 Clinical Report (standalone, typed, no external imports)
+// - Accepts analysis.tier3.canonicalTop5 OR falls back to analysis.rankedScores
+// - Uses canonical schema labels and domains
+// - 6-point Likert is already converted upstream; we display 0–100 indices.
 
 type AnyRecord = Record<string, any>;
 
 export interface EnhancedClinicalReportOptions {
   participantName: string;
-  participantEmail: string;
+  participantEmail?: string;
   participantTeam?: string;
-  assessmentDate: string;   // ISO or readable
-  assessmentId: string;
+  assessmentDate: string;   // ISO or human-readable
+  assessmentId?: string;
 }
 
-// ----- Canonical registry (labels → domains + clinical ids) -----
-const DOMAIN_BY_SCHEMA: Record<string, string> = {
-  // Disconnection/Rejection (1.1–1.5)
-  "Abandonment/Instability": "Disconnection/Rejection",
-  "Defectiveness/Shame": "Disconnection/Rejection",
-  "Emotional Deprivation": "Disconnection/Rejection",
-  "Mistrust/Abuse": "Disconnection/Rejection",
-  "Social Isolation/Alienation": "Disconnection/Rejection",
-  // Impaired Autonomy/Performance (2.1–2.4)
-  "Dependence/Incompetence": "Impaired Autonomy/Performance",
-  "Vulnerability to Harm/Illness": "Impaired Autonomy/Performance",
-  "Enmeshment/Undeveloped Self": "Impaired Autonomy/Performance",
-  "Failure": "Impaired Autonomy/Performance",
-  // Impaired Limits (3.1–3.2)
-  "Entitlement/Grandiosity": "Impaired Limits",
-  "Insufficient Self-Control/Discipline": "Impaired Limits",
-  // Other-Directedness (4.1–4.3)
-  "Subjugation": "Other-Directedness",
-  "Self-Sacrifice": "Other-Directedness",
-  "Approval-Seeking/Recognition-Seeking": "Other-Directedness",
-  // Overvigilance/Inhibition (5.1–5.4)
-  "Negativity/Pessimism": "Overvigilance/Inhibition",
-  "Emotional Inhibition": "Overvigilance/Inhibition",
-  "Unrelenting Standards/Hypercriticalness": "Overvigilance/Inhibition",
-  "Punitiveness": "Overvigilance/Inhibition",
+interface CanonicalInfo {
+  clinicalName: string;  // research/clinical name (same as label here)
+  persona: string;       // display persona (same as label here)
+  domain: "Disconnection/Rejection"
+        | "Impaired Autonomy/Performance"
+        | "Impaired Limits"
+        | "Other-Directedness"
+        | "Overvigilance/Inhibition";
+}
+
+// Canonical 18 schema labels → domain (aligned with your mapping)
+const CANONICAL_BY_LABEL: Record<string, CanonicalInfo> = {
+  "Abandonment/Instability":                { clinicalName: "Abandonment/Instability",                persona: "Abandonment/Instability",                domain: "Disconnection/Rejection" },
+  "Defectiveness/Shame":                    { clinicalName: "Defectiveness/Shame",                    persona: "Defectiveness/Shame",                    domain: "Disconnection/Rejection" },
+  "Emotional Deprivation":                  { clinicalName: "Emotional Deprivation",                  persona: "Emotional Deprivation",                  domain: "Disconnection/Rejection" },
+  "Mistrust/Abuse":                         { clinicalName: "Mistrust/Abuse",                         persona: "Mistrust/Abuse",                         domain: "Disconnection/Rejection" },
+  "Social Isolation/Alienation":            { clinicalName: "Social Isolation/Alienation",            persona: "Social Isolation/Alienation",            domain: "Disconnection/Rejection" },
+
+  "Dependence/Incompetence":                { clinicalName: "Dependence/Incompetence",                persona: "Dependence/Incompetence",                domain: "Impaired Autonomy/Performance" },
+  "Vulnerability to Harm/Illness":          { clinicalName: "Vulnerability to Harm/Illness",          persona: "Vulnerability to Harm/Illness",          domain: "Impaired Autonomy/Performance" },
+  "Enmeshment/Undeveloped Self":            { clinicalName: "Enmeshment/Undeveloped Self",            persona: "Enmeshment/Undeveloped Self",            domain: "Impaired Autonomy/Performance" },
+  "Failure":                                { clinicalName: "Failure",                                persona: "Failure",                                domain: "Impaired Autonomy/Performance" },
+
+  "Entitlement/Grandiosity":                { clinicalName: "Entitlement/Grandiosity",                persona: "Entitlement/Grandiosity",                domain: "Impaired Limits" },
+  "Insufficient Self-Control/Discipline":   { clinicalName: "Insufficient Self-Control/Discipline",   persona: "Insufficient Self-Control/Discipline",   domain: "Impaired Limits" },
+
+  "Subjugation":                            { clinicalName: "Subjugation",                            persona: "Subjugation",                            domain: "Other-Directedness" },
+  "Self-Sacrifice":                         { clinicalName: "Self-Sacrifice",                         persona: "Self-Sacrifice",                         domain: "Other-Directedness" },
+  "Approval-Seeking/Recognition-Seeking":   { clinicalName: "Approval-Seeking/Recognition-Seeking",   persona: "Approval-Seeking/Recognition-Seeking",   domain: "Other-Directedness" },
+
+  "Negativity/Pessimism":                   { clinicalName: "Negativity/Pessimism",                   persona: "Negativity/Pessimism",                   domain: "Overvigilance/Inhibition" },
+  "Emotional Inhibition":                   { clinicalName: "Emotional Inhibition",                   persona: "Emotional Inhibition",                   domain: "Overvigilance/Inhibition" },
+  "Unrelenting Standards/Hypercriticalness":{ clinicalName: "Unrelenting Standards/Hypercriticalness",persona: "Unrelenting Standards/Hypercriticalness",domain: "Overvigilance/Inhibition" },
+  "Punitiveness":                           { clinicalName: "Punitiveness",                           persona: "Punitiveness",                           domain: "Overvigilance/Inhibition" }
 };
 
-const CLINICAL_ID_BY_SCHEMA: Record<string, string> = {
-  "Abandonment/Instability": "abandonment_instability",
-  "Defectiveness/Shame": "defectiveness_shame",
-  "Emotional Deprivation": "emotional_deprivation",
-  "Mistrust/Abuse": "mistrust_abuse",
-  "Social Isolation/Alienation": "social_isolation_alienation",
-  "Dependence/Incompetence": "dependence_incompetence",
-  "Vulnerability to Harm/Illness": "vulnerability_to_harm_illness",
-  "Enmeshment/Undeveloped Self": "enmeshment_undeveloped_self",
-  "Failure": "failure",
-  "Entitlement/Grandiosity": "entitlement_grandiosity",
-  "Insufficient Self-Control/Discipline": "insufficient_self_control_discipline",
-  "Subjugation": "subjugation",
-  "Self-Sacrifice": "self_sacrifice",
-  "Approval-Seeking/Recognition-Seeking": "approval_recognition_seeking",
-  "Negativity/Pessimism": "negativity_pessimism",
-  "Emotional Inhibition": "emotional_inhibition",
-  "Unrelenting Standards/Hypercriticalness": "unrelenting_standards_hypercriticalness",
-  "Punitiveness": "punitiveness",
-};
+function getCanonicalSchemaInfo(label: string): CanonicalInfo | undefined {
+  return CANONICAL_BY_LABEL[label];
+}
 
 function getAnalysisVersion(): string {
-  return "tier3-standalone-v1.0.0";
+  // Keep version string local to avoid imports. Update when you change scoring lineage.
+  return "tier3-v1.0.0";
 }
 
-function getCanonicalSchemaInfo(schemaLabel: string) {
-  if (!schemaLabel) return null;
-  const domain = DOMAIN_BY_SCHEMA[schemaLabel];
-  const clinicalId = CLINICAL_ID_BY_SCHEMA[schemaLabel];
-  if (!domain || !clinicalId) return null;
-  return {
-    persona: schemaLabel,     // public-facing research label is the schema label
-    clinicalName: schemaLabel,
-    domain,
-    clinicalId,
-  };
+function safeDateString(input: string): string {
+  try {
+    const d = new Date(input);
+    return isNaN(d.getTime())
+      ? input
+      : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return input;
+  }
 }
 
 function toPercent(x: unknown): number {
@@ -86,188 +76,189 @@ function toPercent(x: unknown): number {
   return Math.max(0, Math.min(100, Math.round(n)));
 }
 
-type CanonicalItem = { schemaId: string; score: number; rank: number };
+type CanonicalRow = { schemaId: string; score: number; rank: number };
 
-// Prefer analysis.tier3.canonicalTop5 if present; otherwise adapt rankedScores
-function normalizeCanonicalTop(analysis: AnyRecord, take: number = 5): CanonicalItem[] {
-  const t3 = analysis?.tier3;
-  if (Array.isArray(t3?.canonicalTop5) && t3.canonicalTop5.length) {
-    return t3.canonicalTop5
-      .map((it: any, i: number) => ({
-        schemaId: String(it.schemaId ?? it.schemaLabel ?? ""),
+/** Normalize Tier-3 inputs from analysis */
+function normalizeTier3(analysis: AnyRecord): {
+  canonicalTop5: CanonicalRow[];
+  primaryLabel: string | undefined;
+  primaryInfo: CanonicalInfo | undefined;
+  supporting: { label: string; score: number; rank: number; info?: CanonicalInfo }[];
+  therapeuticRecommendations: string[];
+} {
+  // Preferred source: analysis.tier3.canonicalTop5
+  if (analysis?.tier3?.canonicalTop5 && Array.isArray(analysis.tier3.canonicalTop5)) {
+    const rows: CanonicalRow[] = (analysis.tier3.canonicalTop5 as any[])
+      .map((it: any, i: number): CanonicalRow => ({
+        schemaId: String(it.schemaId ?? it.label ?? it.name ?? ""),
         score: toPercent(it.score ?? it.index0to100),
-        rank: Number(it.rank ?? i + 1),
+        rank: Number(it.rank ?? i + 1)
       }))
-      .filter(x => x.schemaId);
+      .filter((row: CanonicalRow) => !!row.schemaId);
+
+    const primaryLabel = rows[0]?.schemaId;
+    const primaryInfo = primaryLabel ? getCanonicalSchemaInfo(primaryLabel) : undefined;
+
+    const supporting = rows.slice(1, 3).map((r: CanonicalRow) => ({
+      label: r.schemaId,
+      score: r.score,
+      rank: r.rank,
+      info: getCanonicalSchemaInfo(r.schemaId)
+    }));
+
+    const therapeuticRecommendations: string[] =
+      Array.isArray(analysis?.tier3?.therapeuticRecommendations) &&
+      analysis.tier3.therapeuticRecommendations.length
+        ? analysis.tier3.therapeuticRecommendations
+        : [
+            "Cognitive restructuring of schema-linked beliefs.",
+            "Brief behavioral experiments to test alternative responses.",
+            "Values-based action planning under stress.",
+            "Mindfulness practices to widen response flexibility."
+          ];
+
+    return { canonicalTop5: rows.slice(0, 5), primaryLabel, primaryInfo, supporting, therapeuticRecommendations };
   }
 
-  // Fallback: rankedScores from shared scorer
+  // Fallback: take from rankedScores (shared 6-point scorer output)
   const ranked = Array.isArray(analysis?.rankedScores) ? analysis.rankedScores : [];
-  return ranked.slice(0, take).map((s: any, i: number) => ({
-    schemaId: String(s.schemaLabel ?? s.schemaId ?? ""),
-    score: toPercent(s.index0to100 ?? s.score),
-    rank: i + 1,
-  })).filter(x => x.schemaId);
+  const rows: CanonicalRow[] = ranked.slice(0, 5).map((s: any, i: number): CanonicalRow => ({
+    schemaId: String(s.schemaLabel ?? ""),
+    score: toPercent(s.index0to100),
+    rank: i + 1
+  })).filter((row: CanonicalRow) => !!row.schemaId);
+
+  const primaryLabel = rows[0]?.schemaId;
+  const primaryInfo = primaryLabel ? getCanonicalSchemaInfo(primaryLabel) : undefined;
+
+  const supporting = rows.slice(1, 3).map((r: CanonicalRow) => ({
+    label: r.schemaId,
+    score: r.score,
+    rank: r.rank,
+    info: getCanonicalSchemaInfo(r.schemaId)
+  }));
+
+  const therapeuticRecommendations: string[] = [
+    "Identify a high-frequency trigger and pre-plan one alternative response.",
+    "Use a brief pause (3 breaths) before key moments to widen choice.",
+    "Schedule one weekly reflection to extract lessons and tweak the plan."
+  ];
+
+  return { canonicalTop5: rows, primaryLabel, primaryInfo, supporting, therapeuticRecommendations };
 }
 
+/** Public API: generate Tier-3 clinical HTML */
 export function generateEnhancedTier3Report(analysis: AnyRecord, options: EnhancedClinicalReportOptions): string {
-  const top = normalizeCanonicalTop(analysis, 5);
-  const primaryRow = top[0];
+  const { canonicalTop5, primaryLabel, primaryInfo, supporting, therapeuticRecommendations } = normalizeTier3(analysis);
 
-  const primaryCanonical = primaryRow ? getCanonicalSchemaInfo(primaryRow.schemaId) : null;
-  const supportingCanonical = top.slice(1, 3)
-    .map(it => ({ ...it, canonical: getCanonicalSchemaInfo(it.schemaId) }))
-    .filter(it => !!it.canonical);
-
-  const schemaCategory = primaryCanonical?.domain ?? "—";
-  const primaryName = primaryCanonical?.persona ?? primaryRow?.schemaId ?? "Primary Pattern";
-  const primaryClinical = primaryCanonical?.clinicalName ?? primaryName;
-  const primaryScore = primaryRow?.score ?? 0;
-
-  // graceful options date formatting
-  const safeDate = (() => {
-    try {
-      const d = new Date(options.assessmentDate);
-      return isNaN(d.getTime())
-        ? options.assessmentDate
-        : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-    } catch {
-      return options.assessmentDate;
-    }
-  })();
-
-  // coaching-friendly copy
-  const clinicalContext =
-    "This section summarizes the strongest schema activations using a standardized 0–100 index derived from a 6-point Likert scale. Values above ~80 typically indicate a clearly prominent pattern. Use these results to guide development—not as fixed labels.";
-
-  const integrationHint =
-    "Consider how your strongest pattern shows up in high-stakes situations, and choose one real context to pilot a small, observable adjustment. Build on strengths while widening behavioral range.";
+  const when = safeDateString(options.assessmentDate);
+  const schemaCategory = primaryInfo?.domain ?? "Unknown Domain";
 
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Clinical Schema-Oriented Report — ${options.participantName}</title>
-<style>
-  body { font-family: Georgia, "Times New Roman", serif; line-height: 1.8; color: #1f2937; background:#f8fafc; max-width: 1000px; margin:0 auto; padding:20px; }
-  .report { background:#fff; padding:56px; border-radius:10px; box-shadow:0 18px 30px rgba(0,0,0,.08); border:1px solid #e5e7eb; }
-  .banner { background:#991b1b; color:#fff; text-align:center; padding:12px 16px; border-radius:6px; font-weight:700; letter-spacing:.3px; }
-  .hdr { text-align:center; border-bottom:4px solid #dc2626; padding-bottom:24px; margin-bottom:36px; }
-  .logo { font-size:30px; font-weight:800; color:#dc2626; margin-bottom:6px; }
-  .meta p { margin:4px 0; color:#4b5563; }
-  .block { background:#fef2f2; padding:22px; border-radius:8px; border-left:5px solid #dc2626; margin:18px 0; }
-  .card { border:2px solid #6b7280; border-radius:10px; padding:24px; margin:24px 0; background:linear-gradient(135deg,#f3f4f6 0%, #e5e7eb 100%); }
-  .schemaTag { background:#374151; color:#fff; display:inline-block; padding:8px 12px; border-radius:6px; text-transform:uppercase; letter-spacing:1px; margin:10px 0; }
-  .supportGrid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px; }
-  .supportItem { background:#f9fafb; border-left:4px solid #6b7280; padding:16px; border-radius:8px; }
-  table { width:100%; border-collapse:collapse; }
-  th, td { border:1px solid #d1d5db; padding:10px; text-align:left; font-size:14px; }
-  thead tr { background:#e5e7eb; }
-  .footer { text-align:center; margin-top:40px; padding-top:16px; border-top:2px solid #e5e7eb; color:#6b7280; font-size:14px; }
-  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; color:#4b5563; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Clinical Schema Assessment — ${options.participantName}</title>
+  <style>
+    body { font-family: Georgia, 'Times New Roman', serif; line-height:1.8; color:#1f2937; background:#f7fafc; max-width:1000px; margin:0 auto; padding:20px; }
+    .report { background:#fff; padding:60px; border-radius:10px; border:1px solid #e5e7eb; box-shadow:0 20px 25px rgba(0,0,0,.08); }
+    .banner { background:#dc2626; color:#fff; padding:12px 16px; text-align:center; font-weight:700; border-radius:6px; margin-bottom:28px; }
+    .hdr { text-align:center; border-bottom:4px solid #dc2626; padding-bottom:24px; margin-bottom:36px; }
+    .logo { font-size:32px; font-weight:800; color:#dc2626; margin-bottom:10px; }
+    .meta p { margin:4px 0; color:#4b5563; }
+
+    .panel { background:#fef2f2; border-left:5px solid #dc2626; padding:24px; border-radius:8px; margin:20px 0; }
+    .category { background:#374151; color:#fff; padding:12px 18px; border-radius:6px; text-transform:uppercase; letter-spacing:.5px; text-align:center; margin:18px 0; font-weight:700; }
+
+    .grid { display:flex; flex-direction:column; gap:12px; }
+    .row { background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:12px; display:flex; gap:12px; align-items:center; }
+    .row b { min-width:40px; display:inline-block; }
+
+    .note { background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; padding:16px; margin:18px 0; color:#78350f; }
+    .therapy { background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left:5px solid #059669; padding:22px; border-radius:8px; margin:22px 0; }
+    .footer { text-align:center; margin-top:40px; padding-top:20px; border-top:2px solid #e5e7eb; color:#6b7280; font-size:14px; }
+    .mono { background:#f3f4f6; padding:12px; border-radius:4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; color:#374151; }
+  </style>
 </head>
 <body>
   <div class="report">
-    <div class="banner">CONFIDENTIAL — FOR PROFESSIONAL USE</div>
+    <div class="banner">CONFIDENTIAL CLINICAL ASSESSMENT — PROFESSIONAL USE ONLY</div>
 
     <div class="hdr">
-      <div class="logo">Clinical Schema-Oriented Report</div>
-      <h1 style="margin:6px 0 0 0;">Schema-Based Pattern Analysis</h1>
-      <p style="margin:4px 0 0 0; color:#6b7280;">Grounded in the 18-schema framework</p>
+      <div class="logo">Clinical Schema Assessment</div>
+      <h1 style="margin:6px 0 0 0;">Schema-Based Pattern Analysis (Tier 3)</h1>
+      <p style="margin:6px 0 0 0; color:#6b7280;">Consistent with your canonical (6-point) scoring pipeline</p>
     </div>
 
     <div class="meta" style="margin-bottom:18px;">
       <p><strong>Client:</strong> ${options.participantName}</p>
-      <p><strong>Assessment Date:</strong> ${safeDate}</p>
-      <p><strong>Assessment ID:</strong> ${options.assessmentId}</p>
-      <p><strong>Items/Schema:</strong> 6 items per schema (108 total)</p>
-      <p><strong>Scale:</strong> 6-point Likert (1–6), reported as 0–100 indices</p>
+      <p><strong>Assessment Date:</strong> ${when}</p>
+      ${options.assessmentId ? `<p><strong>Assessment ID:</strong> ${options.assessmentId}</p>` : ""}
+      ${options.participantTeam ? `<p><strong>Team:</strong> ${options.participantTeam}</p>` : ""}
     </div>
 
-    ${top.length ? `
-    <div class="card">
-      <h3 style="margin-top:0;">🔍 Canonical Activation Snapshot (Top 5)</h3>
-      <p class="mono" style="margin:10px 0 16px 0;">${clinicalContext}</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Rank</th><th>Schema Pattern</th><th>Activation Index</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${top.map(row => `
-            <tr style="${row.rank === 1 ? 'background:#fef3c7;font-weight:600;' : ''}">
-              <td>#${row.rank}</td>
-              <td>${row.schemaId}</td>
-              <td>${row.score}/100</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-    ` : ""}
-
-    <div class="block">
-      <h3 style="margin-top:0;">Primary Schema Pattern</h3>
-      <p style="margin:6px 0;"><strong>${primaryName}</strong> (${primaryScore}/100)</p>
-      <div class="schemaTag">${schemaCategory}</div>
-      <p style="margin-top:10px;">
-        The primary pattern represents the clearest signal in your current profile. Use it as a starting point for
-        targeted development—leveraging strengths while adding flexibility where helpful.
-      </p>
-      <p class="mono" style="margin:10px 0 0 0;">
-        Clinical label: ${primaryClinical}${primaryCanonical?.clinicalId ? ` · ID: ${primaryCanonical.clinicalId}` : ""}
-      </p>
-    </div>
-
-    ${supportingCanonical.length ? `
-    <div class="block" style="background:#fff7ed;border-left-color:#f59e0b;">
-      <h3 style="margin-top:0;">Supporting Schema Patterns</h3>
-      <div class="supportGrid">
-        ${supportingCanonical.map(it => `
-          <div class="supportItem">
-            <p style="margin:0 0 6px 0;"><strong>${it.canonical?.persona}</strong></p>
-            <p style="margin:0 0 6px 0;">Domain: ${it.canonical?.domain}</p>
-            <p style="margin:0 0 6px 0;">Activation: ${it.score}/100 (Rank #${it.rank})</p>
-          </div>
-        `).join("")}
+    ${canonicalTop5.length ? `
+    <div class="panel">
+      <h3 style="margin:0 0 10px 0;">🔍 Canonical Activation (Top 5)</h3>
+      <div class="grid">
+        ${canonicalTop5.map((r: CanonicalRow) => `
+        <div class="row" style="${r.rank === 1 ? 'background:#fff7ed; border-color:#fdba74;' : ''}">
+          <b>#${r.rank}</b>
+          <div style="flex:1;"><strong>${r.schemaId}</strong></div>
+          <div><strong>${r.score}</strong>/100</div>
+        </div>`).join("")}
       </div>
+      <p style="margin:10px 0 0 0; font-size:13px; color:#6b7280;"><em>Index is 0–100 derived linearly from the 6-point Likert scores.</em></p>
     </div>
     ` : ""}
 
-    <div class="card">
-      <h3 style="margin-top:0;">📋 Working Formulation</h3>
-      <p>
-        Your strongest pattern (<strong>${primaryName}</strong>) likely shapes how you appraise situations,
-        allocate attention, and respond under pressure. Rather than treating this as a fixed label, use it to
-        guide experiments that keep your strengths while widening your repertoire.
-      </p>
-      <ul>
-        <li><strong>Observation:</strong> Note 2–3 situations where this pattern shows up most.</li>
-        <li><strong>Small shift:</strong> Choose one behavior to experiment with (e.g., timing, framing, or pacing).</li>
-        <li><strong>Feedback:</strong> Invite brief, behavior-specific feedback from a trusted partner.</li>
+    <div class="panel" style="background:#fff; border:1px solid #e5e7eb;">
+      <h3 style="margin-top:0;">Primary Schema Pattern</h3>
+      <p style="margin-bottom:8px;"><strong>Schema:</strong> ${primaryLabel ?? "Unknown"}</p>
+      <div class="category">${schemaCategory}</div>
+      <div class="note">
+        <strong>Clinical Context:</strong>
+        ${primaryInfo
+          ? `Pattern consistent with <em>${primaryInfo.clinicalName}</em> within the <em>${primaryInfo.domain}</em> domain.`
+          : `Pattern label not recognized in canonical registry.`}
+      </div>
+      <p style="margin:0;">Activation of the primary schema is indicated by top ranking in the canonical list above. Consider how this pattern influences appraisal, affect, and behavior under pressure.</p>
+    </div>
+
+    ${supporting.length ? `
+    <div class="panel">
+      <h3 style="margin:0 0 10px 0;">Supporting Schema Patterns</h3>
+      ${supporting.map(s => `
+        <div class="row">
+          <b>#${s.rank}</b>
+          <div style="flex:1;">
+            <strong>${s.label}</strong>
+            ${s.info ? `<span style="color:#6b7280;"> — ${s.info.domain}</span>` : ""}
+          </div>
+          <div><strong>${s.score}</strong>/100</div>
+        </div>
+      `).join("")}
+    </div>` : ""}
+
+    <div class="therapy">
+      <h3 style="margin-top:0;">🎯 Therapeutic Recommendations</h3>
+      <ul style="margin:0; padding-left:20px;">
+        ${therapeuticRecommendations.map((t: string) => `<li>${t}</li>`).join("")}
       </ul>
     </div>
 
-    <div class="block" style="background:#ecfdf5;border-left-color:#059669;">
-      <h3 style="margin-top:0;">🎯 Development Focus</h3>
-      <ul>
-        <li>Translate insight into one concrete habit you can practice weekly.</li>
-        <li>Pair strengths with a complementary behavior from a supporting pattern.</li>
-        <li>Review progress every 2–3 weeks; keep what works, adjust what doesn’t.</li>
-      </ul>
-      <p class="mono" style="margin:10px 0 0 0;">${integrationHint}</p>
+    <div class="mono" style="margin-top:18px;">
+      <p style="margin:0 0 6px 0;"><strong>Source Lineage (Top 5):</strong></p>
+      <p style="margin:0;">${canonicalTop5.map((r: CanonicalRow) => `[${r.schemaId}, ${r.score}/100, rank-${r.rank}]`).join(", ")}</p>
+      <p style="margin:8px 0 0 0;"><strong>Analysis Version:</strong> ${getAnalysisVersion()}</p>
     </div>
 
     <div class="footer">
-      <div class="mono" style="padding:10px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:6px; margin-bottom:10px;">
-        <div><strong>Source lineage (Top-5):</strong> ${top.map(it => `[${it.schemaId}, ${it.score}/100, rank-${it.rank}]`).join(", ")}</div>
-        <div><strong>Analysis Version:</strong> ${getAnalysisVersion()}</div>
-      </div>
-      <p>Generated on ${new Date().toLocaleDateString()} · Schema-Based Framework © 2025</p>
+      <p><strong>CONFIDENTIAL CLINICAL REPORT</strong></p>
+      <p>For qualified professionals; not a substitute for diagnosis or treatment planning without appropriate clinical supervision.</p>
+      <p>Generated on ${new Date().toLocaleDateString()} · Schema-Based Assessment © 2025</p>
     </div>
   </div>
 </body>
