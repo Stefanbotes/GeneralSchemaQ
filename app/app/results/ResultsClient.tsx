@@ -83,8 +83,8 @@ export default function ResultsClient() {
 
             {!assessmentId && (
               <p className="text-sm text-center text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-                We couldn’t detect an assessment ID. Please return to the dashboard and open this page with the correct link,
-                e.g. <code>/results?id=&lt;assessmentId&gt;</code>.
+                We couldn’t detect an assessment ID. Please return to the dashboard and open this page
+                with a link like <code>/results?id=&lt;assessmentId&gt;</code>.
               </p>
             )}
 
@@ -111,3 +111,4 @@ async function safeJson(res: Response) {
     return null;
   }
 }
+
