@@ -1,19 +1,25 @@
-// app/lib/tier1-persona-copy.ts
+// lib/tier1-persona-copy.ts  (or app/lib/tier1-persona-copy.ts)
 // Canonical Tier-1 (leadership) copy deck, aligned to scorer schema labels.
 // Keys MUST match the scorer's schemaLabel exactly.
 
-import type { VariableId } from "@/app/lib/shared-lasbi-mapping";
+// Inline VariableId to avoid import/alias issues.
+export type VariableId =
+  | "1.1" | "1.2" | "1.3" | "1.4" | "1.5"
+  | "2.1" | "2.2" | "2.3" | "2.4"
+  | "3.1" | "3.2"
+  | "4.1" | "4.2" | "4.3"
+  | "5.1" | "5.2" | "5.3" | "5.4";
 
 export interface Tier1PersonaCopy {
-  variableId: VariableId;          // "1.1" ..."5.4"
-  domain: string;                  // "Disconnection/Rejection", etc.
-  leadershipPersona: string;       // Tier-1 public name
-  healthyPersona: string;          // Healthy expression label
-  leadershipId?: string;           // Optional internal key
-  clinicalId?: string;             // Optional canonical clinical id
-  publicDescription: string;       // 1-liner blurb for Tier-1
-  strengthFocus: string;           // short strength phrase
-  developmentEdge: string;         // gentle growth nudge
+  variableId: VariableId;       // "1.1" ..."5.4"
+  domain: string;               // "Disconnection/Rejection", etc.
+  leadershipPersona: string;    // Tier-1 public name
+  healthyPersona: string;       // Healthy expression label
+  leadershipId?: string;        // Optional internal key
+  clinicalId?: string;          // Optional canonical clinical id
+  publicDescription: string;    // 1-liner blurb for Tier-1
+  strengthFocus: string;        // short strength phrase
+  developmentEdge: string;      // gentle growth nudge
 }
 
 export const TIER1_PERSONA_BY_SCHEMA: Record<string, Tier1PersonaCopy> = {
