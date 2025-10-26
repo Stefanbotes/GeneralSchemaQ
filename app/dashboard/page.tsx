@@ -1,3 +1,4 @@
+// app/(app)/dashboard/page.tsx  (adjust the path to match your project)
 // Dashboard page for authenticated users
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
@@ -8,16 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { 
-  User, 
-  BarChart3, 
-  Clock, 
-  CheckCircle, 
-  PlayCircle, 
+import {
+  User,
+  BarChart3,
+  Clock,
+  CheckCircle,
+  PlayCircle,
   Trophy,
   Calendar,
   Shield,
-  Download
+  Download,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -45,16 +46,17 @@ export default async function DashboardPage() {
   }
 
   const latestAssessment = user.assessments?.[0];
-  const completedAssessments = user.assessments?.filter((a: any) => a.status === 'COMPLETED').length || 0;
+  const completedAssessments =
+    user.assessments?.filter((a: any) => a.status === 'COMPLETED').length || 0;
 
   // Calculate user stats
-  const memberSince = user.createdAt.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long' 
+  const memberSince = user.createdAt.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background to-accent">
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Header */}
         <div className="mb-8">
@@ -137,25 +139,26 @@ export default async function DashboardPage() {
                 <BarChart3 className="h-5 w-5 mr-2" />
                 Assessment Progress
               </CardTitle>
-              <CardDescription>
-                Your current leadership assessment status
-              </CardDescription>
+              <CardDescription>Your current leadership assessment status</CardDescription>
             </CardHeader>
             <CardContent>
               {latestAssessment ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Status</span>
-                    <Badge 
+                    <Badge
                       variant={
-                        latestAssessment.status === 'COMPLETED' ? 'default' :
-                        latestAssessment.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
+                        latestAssessment.status === 'COMPLETED'
+                          ? 'default'
+                          : latestAssessment.status === 'IN_PROGRESS'
+                          ? 'secondary'
+                          : 'outline'
                       }
                     >
                       {latestAssessment.status.replace('_', ' ').toLowerCase()}
                     </Badge>
                   </div>
-                  
+
                   {latestAssessment.status === 'IN_PROGRESS' && (
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
@@ -166,17 +169,18 @@ export default async function DashboardPage() {
                     </div>
                   )}
 
-                  {latestAssessment.status === 'COMPLETED' && latestAssessment.leadershipPersona && (
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center mb-2">
-                        <Trophy className="h-5 w-5 text-green-600 mr-2" />
-                        <span className="font-semibold text-green-800">Assessment Complete!</span>
+                  {latestAssessment.status === 'COMPLETED' &&
+                    latestAssessment.leadershipPersona && (
+                      <div className="p-4 bg-green-50 rounded-lg">
+                        <div className="flex items-center mb-2">
+                          <Trophy className="h-5 w-5 text-green-600 mr-2" />
+                          <span className="font-semibold text-green-800">Assessment Complete!</span>
+                        </div>
+                        <p className="text-sm text-green-700">
+                          Your leadership persona: <strong>{latestAssessment.leadershipPersona}</strong>
+                        </p>
                       </div>
-                      <p className="text-sm text-green-700">
-                        Your leadership persona: <strong>{latestAssessment.leadershipPersona}</strong>
-                      </p>
-                    </div>
-                  )}
+                    )}
 
                   <div className="flex gap-2">
                     {latestAssessment.status !== 'COMPLETED' ? (
@@ -194,10 +198,14 @@ export default async function DashboardPage() {
                             View Results
                           </Button>
                         </Link>
-                        <form action="/api/reports/generate-tier1" method="POST" className="inline">
+                        <form
+                          action="/api/reports/generate-tier1"
+                          method="POST"
+                          className="inline"
+                        >
                           <input type="hidden" name="userId" value={session.user.id} />
                           <input type="hidden" name="assessmentId" value={latestAssessment.id} />
-                          <Button 
+                          <Button
                             type="submit"
                             className="bg-green-600 hover:bg-green-700 text-white"
                           >
@@ -220,7 +228,7 @@ export default async function DashboardPage() {
                       Start your leadership assessment to discover your unique leadership persona.
                     </p>
                   </div>
-                  
+
                   <Link href="/assessment">
                     <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                       <PlayCircle className="h-4 w-4 mr-2" />
@@ -239,25 +247,29 @@ export default async function DashboardPage() {
                 <Clock className="h-5 w-5 mr-2" />
                 Recent Activity
               </CardTitle>
-              <CardDescription>
-                Your latest assessment activities
-              </CardDescription>
+              <CardDescription>Your latest assessment activities</CardDescription>
             </CardHeader>
             <CardContent>
               {user.assessments?.length > 0 ? (
                 <div className="space-y-4">
                   {user.assessments.slice(0, 5).map((assessment: any) => (
-                    <div key={assessment.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div
+                      key={assessment.id}
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                    >
                       <div>
                         <p className="font-medium">Leadership Assessment</p>
                         <p className="text-sm text-muted-foreground">
                           {assessment.createdAt.toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge 
+                      <Badge
                         variant={
-                          assessment.status === 'COMPLETED' ? 'default' :
-                          assessment.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
+                          assessment.status === 'COMPLETED'
+                            ? 'default'
+                            : assessment.status === 'IN_PROGRESS'
+                            ? 'secondary'
+                            : 'outline'
                         }
                       >
                         {assessment.status.replace('_', ' ').toLowerCase()}
@@ -269,7 +281,9 @@ export default async function DashboardPage() {
                 <div className="text-center py-6 text-muted-foreground">
                   <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>No activity yet</p>
-                  <p className="text-sm">Start your first assessment to see your progress here</p>
+                  <p className="text-sm">
+                    Start your first assessment to see your progress here
+                  </p>
                 </div>
               )}
             </CardContent>
