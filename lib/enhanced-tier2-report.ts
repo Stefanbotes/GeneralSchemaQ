@@ -2,15 +2,17 @@
 // Enhanced Tier 2 Report Generation (Coaching Focus with Both Names)
 // Uses public names + research names with detailed coaching insights
 
-import { getPersonaForTier } from './enhanced-persona-mapping';
 
-interface EnhancedReportOptions {
-  participantName: string;
-  participantEmail: string;
-  participantTeam?: string;
-  assessmentDate: string;
-  assessmentId: string;
-}
+import { generateEnhancedTier2Report } from "@/app/lib/tier2-report";
+// ...
+const html = generateEnhancedTier2Report(analysis, {
+  participantName,
+  participantEmail,
+  participantTeam,
+  assessmentDate,
+  assessmentId
+});
+
 
 export function generateEnhancedTier2Report(analysis: any, options: EnhancedReportOptions): string {
   const primary = analysis.tier2.primaryPersona;
