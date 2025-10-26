@@ -1,4 +1,3 @@
-
 // Dashboard page for authenticated users
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
@@ -17,7 +16,6 @@ import {
   PlayCircle, 
   Trophy,
   Calendar,
-  Users,
   Shield,
   Download
 } from 'lucide-react';
@@ -48,7 +46,7 @@ export default async function DashboardPage() {
 
   const latestAssessment = user.assessments?.[0];
   const completedAssessments = user.assessments?.filter((a: any) => a.status === 'COMPLETED').length || 0;
-  
+
   // Calculate user stats
   const memberSince = user.createdAt.toLocaleDateString('en-US', { 
     year: 'numeric', 
@@ -56,14 +54,14 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Welcome back, {user.firstName}!
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Track your leadership development journey and explore your growth opportunities.
           </p>
         </div>
@@ -74,13 +72,13 @@ export default async function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Role</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-muted-foreground">Role</p>
+                  <p className="text-2xl font-bold text-foreground">
                     {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Shield className="h-6 w-6 text-blue-600" />
+                <div className="p-3 bg-accent rounded-full">
+                  <Shield className="h-6 w-6 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -90,8 +88,8 @@ export default async function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900">{completedAssessments}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                  <p className="text-2xl font-bold text-foreground">{completedAssessments}</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
                   <CheckCircle className="h-6 w-6 text-green-600" />
@@ -104,8 +102,8 @@ export default async function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Member Since</p>
-                  <p className="text-lg font-bold text-gray-900">{memberSince}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Member Since</p>
+                  <p className="text-lg font-bold text-foreground">{memberSince}</p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
                   <Calendar className="h-6 w-6 text-purple-600" />
@@ -118,7 +116,7 @@ export default async function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Status</p>
+                  <p className="text-sm font-medium text-muted-foreground">Status</p>
                   <Badge variant={user.emailVerified ? 'default' : 'destructive'}>
                     {user.emailVerified ? 'Verified' : 'Pending'}
                   </Badge>
@@ -183,7 +181,7 @@ export default async function DashboardPage() {
                   <div className="flex gap-2">
                     {latestAssessment.status !== 'COMPLETED' ? (
                       <Link href="/assessment">
-                        <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                           <PlayCircle className="h-4 w-4 mr-2" />
                           Continue Assessment
                         </Button>
@@ -214,17 +212,17 @@ export default async function DashboardPage() {
               ) : (
                 <div className="text-center py-6">
                   <div className="mb-4">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <PlayCircle className="h-8 w-8 text-blue-600" />
+                    <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+                      <PlayCircle className="h-8 w-8 text-primary" />
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Ready to Begin?</h3>
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-muted-foreground mb-4">
                       Start your leadership assessment to discover your unique leadership persona.
                     </p>
                   </div>
                   
                   <Link href="/assessment">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                    <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                       <PlayCircle className="h-4 w-4 mr-2" />
                       Start Assessment
                     </Button>
@@ -249,10 +247,10 @@ export default async function DashboardPage() {
               {user.assessments?.length > 0 ? (
                 <div className="space-y-4">
                   {user.assessments.slice(0, 5).map((assessment: any) => (
-                    <div key={assessment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={assessment.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                       <div>
                         <p className="font-medium">Leadership Assessment</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {assessment.createdAt.toLocaleDateString()}
                         </p>
                       </div>
@@ -268,7 +266,7 @@ export default async function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-gray-500">
+                <div className="text-center py-6 text-muted-foreground">
                   <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>No activity yet</p>
                   <p className="text-sm">Start your first assessment to see your progress here</p>
@@ -285,9 +283,9 @@ export default async function DashboardPage() {
             <Link href="/assessment">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
-                  <PlayCircle className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                  <PlayCircle className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-semibold">Start Assessment</h3>
-                  <p className="text-sm text-gray-600">Begin your leadership evaluation</p>
+                  <p className="text-sm text-muted-foreground">Begin your leadership evaluation</p>
                 </CardContent>
               </Card>
             </Link>
@@ -297,7 +295,7 @@ export default async function DashboardPage() {
                 <CardContent className="p-6 text-center">
                   <User className="h-8 w-8 mx-auto mb-2 text-green-600" />
                   <h3 className="font-semibold">Update Profile</h3>
-                  <p className="text-sm text-gray-600">Manage your account settings</p>
+                  <p className="text-sm text-muted-foreground">Manage your account settings</p>
                 </CardContent>
               </Card>
             </Link>
@@ -306,9 +304,9 @@ export default async function DashboardPage() {
               <Link href="/admin">
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                   <CardContent className="p-6 text-center">
-                    <Shield className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                    <Shield className="h-8 w-8 mx-auto mb-2 text-primary" />
                     <h3 className="font-semibold">Admin Panel</h3>
-                    <p className="text-sm text-gray-600">Manage users and system</p>
+                    <p className="text-sm text-muted-foreground">Manage users and system</p>
                   </CardContent>
                 </Card>
               </Link>
