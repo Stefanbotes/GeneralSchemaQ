@@ -160,7 +160,7 @@ export function AdminClient({ stats }: AdminClientProps) {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold">{stats.totalUser}</div>
+              <div className="text-2xl font-bold">{stats.totaluser}</div>
               <div className="text-indigo-100">Total Users</div>
             </div>
             <div>

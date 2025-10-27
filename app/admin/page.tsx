@@ -58,7 +58,7 @@ export default async function AdminPage() {
 
   // Dashboard data
   try {
-    const [totalUser, totalAssessments, verifiedUsers, unverifiedUsers] =
+    const [totaluser, totalAssessments, verifiedUsers, unverifiedUsers] =
       await Promise.all([
         db.user.count(),
         db.assessment.count(),
@@ -128,7 +128,7 @@ export default async function AdminPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-indigo-600">{totalUser}</div>
+                <div className="text-2xl font-bold text-indigo-600">{totaluser}</div>
               </CardContent>
             </Card>
 
@@ -172,7 +172,7 @@ export default async function AdminPage() {
           {/* Admin Export Tools (client component) */}
           <AdminClient
             stats={{
-              totalUser,
+              totaluser,
               totalAssessments,
               verifiedUsers,
               unverifiedUsers,
