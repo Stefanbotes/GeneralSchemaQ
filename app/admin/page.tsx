@@ -219,7 +219,7 @@ export default async function AdminPage() {
                   </div>
                 </div>
 
-                <ReportGenerationInterface user={usersWithCompletedAssessments as any} />
+                <ReportGenerationInterface users={usersWithCompletedAssessments as any} />
               </div>
             </CardContent>
           </Card>
