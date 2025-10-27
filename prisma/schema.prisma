@@ -6,7 +6,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("PRISMA_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 /* ------------------- AUTH MODELS (NextAuth-compatible) ------------------- */
