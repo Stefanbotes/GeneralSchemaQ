@@ -151,7 +151,7 @@ function exportAsJSON(assessments: any[], user: any[]) {
       totaluser: user.length,
       completedAssessments: assessments.filter(a => a.status === 'COMPLETED').length,
       inProgressAssessments: assessments.filter(a => a.status === 'IN_PROGRESS').length,
-      verifieduser: users.filter(u => u.emailVerified).length,
+      verifieduser: user.filter(u => u.emailVerified).length,
     },
     assessments: assessments.map(assessment => {
       const responseCount = assessment.responses ? 
