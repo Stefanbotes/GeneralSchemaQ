@@ -1,23 +1,22 @@
-// app/api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
-import { db } from "@/lib/db";
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { compare } from 'bcryptjs';
+import { db } from '@/lib/db';
 
 const handler = NextAuth({
-  session: { strategy: "jwt" },
+  session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET,
-  pages: { signIn: "/auth/login" },
+  pages: { signIn: '/auth/login' },
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
+        if (!credentials || !credentials.email || !credentials.password) {
+          throw new Error('Email and password are required');
         }
         const user = await db.user.findUnique({
           where: { email: credentials.email.toLowerCase() },
@@ -32,9 +31,9 @@ const handler = NextAuth({
             tokenVersion: true
           }
         });
-        if (!user) throw new Error("Invalid credentials");
+        if (!user) throw new Error('Invalid credentials');
         const ok = await compare(credentials.password, user.password);
-        if (!ok) throw new Error("Invalid credentials");
+        if (!ok) throw new Error('Invalid credentials');
         return {
           id: user.id,
           email: user.email,
@@ -50,7 +49,7 @@ const handler = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         (token as any).id = (user as any).id;
-        (token as any).role = (user as any).role ?? "CLIENT";
+        (token as any).role = (user as any).role ?? 'CLIENT';
         (token as any).emailVerified = (user as any).emailVerified ?? null;
         (token as any).tokenVersion = (user as any).tokenVersion ?? 0;
       }
