@@ -3,10 +3,10 @@ import crypto from "crypto";
 import { db } from "@/lib/db";
 
 type EmailParams = {
-  email: string;
-  baseUrl: string;              // e.g. https://yourapp.com
-  userId?: string;              // optional: link token to a user
-  expiresInMinutes?: number;    // default 60
+  email: string;                 // user email (we'll store in VerificationToken.identifier)
+  baseUrl: string;               // e.g. https://yourapp.com
+  userId?: string;               // optional (used for password reset model if you have it)
+  expiresInMinutes?: number;     // default 60 for verification, 30 for reset (see callers)
 };
 
 /** Generate a random token (hex) and its SHA256 hash */
@@ -24,36 +24,36 @@ function minutesFromNow(minutes: number) {
 }
 
 /**
- * Create + store a verification token for email verification
- * Returns the *plaintext* token to embed in your email link.
+ * Create + store an email verification token (NextAuth default model)
+ * VerificationToken fields: identifier (email), token (hashed), expires
+ * Returns the *plaintext* token and a ready-to-use verify URL.
  */
 export async function createEmailVerificationToken({
   email,
   baseUrl,
-  userId,
   expiresInMinutes = 60,
 }: EmailParams) {
   const normalizedEmail = email.toLowerCase();
   const { token, hashed } = generateTokenPair();
 
-  // Best-effort: clear any existing tokens for this email to keep it simple
+  // Clear old tokens for this identifier (email)
   try {
-    await db.verificationToken.deleteMany({ where: { email: normalizedEmail } });
+    await db.verificationToken.deleteMany({
+      where: { identifier: normalizedEmail },
+    });
   } catch {
-    // ignore if table/index not present yet
+    // ignore if the table doesn't exist yet
   }
 
-  // Store hashed token (NEVER store plaintext)
+  // Store hashed token using NextAuth's VerificationToken shape
   await db.verificationToken.create({
     data: {
-      token: hashed,                    // hashed token
-      email: normalizedEmail,
-      userId: userId ?? null,
+      identifier: normalizedEmail,          // <-- NOT "email"
+      token: hashed,                        // store the hash, never plaintext
       expires: minutesFromNow(expiresInMinutes),
     },
   });
 
-  // Build your verification link with the *plaintext* token
   const verifyUrl = `${baseUrl.replace(/\/$/, "")}/api/verify-email?token=${encodeURIComponent(
     token
   )}&email=${encodeURIComponent(normalizedEmail)}`;
@@ -63,7 +63,9 @@ export async function createEmailVerificationToken({
 
 /**
  * Create + store a password reset token.
- * Returns the plaintext token + URL you can email to the user.
+ * Adjust the delegate/fields to match your schema.
+ * If you have: model password_reset_tokens { token,email,userId,expires,... }
+ * the delegate will likely be: db.passwordResetToken
  */
 export async function createPasswordResetToken({
   email,
@@ -74,16 +76,18 @@ export async function createPasswordResetToken({
   const normalizedEmail = email.toLowerCase();
   const { token, hashed } = generateTokenPair();
 
-  // If you keep a dedicated passwordResetToken model:
-  //   await db.passwordResetToken.deleteMany({ where: { email: normalizedEmail } });
-  //   await db.passwordResetToken.create({ data: { token: hashed, email: normalizedEmail, userId: userId ?? null, expires: minutesFromNow(expiresInMinutes) } });
-
-  // If you reuse the same verificationToken table for resets, add a `purpose` field in your schema.
-  // For now, this shows a dedicated model usage; adjust to your schema.
+  // If your Prisma model is `model password_reset_tokens { ... }` with Prisma default naming,
+  // the client delegate will be camel-cased singular: `db.passwordResetToken`.
+  // Adjust the field names below to your actual schema.
   try {
-    await (db as any).passwordResetToken.deleteMany?.({ where: { email: normalizedEmail } });
-  } catch {}
-  await (db as any).passwordResetToken.create?.({
+    await (db as any).passwordResetToken?.deleteMany?.({
+      where: { email: normalizedEmail },
+    });
+  } catch {
+    /* ignore */
+  }
+
+  await (db as any).passwordResetToken?.create?.({
     data: {
       token: hashed,
       email: normalizedEmail,
@@ -99,26 +103,8 @@ export async function createPasswordResetToken({
   return { token, resetUrl };
 }
 
-/* Example email sender (pseudo—replace with your provider)
-import { Resend } from 'resend';
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-export async function sendVerificationEmail(to: string, url: string) {
-  await resend.emails.send({
-    from: 'no-reply@yourdomain.com',
-    to,
-    subject: 'Verify your email',
-    html: `<p>Click to verify: <a href="${url}">${url}</a></p>`,
-  });
-}
-*/
-// lib/email-service.ts
-// ... keep your existing code (createEmailVerificationToken, createPasswordResetToken, etc.)
-
+/** Convenience export (optional) for modules that expect an EmailService object */
 export const EmailService = {
   createEmailVerificationToken,
   createPasswordResetToken,
-  // sendVerificationEmail, // uncomment if you implement it
-  // sendPasswordResetEmail, // idem
 };
-
