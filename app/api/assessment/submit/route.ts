@@ -242,7 +242,7 @@ async function handleLegacySubmission(userId: string, submissionData: Submission
 
   const { leadershipPersona, report } = buildReport(submissionData, rawScores108);
 
-  const existingAssessment = await db.assessment.dFirst({
+  const existingAssessment = await db.assessment.findFirst({
     where: { userId, status: { not: 'COMPLETED' } },
     orderBy: { createdAt: 'desc' }
   });
