@@ -1,44 +1,27 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "next-themes";
 
-import { SessionProviderWrapper } from "@/components/providers/session-provider";
-import { ClientNavbar } from "@/components/ui/navbar";
+import Navbar from "@/components/ui/navbar";           // ✅ default import (matches file)
 import { Footer } from "@/components/ui/footer";
 import { Toaster } from "@/components/ui/sonner";
-
-const inter = Inter({ subsets: ["latin"] });
+import { SessionProviderWrapper } from "@/components/providers/session-provider";
 
 export const metadata: Metadata = {
-  title: "Inner PersonaPersonas Assessment",
-  description:
-    "Discover your Inner Personapersona through behavioral reflection statements and identify growth opportunities.",
-  keywords: "leadership, assessment, personas, behavioral reflection, Inner Personadevelopment",
-  authors: [{ name: "Inner PersonaPersonas Assessment" }],
-  openGraph: {
-    title: "Inner PersonaPersonas Assessment",
-    description:
-      "Discover your Inner Personapersona through behavioral reflection statements and identify growth opportunities.",
-    type: "website",
-  },
+  title: "Inner Personas",
+  description: "Assessments and insights",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-background text-foreground antialiased min-h-dvh flex flex-col`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange storageKey="gs-theme">
-          <SessionProviderWrapper>
-            <div className="min-h-dvh flex flex-col">
-              <ClientNavbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <Toaster />
-          </SessionProviderWrapper>
-        </ThemeProvider>
+    <html lang="en">
+      <body>
+        <SessionProviderWrapper>
+          <Navbar />                                    {/* ✅ use default export */}
+          {children}
+          <Footer />
+          <Toaster />
+        </SessionProviderWrapper>
       </body>
     </html>
   );
