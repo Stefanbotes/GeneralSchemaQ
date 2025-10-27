@@ -148,7 +148,7 @@ function exportAsJSON(assessments: any[], user: any[]) {
     exportDate: new Date().toISOString(),
     summary: {
       totalAssessments: assessments.length,
-      totaluser: users.length,
+      totaluser: user.length,
       completedAssessments: assessments.filter(a => a.status === 'COMPLETED').length,
       inProgressAssessments: assessments.filter(a => a.status === 'IN_PROGRESS').length,
       verifieduser: users.filter(u => u.emailVerified).length,
