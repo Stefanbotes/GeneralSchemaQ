@@ -22,6 +22,7 @@ const handler = NextAuth({
           throw new Error("Email and password are required");
         }
 
+        // NOTE: do NOT select emailVerified here to avoid any conflicting types
         const user = await db.user.findUnique({
           where: { email: credentials.email.toLowerCase() },
           select: {
@@ -31,7 +32,6 @@ const handler = NextAuth({
             lastName: true,
             password: true,
             role: true,
-            // NOTE: we intentionally DO NOT select/return emailVerified here
           },
         });
         if (!user) throw new Error("Invalid credentials");
@@ -39,7 +39,7 @@ const handler = NextAuth({
         const ok = await compare(credentials.password, user.password);
         if (!ok) throw new Error("Invalid credentials");
 
-        // Return a *minimal* object to avoid any conflicting User typings
+        // Return a minimal object (cast to any to avoid NextAuth User typing conflicts)
         return {
           id: user.id,
           email: user.email,
@@ -52,9 +52,9 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        (token as any).id   = (user as any).id;
+        (token as any).id = (user as any).id;
         (token as any).role = (user as any).role ?? "CLIENT";
-        // Since authorize didn't return emailVerified, default to null:
+        // Default emailVerified to null in JWT if not present
         (token as any).emailVerified = (token as any).emailVerified ?? null;
       }
       return token;
