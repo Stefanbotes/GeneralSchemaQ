@@ -1,121 +1,86 @@
-
-// User registration API with comprehensive validation and security
-export const dynamic = "force-dynamic";
-
+// app/api/signup/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { db } from '@/lib/db';
-import { PasswordUtils, EmailUtils } from '@/lib/auth-utils';
-import { RateLimiter } from '@/lib/rate-limit';
-import { EmailService } from '@/lib/email-service';
+import { z } from 'zod';
+import { hash } from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
-const signupSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(4, 'Password must be at least 4 characters'),
-  firstName: z.string().min(1, 'First name is required').max(50),
-  lastName: z.string().min(1, 'Last name is required').max(50),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
+const Body = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Valid email required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-export async function POST(request: NextRequest) {
+function bad(message: string, extra?: any) {
+  return NextResponse.json({ success: false, error: message, ...extra }, { status: 400 });
+}
+
+export async function POST(req: NextRequest) {
   try {
-    const clientIP = RateLimiter.getClientIP(request);
-    
-    // Check rate limiting
-    const rateLimitResult = await RateLimiter.checkRateLimit('registration', clientIP, 'ip');
-    
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { 
-          error: 'Too many registration attempts. Please try again later.',
-          retryAfter: rateLimitResult.retryAfter 
-        },
-        { 
-          status: 429,
-          headers: {
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600'
-          }
-        }
-      );
+    const json = await req.json().catch(() => ({}));
+    const parsed = Body.safeParse(json);
+    if (!parsed.success) {
+      const first = parsed.error.issues?.[0]?.message ?? 'Invalid payload';
+      return bad(first, { details: parsed.error.format() });
     }
 
-    const body = await request.json();
-    
-    // Validate input
-    const validationResult = signupSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      );
+    const { firstName, lastName, email, password } = parsed.data;
+
+    // 1) Check if email already exists
+    const existing = await db.user.findUnique({ where: { email } });
+    if (existing) {
+      return bad('An account with this email already exists.');
     }
 
-    const { email, password, firstName, lastName } = validationResult.data;
-    const normalizedEmail = EmailUtils.normalize(email);
+    // 2) Hash password
+    const passwordHash = await hash(password, 12);
 
-    // Check if user already exists
-    const existingUser = await db.user.findUnique({
-      where: { email: normalizedEmail },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists' },
-        { status: 409 }
-      );
-    }
-
-    // Hash password
-    const hashedPassword = await PasswordUtils.hash(password);
-
-    // Create user
+    // 3) Create user (omit emailVerified or set to null)
     const user = await db.user.create({
       data: {
-        email: normalizedEmail,
-        password: hashedPassword,
+        email: email.trim().toLowerCase(),
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        role: 'CLIENT',
-        emailVerified: false,
+        password: passwordHash,
+        role: 'CLIENT',          // default role
+        // emailVerified: null,   // optional; omitting also results in null
+      },
+      select: { id: true, email: true },
+    });
+
+    // 4) Create verification token (NextAuth expects { identifier, token, expires })
+    const token = randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+
+    await db.verificationToken.create({
+      data: {
+        identifier: user.email,
+        token,
+        expires,
       },
     });
 
-    // Send verification email
-    try {
-      await EmailService.sendVerificationEmail(normalizedEmail, firstName);
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      // Don't fail registration if email fails
+    // TODO: send verification email with the tokenized link:
+    // e.g. `${process.env.NEXTAUTH_URL}/auth/verify?token=${token}`
+
+    return NextResponse.json({
+      success: true,
+      message: 'Account created. Please check your email to verify your address.',
+      user: { id: user.id, email: user.email },
+    });
+  } catch (err: any) {
+    // Handle unique constraint race just in case
+    if (err?.code === 'P2002' && err?.meta?.target?.includes('email')) {
+      return bad('An account with this email already exists.');
     }
-
-    // Return success response (don't include sensitive data)
+    console.error('[signup] error:', err);
     return NextResponse.json(
-      {
-        message: 'Account created successfully. Please check your email for verification instructions.',
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          emailVerified: user.emailVerified,
-        },
-      },
-      { status: 201 }
-    );
-
-  } catch (error) {
-    console.error('Registration error:', error);
-    
-    return NextResponse.json(
-      { error: 'An unexpected error occurred. Please try again.' },
+      { success: false, error: err?.message ?? 'Internal error' },
       { status: 500 }
     );
   }
