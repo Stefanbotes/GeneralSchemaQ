@@ -1,4 +1,4 @@
-// Client component for the Inner Personas Assessment – Ultra-Clean Version
+// app/assessment/assessment-client.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 
 interface Question {
   id: string;
-  order: number; // retained for data compatibility – not shown
+  order: number;
   domain: string;
   schema: string;
   persona: string;
@@ -37,19 +37,15 @@ interface BioData {
   uniqueCode: string;
 }
 
-/**
- * Hardened cleaner for leading numbering (handles weird spaces, BOMs, fullwidth digits, and numbers wrapped in tags).
- * Examples removed: "13. ", "13:", "(13) ", "[13] -", "<strong>13.</strong> ", "１３．", "&nbsp;13 –", "13 . " etc.
- */
+/** Strip leading numbering once (robust) */
 const stripLeadingNumberOnce = (input: string): string => {
   if (!input) return '';
   let s = input
     .normalize('NFKC')
-    .replace(/\uFEFF/g, '')                 // BOM
-    .replace(/\u00A0/g, ' ')                // NBSP
-    .replace(/[\u2000-\u200D\u2060]/g, ''); // zero-widths
+    .replace(/\uFEFF/g, '')
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\u2000-\u200D\u2060]/g, '');
 
-  // Remove optional tags then number + optional trailing punctuation/space
   s = s.replace(
     new RegExp(
       '^\\s*(?:<(?:\\/)?[a-zA-Z][^>]*>\\s*)*' +
@@ -61,26 +57,22 @@ const stripLeadingNumberOnce = (input: string): string => {
     ''
   );
 
-  // Safety fallback
   s = s.replace(/^\s*[0-9\uFF10-\uFF19]{1,3}\s*[\.\uFF0E:–—\-]?\s*/, '');
-
   return s.trim();
 };
 
-// Idempotent
 const cleanQuestionText = (raw: string) => stripLeadingNumberOnce(stripLeadingNumberOnce(raw || ''));
 
 export function AssessmentClient() {
-  const { data: session } = useSession() || {};
+  const { data: session } = useSession();
   const router = useRouter();
 
-  // State
   const [responses, setResponses] = useState<Record<string, Response>>({});
   const [bioData, setBioData] = useState<BioData>({
     name: '',
     email: '',
     team: '',
-    uniqueCode: crypto.randomUUID()
+    uniqueCode: crypto.randomUUID(),
   });
   const [bioCompleted, setBioCompleted] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -91,13 +83,18 @@ export function AssessmentClient() {
   const [showResults, setShowResults] = useState(false);
   const [categoryScores, setCategoryScores] = useState<Record<string, number>>({});
 
+  // ✅ Standard: use session.user.name / email with safe fallbacks
   useEffect(() => {
     if (session?.user) {
-      setBioData(prev => ({
-        ...prev,
-        name: prev.name || `${session.user.firstName || ''} ${session.user.lastName || ''}`.trim(),
-        email: prev.email || session.user.email || ''
-      }));
+      setBioData((prev) => {
+        const fullName =
+          prev.name ??
+          session.user.name ??
+          [(session.user as any)?.firstName, (session.user as any)?.lastName].filter(Boolean).join(' ').trim();
+
+        const email = prev.email ?? (session.user.email ?? '');
+        return { ...prev, name: fullName || '', email };
+      });
     }
   }, [session]);
 
@@ -109,10 +106,9 @@ export function AssessmentClient() {
     { value: 3, label: 'Slightly Disagree' },
     { value: 4, label: 'Slightly Agree' },
     { value: 5, label: 'Agree' },
-    { value: 6, label: 'Strongly Agree' }
+    { value: 6, label: 'Strongly Agree' },
   ];
 
-  // Fisher–Yates
   const shuffleArray = <T,>(array: T[]): T[] => {
     const a = [...array];
     for (let i = a.length - 1; i > 0; i--) {
@@ -133,16 +129,14 @@ export function AssessmentClient() {
         const data = await res.json();
         if (data.success && data.questions) {
           const shuffled = shuffleArray(data.questions as Question[]);
-          const sanitized = shuffled.map(q => ({
+          const sanitized = shuffled.map((q) => ({
             ...q,
-            statement: cleanQuestionText(String(q.statement ?? ''))
+            statement: cleanQuestionText(String(q.statement ?? '')),
           }));
           setQuestions(sanitized);
-
-          // Optional diagnostics
           console.log('[Questions]', {
             originalExample: (data.questions[0] as Question)?.statement,
-            sanitizedExample: sanitized[0]?.statement
+            sanitizedExample: sanitized[0]?.statement,
           });
         } else {
           throw new Error('Invalid questions data received');
@@ -159,7 +153,7 @@ export function AssessmentClient() {
 
   // Response handling
   const handleResponse = (questionId: string, value: number) => {
-    setResponses(prev => {
+    setResponses((prev) => {
       const next = { ...prev, [questionId]: { value, timestamp: new Date().toISOString() } };
       const total = questions.length || 0;
       const answered = Object.keys(next).length || 0;
@@ -171,7 +165,7 @@ export function AssessmentClient() {
   // Bio handling
   const handleBioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setBioData(prev => ({ ...prev, [name]: value }));
+    setBioData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBioSubmit = (e: React.FormEvent) => {
@@ -187,7 +181,7 @@ export function AssessmentClient() {
   // Scoring
   const calculateCategoryScores = (): Record<string, number> => {
     const totals: Record<string, { total: number; count: number }> = {};
-    questions.forEach(q => {
+    questions.forEach((q) => {
       const r = responses[q.id];
       if (q.schema && r) {
         if (!totals[q.schema]) totals[q.schema] = { total: 0, count: 0 };
@@ -205,44 +199,39 @@ export function AssessmentClient() {
     try {
       const scores = calculateCategoryScores();
       setCategoryScores(scores);
-      const topCategory = Object.entries(scores).reduce((a, b) =>
-        scores[a[0]] > scores[b[0]] ? a : b
-      );
+      const topCategory = Object.entries(scores).reduce((a, b) => (scores[a[0]] > scores[b[0]] ? a : b));
       const submissionData = {
         bioData,
         responses,
         categoryScores: scores,
         topCategory: topCategory[0],
         topScore: topCategory[1],
-        completedAt: new Date().toISOString()
+        completedAt: new Date().toISOString(),
       };
 
       const res = await fetch('/api/assessment/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // ✅ ensure cookies/session are sent
-        body: JSON.stringify(submissionData)
+        credentials: 'include',
+        body: JSON.stringify(submissionData),
       });
       if (!res.ok) throw new Error('Failed to save assessment');
 
-      // ✅ Use the real assessmentId returned by the server
       let assessmentId: string | undefined;
       try {
         const data = await res.json();
         assessmentId = data?.assessmentId;
       } catch {
-        // If parsing fails, we'll fall back to client-side responses in handleDownloadReport
+        /* noop */
       }
 
       setIsSubmitted(true);
       setShowResults(true);
       toast.success('Assessment completed and saved successfully!');
 
-      // ✅ Navigate to results page (auto-download happens there)
       if (assessmentId) {
         router.push(`/results?justCompleted=1&id=${encodeURIComponent(assessmentId)}`);
       } else {
-        // Fallback: still try to generate immediately using client responses
         setTimeout(() => handleDownloadReport(), 600);
       }
     } catch (e) {
@@ -251,19 +240,17 @@ export function AssessmentClient() {
     }
   };
 
-  // Report (kept as fallback / manual trigger)
+  // Report (fallback/manual)
   const handleDownloadReport = async (assessmentId?: string) => {
     try {
       toast.loading('Generating your Inner Persona summary...');
-      const body = assessmentId
-        ? { assessmentId } // ✅ lookup mode from DB (preferred)
-        : { responses, participantData: bioData }; // fallback to direct responses
+      const body = assessmentId ? { assessmentId } : { responses, participantData: bioData };
 
       const res = await fetch('/api/reports/generate-tier1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // ✅ send cookies
-        body: JSON.stringify(body)
+        credentials: 'include',
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -297,23 +284,21 @@ export function AssessmentClient() {
   };
 
   const handleNext = () => {
-    const unanswered = getCurrentPageQuestions().filter(q => !responses[q.id]);
+    const unanswered = getCurrentPageQuestions().filter((q) => !responses[q.id]);
     if (unanswered.length) return toast.error(`Please answer all questions on this page (${unanswered.length})`);
-    if (currentPage < Math.ceil(questions.length / questionsPerPage) - 1) setCurrentPage(p => p + 1);
+    if (currentPage < Math.ceil(questions.length / questionsPerPage) - 1) setCurrentPage((p) => p + 1);
   };
 
-  const handlePrevious = () => currentPage > 0 && setCurrentPage(p => p - 1);
+  const handlePrevious = () => currentPage > 0 && setCurrentPage((p) => p - 1);
 
   const isLast = currentPage === Math.ceil(questions.length / questionsPerPage) - 1;
   const isFirst = currentPage === 0;
   const totalPages = Math.ceil(questions.length / questionsPerPage);
-  const currentQuestions = getCurrentPageQuestions();
-  const answeredOnPage = currentQuestions.filter(q => responses[q.id]).length;
 
   // Loading
-  if (questionsLoading)
+  if (questionsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br bg-primary)50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-indigo-100">
         <Card className="bg-white shadow-xl max-w-md w-full">
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -323,18 +308,19 @@ export function AssessmentClient() {
         </Card>
       </div>
     );
+  }
 
   // Bio
-  if (!bioCompleted)
+  if (!bioCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 p-6">
         <div className="max-w-2xl mx-auto">
           <Card className="bg-white shadow-xl">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                 <AnimatedLogo />
               </div>
-              <CardTitle className="text-2xl font-bold text-primary700">Personal Information</CardTitle>
+              <CardTitle className="text-2xl font-bold text-indigo-700">Personal Information</CardTitle>
               <CardDescription>Please provide your details to begin the Inner Personas Assessment</CardDescription>
             </CardHeader>
             <CardContent>
@@ -351,7 +337,7 @@ export function AssessmentClient() {
                   <Label htmlFor="team">Team/Organization *</Label>
                   <Input id="team" name="team" value={bioData.team} onChange={handleBioChange} required />
                 </div>
-                <Button type="submit" className="w-full bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700" size="lg">
+                <Button type="submit" className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700" size="lg">
                   Begin Assessment
                 </Button>
               </form>
@@ -360,36 +346,39 @@ export function AssessmentClient() {
         </div>
       </div>
     );
+  }
 
   // Questions
+  const currentQuestions = getCurrentPageQuestions();
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 p-6">
       <div className="max-w-4xl mx-auto">
         <Card className="bg-white shadow-xl">
           <CardHeader>
             <div className="flex items-center justify-between mb-4">
-              <CardTitle className="text-xl font-bold text-primary700">Inner Personas Assessment</CardTitle>
-              <div className="text-sm text-gray-600">Page {currentPage + 1} of {totalPages}</div>
+              <CardTitle className="text-xl font-bold text-indigo-700">Inner Personas Assessment</CardTitle>
+              <div className="text-sm text-gray-600">
+                Page {currentPage + 1} of {totalPages}
+              </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Progress: {Math.round(progress)}% complete</span>
-                <span>{Object.keys(responses).length} of {questions.length} answered</span>
+                <span>
+                  {Object.keys(responses).length} of {questions.length} answered
+                </span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {getCurrentPageQuestions().map((q, index) => {
+            {currentQuestions.map((q, index) => {
               const displayNumber = currentPage * questionsPerPage + index + 1;
               return (
                 <Card key={q.id} className="border border-gray-200">
                   <CardHeader>
-                    <div className="text-xs text-gray-500 mb-1">
-                      Question {displayNumber} of {questions.length}
-                    </div>
-                    {/* Clean AGAIN at render for extra safety */}
+                    <div className="text-xs text-gray-500 mb-1">Question {displayNumber} of {questions.length}</div>
                     <CardTitle className="text-lg font-medium text-gray-800">
                       {cleanQuestionText(q.statement)}
                     </CardTitle>
@@ -397,10 +386,10 @@ export function AssessmentClient() {
                   <CardContent>
                     <RadioGroup
                       value={responses[q.id]?.value?.toString() || ''}
-                      onValueChange={v => handleResponse(q.id, parseInt(v))}
+                      onValueChange={(v) => handleResponse(q.id, parseInt(v))}
                     >
                       <div className="grid grid-cols-6 gap-3">
-                        {likertOptions.map(o => (
+                        {likertOptions.map((o) => (
                           <div key={o.value} className="flex flex-col items-center space-y-2">
                             <RadioGroupItem value={o.value.toString()} id={`${q.id}-${o.value}`} className="scale-125" />
                             <Label htmlFor={`${q.id}-${o.value}`} className="text-xs text-center leading-tight cursor-pointer">
@@ -416,13 +405,15 @@ export function AssessmentClient() {
             })}
 
             <div className="flex justify-between items-center pt-6 border-t">
-              <Button onClick={handlePrevious} disabled={isFirst} variant="outline" className="flex items-center space-x-2">
+              <Button onClick={handlePrevious} disabled={currentPage === 0} variant="outline" className="flex items-center space-x-2">
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous</span>
               </Button>
+
               <div className="text-sm text-gray-600">
-                {getCurrentPageQuestions().filter(q => responses[q.id]).length} of {getCurrentPageQuestions().length} answered on this page
+                {currentQuestions.filter((q) => responses[q.id]).length} of {currentQuestions.length} answered on this page
               </div>
+
               {currentPage === Math.ceil(questions.length / questionsPerPage) - 1 ? (
                 <Button
                   onClick={handleSubmit}
@@ -435,8 +426,8 @@ export function AssessmentClient() {
               ) : (
                 <Button
                   onClick={handleNext}
-                  disabled={getCurrentPageQuestions().filter(q => responses[q.id]).length !== getCurrentPageQuestions().length}
-                  className="bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700 flex items-center space-x-2"
+                  disabled={currentQuestions.filter((q) => responses[q.id]).length !== currentQuestions.length}
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 flex items-center space-x-2"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-4 h-4" />
