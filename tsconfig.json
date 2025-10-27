@@ -21,11 +21,6 @@
       "@/*": ["./*"]
     }
   },
- 
-{
-  "compilerOptions": {
-    "...": "unchanged"
-  },
   "include": [
     "next-env.d.ts",
     "types/**/*.d.ts",
@@ -36,7 +31,7 @@
   ],
   "exclude": [
     "node_modules",
-    "scripts/**/*"           // ⬅️ add this line
+    "scripts/**/*"
   ]
 }
 
