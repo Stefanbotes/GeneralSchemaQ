@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch user and assessment
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       include: {
         assessments: {
