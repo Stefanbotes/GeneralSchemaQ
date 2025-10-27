@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Increment token version to invalidate existing sessions
-    await db.users.update({
+    await db.user.update({
       where: { id: userId },
       data: { 
         tokenVersion: { increment: 1 }
