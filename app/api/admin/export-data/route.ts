@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Get all users for additional context
-    const users = await db.users.findMany({
+    const users = await db.user.findMany({
       select: {
         id: true,
         firstName: true,
