@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = EmailUtils.normalize(email);
 
     // Find user (always return success to prevent email enumeration)
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { email: normalizedEmail },
     });
 
