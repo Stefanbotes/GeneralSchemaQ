@@ -1,98 +1,73 @@
-
-// Email verification API endpoint
-export const dynamic = "force-dynamic";
-
+// app/api/verify-email/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { db } from '@/lib/db';
-import { TokenUtils } from '@/lib/auth-utils';
-import { RateLimiter } from '@/lib/rate-limit';
 
-const verifyEmailSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-  email: z.string().email('Invalid email address'),
-});
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
-export async function POST(request: NextRequest) {
+function bad(message: string, status = 400, extra?: any) {
+  return NextResponse.json({ success: false, error: message, ...extra }, { status });
+}
+
+export async function POST(req: NextRequest) {
   try {
-    const clientIP = RateLimiter.getClientIP(request);
-    
-    // Check rate limiting
-    const rateLimitResult = await RateLimiter.checkRateLimit('emailVerification', clientIP, 'ip');
-    
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { 
-          error: 'Too many verification attempts. Please try again later.',
-          retryAfter: rateLimitResult.retryAfter 
-        },
-        { 
-          status: 429,
-          headers: {
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600'
-          }
-        }
-      );
-    }
+    // token from query or body
+    const url = new URL(req.url);
+    const qsToken = url.searchParams.get('token') ?? undefined;
+    const body = await req.json().catch(() => ({} as any));
+    const token: string | undefined = body.token ?? qsToken;
 
-    const body = await request.json();
-    
-    // Validate input
-    const validationResult = verifyEmailSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid request',
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      );
-    }
+    if (!token) return bad('Missing token', 400);
 
-    const { token, email } = validationResult.data;
-    const hashedToken = TokenUtils.hashToken(token);
-
-    // Find verification token
-    const verificationToken = await db.verification_tokens.findFirst({
-      where: {
-        token: hashedToken,
-        email: email.toLowerCase(),
-        expires: { gt: new Date() },
-      },
+    // 1) Find verification token (adapter columns: identifier, token, expires)
+    const vt = await db.verificationToken.findFirst({
+      where: { token },
+      select: { identifier: true, token: true, expires: true },
     });
+    if (!vt) return bad('Invalid or unknown token', 401);
+    if (vt.expires <= new Date()) return bad('Token expired', 401);
 
-    if (!verificationToken) {
-      return NextResponse.json(
-        { error: 'Invalid or expired verification token' },
-        { status: 400 }
-      );
+    // 2) Find the user by identifier (email)
+    const user = await db.user.findUnique({
+      where: { email: vt.identifier.toLowerCase() },
+      select: { id: true, email: true, emailVerified: true },
+    });
+    if (!user) return bad('User not found for this token', 404);
+
+    // 3) If already verified, clean up any stale tokens and exit gracefully
+    if (user.emailVerified) {
+      await db.verificationToken.deleteMany({ where: { identifier: user.email } });
+      return NextResponse.json({ success: true, message: 'Email is already verified.' });
     }
 
-    // Update user as verified
+    // 4) Mark verified and delete tokens in a transaction
     await db.$transaction([
       db.user.update({
-        where: { email: email.toLowerCase() },
-        data: {
-          emailVerified: true,
-          emailVerifiedAt: new Date(),
-        },
+        where: { id: user.id },
+        data: { emailVerified: new Date() },
       }),
-      db.verification_tokens.delete({
-        where: { id: verificationToken.id },
+      db.verificationToken.deleteMany({
+        where: { identifier: user.email },
       }),
     ]);
 
     return NextResponse.json({
-      message: 'Email verified successfully. You can now log in.',
+      success: true,
+      message: 'Email verified successfully.',
     });
-
-  } catch (error) {
-    console.error('Email verification error:', error);
-    
+  } catch (err: any) {
+    console.error('[verify-email] error:', err);
     return NextResponse.json(
-      { error: 'An unexpected error occurred. Please try again.' },
+      { success: false, error: err?.message ?? 'Internal error' },
       { status: 500 }
     );
   }
 }
+
+// Optional GET handler if you want to support /api/verify-email?token=...
+export async function GET(req: NextRequest) {
+  // Reuse POST logic for convenience
+  return POST(req);
+}
+
