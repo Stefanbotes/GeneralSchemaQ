@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   }
 
   // Fetch user's assessment data
-  const user = await db.users.findUnique({
+  const user = await db.user.findUnique({
     where: { id: session.user.id },
     include: {
       assessments: {

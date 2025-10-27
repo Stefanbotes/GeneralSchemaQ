@@ -66,7 +66,7 @@ export class LockoutUtils {
   }
 
   static async incrementLoginAttempts(userId: string): Promise<{ locked: boolean; lockoutUntil?: Date }> {
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { loginAttempts: true, lockoutUntil: true }
     });
@@ -79,7 +79,7 @@ export class LockoutUtils {
     const lockoutDuration = this.calculateLockoutDuration(newAttempts);
     const lockoutUntil = lockoutDuration > 0 ? new Date(Date.now() + lockoutDuration) : null;
 
-    await db.users.update({
+    await db.user.update({
       where: { id: userId },
       data: {
         loginAttempts: newAttempts,
@@ -94,7 +94,7 @@ export class LockoutUtils {
   }
 
   static async resetLoginAttempts(userId: string): Promise<void> {
-    await db.users.update({
+    await db.user.update({
       where: { id: userId },
       data: {
         loginAttempts: 0,
@@ -105,7 +105,7 @@ export class LockoutUtils {
   }
 
   static async isAccountLocked(userId: string): Promise<boolean> {
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { lockoutUntil: true }
     });

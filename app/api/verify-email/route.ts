@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     // Update user as verified
     await db.$transaction([
-      db.users.update({
+      db.user.update({
         where: { email: email.toLowerCase() },
         data: {
           emailVerified: true,

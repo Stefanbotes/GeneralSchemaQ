@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = EmailUtils.normalize(email);
 
     // Check if user already exists
-    const existingUser = await db.users.findUnique({
+    const existingUser = await db.user.findUnique({
       where: { email: normalizedEmail },
     });
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await PasswordUtils.hash(password);
 
     // Create user
-    const user = await db.users.create({
+    const user = await db.user.create({
       data: {
         email: normalizedEmail,
         password: hashedPassword,

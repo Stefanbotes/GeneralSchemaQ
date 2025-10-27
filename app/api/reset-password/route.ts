@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     // Update user password and invalidate sessions
     await db.$transaction([
-      db.users.update({
+      db.user.update({
         where: { id: resetToken.userId },
         data: {
           password: hashedPassword,

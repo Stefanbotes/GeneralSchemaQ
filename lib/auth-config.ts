@@ -60,7 +60,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Find user by email
-          const user = await db.users.findUnique({
+          const user = await db.user.findUnique({
             where: { email: credentials.email.toLowerCase() },
           });
 
@@ -71,7 +71,7 @@ export const authOptions: NextAuthOptions = {
           // Check if account is locked
           const isLocked = await LockoutUtils.isAccountLocked(user.id);
           if (isLocked) {
-            const lockoutInfo = await db.users.findUnique({
+            const lockoutInfo = await db.user.findUnique({
               where: { id: user.id },
               select: { lockoutUntil: true }
             });
@@ -138,7 +138,7 @@ export const authOptions: NextAuthOptions = {
 
       // Check if token is still valid (session versioning)
       if (token.id) {
-        const dbUser = await db.users.findUnique({
+        const dbUser = await db.user.findUnique({
           where: { id: token.id },
           select: { tokenVersion: true, emailVerified: true }
         });

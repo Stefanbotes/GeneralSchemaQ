@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Get user data for filename
-      const user = await db.users.findUnique({
+      const user = await db.user.findUnique({
         where: { id: body.userId },
         select: {
           firstName: true,
