@@ -10,15 +10,13 @@ export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
   const user = session?.user;
 
-  // Build a safe display name:
   const displayName =
-    user?.name ??
-    [ (user as any)?.firstName, (user as any)?.lastName ].filter(Boolean).join(' ').trim() ||
-    '—';
+    (user?.name ??
+      `${(user as any)?.firstName ?? ''} ${(user as any)?.lastName ?? ''}`.trim()) || '-';
 
-  const email = user?.email ?? '—';
+  const email = user?.email ?? '-';
   const role = (user as any)?.role ?? 'CLIENT';
-  const isVerified = !!user?.emailVerified; // Date | null → boolean
+  const isVerified = Boolean(user?.emailVerified); // Date | null -> boolean
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 p-6">
