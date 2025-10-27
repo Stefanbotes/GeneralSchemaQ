@@ -1,16 +1,4 @@
-generator client {
-  provider      = "prisma-client-js"
-  // Keep it simple and compatible with Vercel:
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("Test_DATABASE_URL")
-}
-
-/* ------------------- AUTH MODELS (NextAuth-compatible) ------------------- */
-/* Keep these EXACTLY as below for Prisma Adapter compatibility.            */
+// generator & datasource stay as you already have them
 
 model User {
   id                String   @id @default(cuid())
@@ -19,47 +7,23 @@ model User {
   lastName          String
   password          String
   role              UserRole @default(CLIENT)
-
-  // NextAuth expects DateTime? (not boolean)
   emailVerified     DateTime?
-
-  // Optional app fields
-  emailVerifiedAt   DateTime?
-  tokenVersion      Int       @default(0)
-  loginAttempts     Int       @default(0)
+  tokenVersion      Int      @default(0)
+  loginAttempts     Int      @default(0)
   lockoutUntil      DateTime?
   lastLogin         DateTime?
   passwordChangedAt DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   accounts          Account[]
   sessions          Session[]
+  assessments       Assessment[]
+  passwordResetTokens PasswordResetToken[]
+  rateLimitRecords  RateLimitRecord[]
+  verificationTokens VerificationToken[]
 
-  // App relations
-  assessments           assessments[]
-  password_reset_tokens password_reset_tokens[]
-  rate_limit_records    rate_limit_records[]
-}
-
-model Account {
-  id                String @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
+  @@map("users") // <-- map model User to table "users"
 }
 
 model Session {
@@ -68,35 +32,56 @@ model Session {
   userId       String
   expires      DateTime
   tokenVersion Int      @default(0)
-
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                String @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
 model VerificationToken {
-  // Prisma Adapter expects exactly these three columns
+  id        String   @id @default(cuid())
   identifier String
-  token      String   @unique
-  expires    DateTime
+  token     String   @unique
+  userId    String?
+  expires   DateTime
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
-/* ------------------- APP MODELS (your domain) ---------------------------- */
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  userId    String?
+  expires   DateTime
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model assessment_questions {
-  id             String   @id // e.g., "1.1.R1"
-  order          Int      @unique
-  domain         String?
-  schema         String?
-  persona        String?
-  healthyPersona String?
-  statement      String
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  @@map("password_reset_tokens")
 }
 
-model assessments {
+model Assessment {
   id                String            @id @default(cuid())
   userId            String
   status            AssessmentStatus  @default(NOT_STARTED)
@@ -109,14 +94,28 @@ model assessments {
   completedAt       DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lasbiResponses    LasbiResponse[]
 
-  // relation to User
-  users             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  lasbi_responses   lasbi_responses[]
+  @@map("assessments")
 }
 
-model leadership_personas {
+model AssessmentQuestion {
+  id             String   @id
+  order          Int      @unique
+  domain         String?
+  schema         String?
+  persona        String?
+  healthyPersona String?
+  statement      String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("assessment_questions")
+}
+
+model LeadershipPersona {
   id              String   @id @default(cuid())
   name            String   @unique
   description     String
@@ -126,25 +125,26 @@ model leadership_personas {
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@map("leadership_personas")
 }
 
-model lasbi_items {
+model LasbiItem {
   item_id         String   @id
-  canonical_id    String   @unique // "d.s.q"
-  variable_id     String   // "d.s"
+  canonical_id    String   @unique
+  variable_id     String
   question_number Int
   schema_label    String
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
-
-  responses lasbi_responses[]
+  responses       LasbiResponse[]
 
   @@index([canonical_id])
   @@index([variable_id])
-  @@map("lasbi_items") // keep your table name
+  @@map("lasbi_items")
 }
 
-model lasbi_responses {
+model LasbiResponse {
   response_id     String   @id @default(cuid())
   assessment_id   String
   item_id         String
@@ -154,28 +154,17 @@ model lasbi_responses {
   mapping_version String   @default("1.0.1")
   created_at      DateTime @default(now())
 
-  assessment assessments @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
-  item       lasbi_items @relation(fields: [item_id], references: [item_id], onDelete: Restrict)
+  assessment Assessment @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
+  item       LasbiItem  @relation(fields: [item_id], references: [item_id], onDelete: Restrict)
 
-  @@unique([assessment_id, item_id])
+  @@unique([assessment_id, item_id], name: "assessment_id_item_id")
   @@index([assessment_id])
   @@index([variable_id])
   @@index([canonical_id])
-  @@map("lasbi_responses") // keep your table name
+  @@map("lasbi_responses")
 }
 
-model password_reset_tokens {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  expires   DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model rate_limit_records {
+model RateLimitRecord {
   id          String   @id @default(cuid())
   userId      String?
   ipAddress   String?
@@ -184,14 +173,12 @@ model rate_limit_records {
   windowStart DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  users       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([ipAddress, action, windowStart])
   @@unique([userId, action, windowStart])
+  @@map("rate_limit_records")
 }
-
-/* ------------------- ENUMS ----------------------------------------------- */
 
 enum AssessmentStatus {
   NOT_STARTED
