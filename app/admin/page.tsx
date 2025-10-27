@@ -1,13 +1,17 @@
-
+// app/admin/page.tsx
 // Admin dashboard for user management
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, Shield, Mail, AlertCircle, User, Database, Download, FileText } from 'lucide-react';
+import {
+  Users, Shield, Mail, AlertCircle, User as UserIcon, Database, FileText,
+} from 'lucide-react';
 import { AdminClient } from './admin-client';
 import { RoleManagement } from './role-management';
 import { ReportGenerationInterface } from './report-generation';
@@ -17,33 +21,33 @@ export const dynamic = 'force-dynamic';
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
 
-  // Check if user is logged in
+  // Require login
   if (!session?.user) {
     redirect('/auth/login?callbackUrl=/admin');
   }
 
-  // Check if user has admin privileges (with temporary bypass for testing)
-  const isAdminAccess = session?.user?.role === 'ADMIN' || process.env.NODE_ENV === 'development';
-  
+  // Allow only ADMIN (bypass in dev if you want to preview layout)
+  const isAdminAccess =
+    session?.user?.role === 'ADMIN' || process.env.NODE_ENV === 'development';
+
   if (!isAdminAccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6 flex items-center justify-center">
-        <Card className="bg-white shadow-lg max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100 p-6 flex items-center justify-center">
+        <Card className="bg-white shadow-lg max-w-md w-full">
           <CardHeader>
             <CardTitle className="flex items-center text-red-600">
               <AlertCircle className="h-5 w-5 mr-2" />
               Access Denied
             </CardTitle>
+            <CardDescription>
+              You don&apos;t have permission to access this page. Admin privileges are required.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                You don't have permission to access this page. Admin privileges are required.
-                <br />
-                <small className="text-gray-500 mt-2 block">
-                  For testing: Use credentials john@doe.com / johndoe123
-                </small>
+                Please sign in with an admin account.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -52,37 +56,35 @@ export default async function AdminPage() {
     );
   }
 
-  // Get user statistics for admin dashboard
+  // Dashboard data
   try {
-    const [totalUsers, totalAssessments, verifiedUsers, unverifiedUsers] = await Promise.all([
-      db.users.count(),
-      db.assessments.count(),
-      db.users.count({ where: { emailVerified: true } }),
-      db.users.count({ where: { emailVerified: false } })
-    ]);
+    const [totalUsers, totalAssessments, verifiedUsers, unverifiedUsers] =
+      await Promise.all([
+        db.user.count(),
+        db.assessments.count(),
+        db.user.count({ where: { emailVerified: { not: null } } }), // Date set => verified
+        db.user.count({ where: { emailVerified: null } }), // null => unverified
+      ]);
 
-    const recentUsers = await db.users.findMany({
+    const recentUsers = await db.user.findMany({
       select: {
         id: true,
         firstName: true,
         lastName: true,
         email: true,
         role: true,
-        emailVerified: true,
+        emailVerified: true, // Date | null
         createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
-      take: 10
+      take: 10,
     });
 
-    // Get users with completed assessments for report generation
-    const usersWithCompletedAssessments = await db.users.findMany({
+    const usersWithCompletedAssessments = await db.user.findMany({
       where: {
         assessments: {
-          some: {
-            status: 'COMPLETED'
-          }
-        }
+          some: { status: 'COMPLETED' },
+        },
       },
       select: {
         id: true,
@@ -98,17 +100,17 @@ export default async function AdminPage() {
             id: true,
             completedAt: true,
             leadershipPersona: true,
-            status: true
+            status: true,
           },
           orderBy: { completedAt: 'desc' },
-          take: 1
-        }
+          take: 1,
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
     return (
-      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100 p-6">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -126,7 +128,7 @@ export default async function AdminPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-primary600">{totalUsers}</div>
+                <div className="text-2xl font-bold text-indigo-600">{totalUsers}</div>
               </CardContent>
             </Card>
 
@@ -167,18 +169,18 @@ export default async function AdminPage() {
             </Card>
           </div>
 
-          {/* Admin Export Tools */}
-          <AdminClient 
+          {/* Admin Export Tools (client component) */}
+          <AdminClient
             stats={{
               totalUsers,
               totalAssessments,
               verifiedUsers,
-              unverifiedUsers
-            }} 
+              unverifiedUsers,
+            }}
           />
 
           {/* Role Management */}
-          <RoleManagement users={recentUsers} />
+          <RoleManagement users={recentUsers as any} />
 
           {/* Three-Tier Report Generation */}
           <Card className="bg-white shadow-lg">
@@ -198,20 +200,26 @@ export default async function AdminPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="p-3 bg-green-100 rounded">
                       <strong>Tier 1: Summary</strong>
-                      <p className="text-green-700 text-xs mt-1">Auto-downloaded on completion. Gentle, strengths-focused (2-3 paragraphs)</p>
+                      <p className="text-green-700 text-xs mt-1">
+                        Auto-downloaded on completion. Gentle, strengths-focused (2-3 paragraphs)
+                      </p>
                     </div>
-                    <div className="p-3 bg-primary100 rounded">
+                    <div className="p-3 bg-indigo-100 rounded">
                       <strong>Tier 2: Leadership</strong>
-                      <p className="text-primary700 text-xs mt-1">Professional development focus. Inner Personas (8-12 pages)</p>
+                      <p className="text-indigo-700 text-xs mt-1">
+                        Professional development focus. Inner Personas (8-12 pages)
+                      </p>
                     </div>
                     <div className="p-3 bg-red-100 rounded">
                       <strong>Tier 3: Clinical</strong>
-                      <p className="text-red-700 text-xs mt-1">Clinical supervision required. Schema therapy framework (12-15 pages)</p>
+                      <p className="text-red-700 text-xs mt-1">
+                        Clinical supervision required. Schema therapy framework (12-15 pages)
+                      </p>
                     </div>
                   </div>
                 </div>
-                
-                <ReportGenerationInterface users={usersWithCompletedAssessments} />
+
+                <ReportGenerationInterface users={usersWithCompletedAssessments as any} />
               </div>
             </CardContent>
           </Card>
@@ -220,12 +228,10 @@ export default async function AdminPage() {
           <Card className="bg-white shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2 text-primary600" />
+                <UserIcon className="h-5 w-5 mr-2 text-indigo-600" />
                 Recent Users
               </CardTitle>
-              <CardDescription>
-                Latest user registrations and their status
-              </CardDescription>
+              <CardDescription>Latest user registrations and their status</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -240,16 +246,14 @@ export default async function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentUsers?.map((user: any) => (
+                    {recentUsers?.map((user) => (
                       <tr key={user.id} className="border-b hover:bg-gray-50">
                         <td className="py-3">
                           {user.firstName} {user.lastName}
                         </td>
                         <td className="py-3 text-gray-600">{user.email}</td>
                         <td className="py-3">
-                          <Badge variant="outline">
-                            {user.role}
-                          </Badge>
+                          <Badge variant="outline">{user.role}</Badge>
                         </td>
                         <td className="py-3">
                           {user.emailVerified ? (
@@ -266,7 +270,7 @@ export default async function AdminPage() {
                   </tbody>
                 </table>
               </div>
-              
+
               {recentUsers?.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
@@ -280,9 +284,9 @@ export default async function AdminPage() {
     );
   } catch (error) {
     console.error('Admin dashboard error:', error);
-    
+
     return (
-      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100 p-6 flex items-center justify-center">
         <Card className="bg-white shadow-lg max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center text-red-600">
