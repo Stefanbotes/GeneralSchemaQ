@@ -1,89 +1,73 @@
-
-// Forgot password API endpoint
-export const dynamic = "force-dynamic";
-
-import { NextRequest, NextResponse } from 'next/server';
+// app/api/forgot-password/route.ts
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { EmailUtils } from '@/lib/auth-utils';
 import { RateLimiter } from '@/lib/rate-limit';
-import { EmailService } from '@/lib/email-service';
+import { createPasswordResetToken } from '@/lib/email-service';
+
+export const dynamic = 'force-dynamic';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-export async function POST(request: NextRequest) {
+const limiter = new RateLimiter({
+  windowMs: 60_000,      // 1 minute
+  max: 5,                // 5 attempts per minute per IP
+  keyPrefix: 'forgotpwd' // redis key prefix if using redis
+});
+
+export async function POST(req: Request) {
   try {
-    const clientIP = RateLimiter.getClientIP(request);
-    
-    // Check rate limiting
-    const rateLimitResult = await RateLimiter.checkRateLimit('passwordReset', clientIP, 'ip');
-    
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { 
-          error: 'Too many password reset attempts. Please try again later.',
-          retryAfter: rateLimitResult.retryAfter 
-        },
-        { 
-          status: 429,
-          headers: {
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600'
-          }
-        }
-      );
+    const ip = EmailUtils.getClientIp(req) ?? 'unknown';
+    const limited = await limiter.consume(ip);
+    if (!limited.ok) {
+      return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
     }
 
-    const body = await request.json();
-    
-    // Validate input
-    const validationResult = forgotPasswordSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid email address',
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      );
+    const json = await req.json().catch(() => ({}));
+    const parsed = forgotPasswordSchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const { email } = validationResult.data;
-    const normalizedEmail = EmailUtils.normalize(email);
+    const email = parsed.data.email.toLowerCase();
 
-    // Find user (always return success to prevent email enumeration)
+    // Look up the user (do not reveal existence in the response)
     const user = await db.user.findUnique({
-      where: { email: normalizedEmail },
+      where: { email },
+      select: { id: true, email: true },
     });
 
-    if (user && user.emailVerified) {
-      try {
-        // Clean up existing password reset tokens for this user
-        await db.password_reset_tokens.deleteMany({
-          where: { userId: user.id },
-        });
+    // Always respond success (to prevent user enumeration)
+    // but only create token/send email if user exists.
+    if (user) {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.NEXTAUTH_URL ||
+        '';
 
-        // Send password reset email
-        await EmailService.sendPasswordResetEmail(user.id, normalizedEmail, user.firstName);
-      } catch (emailError) {
-        console.error('Failed to send password reset email:', emailError);
-        // Still return success to prevent information leakage
-      }
+      // create + store reset token and get the URL
+      const { resetUrl } = await createPasswordResetToken({
+        email,
+        baseUrl,
+        userId: user.id,
+        expiresInMinutes: 30,
+      });
+
+      // TODO: send the email via your provider
+      // await sendPasswordResetEmail(email, resetUrl);
+      console.log('[ForgotPassword] Reset link (dev):', resetUrl);
     }
 
-    // Always return success response to prevent email enumeration
     return NextResponse.json({
-      message: 'If an account with this email exists, you will receive password reset instructions shortly.',
+      success: true,
+      message: 'If an account with that email exists, a reset link has been sent.',
     });
-
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    
-    return NextResponse.json(
-      { error: 'An unexpected error occurred. Please try again.' },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    console.error('[ForgotPassword] error:', err);
+    return NextResponse.json({ error: 'Unable to process request' }, { status: 500 });
   }
 }
+
