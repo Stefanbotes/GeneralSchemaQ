@@ -14,13 +14,14 @@ const handler = NextAuth({
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email:    { label: "Email",    type: "email" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials || !credentials.email || !credentials.password) {
+        if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
         }
+
         const user = await db.user.findUnique({
           where: { email: credentials.email.toLowerCase() },
           select: {
@@ -30,20 +31,20 @@ const handler = NextAuth({
             lastName: true,
             password: true,
             role: true,
-            emailVerified: true,
-            tokenVersion: true
-          }
+            // NOTE: we intentionally DO NOT select/return emailVerified here
+          },
         });
         if (!user) throw new Error("Invalid credentials");
+
         const ok = await compare(credentials.password, user.password);
         if (!ok) throw new Error("Invalid credentials");
+
+        // Return a *minimal* object to avoid any conflicting User typings
         return {
           id: user.id,
           email: user.email,
           name: `${user.firstName} ${user.lastName}`.trim(),
           role: user.role,
-          emailVerified: user.emailVerified,
-          tokenVersion: user.tokenVersion
         } as any;
       }
     })
@@ -51,10 +52,10 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        (token as any).id = (user as any).id;
+        (token as any).id   = (user as any).id;
         (token as any).role = (user as any).role ?? "CLIENT";
-        (token as any).emailVerified = (user as any).emailVerified ?? null;
-        (token as any).tokenVersion = (user as any).tokenVersion ?? 0;
+        // Since authorize didn't return emailVerified, default to null:
+        (token as any).emailVerified = (token as any).emailVerified ?? null;
       }
       return token;
     },
@@ -63,11 +64,11 @@ const handler = NextAuth({
         ...session.user,
         id: (token as any).id,
         role: (token as any).role,
-        emailVerified: (token as any).emailVerified ?? null
+        emailVerified: (token as any).emailVerified ?? null,
       };
       return session;
-    }
-  }
+    },
+  },
 });
 
 export { handler as GET, handler as POST };
