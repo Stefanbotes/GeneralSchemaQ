@@ -1,87 +1,94 @@
 // app/api/signup/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { db } from '@/lib/db';
 import { hash } from 'bcryptjs';
-import { randomBytes } from 'crypto';
+import { createEmailVerificationToken } from '@/lib/email-service';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-export const maxDuration = 60;
 
-const Body = z.object({
+const schema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Valid email required'),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-function bad(message: string, extra?: any) {
-  return NextResponse.json({ success: false, error: message, ...extra }, { status: 400 });
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const json = await req.json().catch(() => ({}));
-    const parsed = Body.safeParse(json);
+    const parsed = schema.safeParse(json);
     if (!parsed.success) {
-      const first = parsed.error.issues?.[0]?.message ?? 'Invalid payload';
-      return bad(first, { details: parsed.error.format() });
+      const errs = parsed.error.flatten().fieldErrors;
+      return NextResponse.json({ success: false, error: errs }, { status: 400 });
     }
 
     const { firstName, lastName, email, password } = parsed.data;
+    const normalizedEmail = email.toLowerCase();
 
-    // 1) Check if email already exists
-    const existing = await db.user.findUnique({ where: { email } });
+    // 1) Uniqueness check
+    const existing = await db.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    });
     if (existing) {
-      return bad('An account with this email already exists.');
+      return NextResponse.json(
+        { success: false, message: 'An account with this email already exists.' },
+        { status: 409 }
+      );
     }
 
-    // 2) Hash password
-    const passwordHash = await hash(password, 12);
+    // 2) Create user
+    const passwordHash = await hash(password, 10);
 
-    // 3) Create user (omit emailVerified or set to null)
     const user = await db.user.create({
       data: {
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         password: passwordHash,
-        role: 'CLIENT',          // default role
-        // emailVerified: null,   // optional; omitting also results in null
+        role: 'CLIENT',            // default
+        emailVerified: null,       // Date | null in your schema
+        tokenVersion: 0,
       },
-      select: { id: true, email: true },
-    });
-
-    // 4) Create verification token (NextAuth expects { identifier, token, expires })
-    const token = randomBytes(32).toString('hex');
-    const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
-
-    await db.verificationToken.create({
-      data: {
-        identifier: user.email,
-        token,
-        expires,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        emailVerified: true,
       },
     });
 
-    // TODO: send verification email with the tokenized link:
-    // e.g. `${process.env.NEXTAUTH_URL}/auth/verify?token=${token}`
+    // 3) Create verification token + URL
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXTAUTH_URL ||
+      '';
+
+    const { verifyUrl } = await createEmailVerificationToken({
+      email: user.email,
+      baseUrl,
+      expiresInMinutes: 60,
+    });
+
+    // TODO: send email via your provider
+    // await sendVerificationEmail(user.email, verifyUrl);
+    console.log('[Signup] verification link (dev):', verifyUrl);
 
     return NextResponse.json({
       success: true,
-      message: 'Account created. Please check your email to verify your address.',
-      user: { id: user.id, email: user.email },
+      message: 'Account created. Please check your email for a verification link.',
     });
   } catch (err: any) {
-    // Handle unique constraint race just in case
-    if (err?.code === 'P2002' && err?.meta?.target?.includes('email')) {
-      return bad('An account with this email already exists.');
-    }
-    console.error('[signup] error:', err);
-    return NextResponse.json(
-      { success: false, error: err?.message ?? 'Internal error' },
-      { status: 500 }
-    );
+    console.error('[Signup] error:', err);
+    // Try to expose a readable error
+    const msg =
+      err?.code === 'P2002'
+        ? 'Email is already registered.'
+        : err?.message || 'Signup failed.';
+    return NextResponse.json({ success: false, message: msg }, { status: 500 });
   }
 }
+
