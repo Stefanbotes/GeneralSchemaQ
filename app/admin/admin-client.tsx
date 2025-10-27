@@ -9,10 +9,10 @@ import { Download, FileText, Database } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AdminStats {
-  totalUsers: number;
+  totaluser: number;
   totalAssessments: number;
-  verifiedUsers: number;
-  unverifiedUsers: number;
+  verifieduser: number;
+  unverifieduser: number;
 }
 
 interface AdminClientProps {

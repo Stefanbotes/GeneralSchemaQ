@@ -54,7 +54,7 @@ The app uses these **exact** variable names (not EMAIL_SERVER_*):
 8. **Alternative: Using SendGrid** - For high-volume sending
 9. **Success Checklist** - Final verification steps
 
-**Written for non-technical users:**
+**Written for non-technical user:**
 - ✅ Simple language, no jargon
 - ✅ Step-by-step with numbering
 - ✅ Visual organization with emojis

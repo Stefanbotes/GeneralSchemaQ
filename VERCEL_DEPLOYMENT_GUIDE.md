@@ -504,7 +504,7 @@ https://your-actual-deployed-url.vercel.app
 
 **What it does:** Password for your email account
 
-**⚠️ IMPORTANT FOR GMAIL USERS:**
+**⚠️ IMPORTANT FOR GMAIL user:**
 
 If using Gmail, you CANNOT use your regular Gmail password. You must create an "App Password":
 

@@ -128,7 +128,7 @@ ubuntu  7666  next-server (v14.2.28)
 ### Port Binding
 ```bash
 $ ss -tlnp | grep 3000
-LISTEN 0  511  *:3000  *:*  users:(("next-server",pid=7666))
+LISTEN 0  511  *:3000  *:*  user:(("next-server",pid=7666))
 ```
 ✅ **Pass**: Port 3000 bound correctly
 

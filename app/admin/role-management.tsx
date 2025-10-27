@@ -19,15 +19,15 @@ interface UserData {
 }
 
 interface RoleManagementProps {
-  users: UserData[];
+  user: UserData[];
 }
 
-export function RoleManagement({ users: initialUsers }: RoleManagementProps) {
+export function RoleManagement({ user: initialUsers }: RoleManagementProps) {
   const [users, setUsers] = useState(initialUsers);
   const [updating, setUpdating] = useState<string | null>(null);
 
   // Debug: Log to see if component is being called
-  console.log('RoleManagement component loaded with users:', initialUsers?.length || 0);
+  console.log('RoleManagement component loaded with user:', initialUsers?.length || 0);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
@@ -77,7 +77,7 @@ export function RoleManagement({ users: initialUsers }: RoleManagementProps) {
       <CardHeader>
         <CardTitle className="flex items-center">
           <Settings className="h-5 w-5 mr-2 text-indigo-600" />
-          🔧 Role Management (Users: {users?.length || 0})
+          🔧 Role Management (user: {users?.length || 0})
         </CardTitle>
         <CardDescription>
           Manage user roles and access permissions - Component is now visible!

@@ -25,7 +25,7 @@ interface UserData {
 }
 
 interface ReportGenerationProps {
-  users: UserData[];
+  user: UserData[];
 }
 
 export function ReportGenerationInterface({ users }: ReportGenerationProps) {
@@ -39,7 +39,7 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
   
   // Set debug info and auto-select first user for convenience
   useEffect(() => {
-    setDebugInfo(`Received ${users.length} users: ${users.map(u => `${u.firstName} ${u.lastName} (${u.assessments?.length || 0} assessments)`).join(', ')}`);
+    setDebugInfo(`Received ${users.length} user: ${users.map(u => `${u.firstName} ${u.lastName} (${u.assessments?.length || 0} assessments)`).join(', ')}`);
     
     // Auto-select the first user if available for immediate access to print options
     if (users.length > 0 && !selectedUser) {

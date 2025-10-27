@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // Get all assessment data with user information
     const assessments = await db.assessment.findMany({
       include: {
-        users: {
+        user: {
           select: {
             id: true,
             firstName: true,
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function exportAsCSV(assessments: any[], users: any[]) {
+function exportAsCSV(assessments: any[], user: any[]) {
   // Create CSV for assessments
   const assessmentHeaders = [
     'Assessment_ID',
@@ -143,15 +143,15 @@ function exportAsCSV(assessments: any[], users: any[]) {
   });
 }
 
-function exportAsJSON(assessments: any[], users: any[]) {
+function exportAsJSON(assessments: any[], user: any[]) {
   const exportData = {
     exportDate: new Date().toISOString(),
     summary: {
       totalAssessments: assessments.length,
-      totalUsers: users.length,
+      totaluser: users.length,
       completedAssessments: assessments.filter(a => a.status === 'COMPLETED').length,
       inProgressAssessments: assessments.filter(a => a.status === 'IN_PROGRESS').length,
-      verifiedUsers: users.filter(u => u.emailVerified).length,
+      verifieduser: users.filter(u => u.emailVerified).length,
     },
     assessments: assessments.map(assessment => {
       const responseCount = assessment.responses ? 
@@ -174,7 +174,7 @@ function exportAsJSON(assessments: any[], users: any[]) {
         results: assessment.results, // Include analysis results
       };
     }),
-    users: users.map(user => ({
+    user: users.map(user => ({
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
