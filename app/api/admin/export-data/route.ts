@@ -117,7 +117,7 @@ function exportAsCSV(assessments: any[], user: any[]) {
     'Last_Login'
   ];
 
-  const userRows = users.map(user => [
+  const userRows = user.map(user => [
     user.id,
     user.firstName || '',
     user.lastName || '',
