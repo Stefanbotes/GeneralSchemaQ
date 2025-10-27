@@ -8,25 +8,19 @@ import { createEmailVerificationToken } from '@/lib/email-service';
 export const dynamic = 'force-dynamic';
 
 const schema = z.object({
-  firstName: z.string().trim().min(1, 'First name is required'),
-  lastName: z.string().trim().min(1, 'Last name is required'),
-  email: z.string().trim().email('Invalid email address'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export async function POST(req: Request) {
   try {
-    const json = await req.json().catch(() => ({} as any));
-    const parsed = schema.safeParse(json);
-
+    const body = await req.json().catch(() => ({}));
+    const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      const fieldErrors = parsed.error.flatten().fieldErrors;
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Please correct the highlighted fields.',
-          fieldErrors, // <-- object with arrays of messages per field
-        },
+        { success: false, details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -34,7 +28,7 @@ export async function POST(req: Request) {
     const { firstName, lastName, email, password } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
-    // 1) Uniqueness check
+    // Ensure delegate is correct: db.user
     const existing = await db.user.findUnique({
       where: { email: normalizedEmail },
       select: { id: true },
@@ -46,61 +40,63 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2) Create user
     const passwordHash = await hash(password, 10);
 
-    await db.user.create({
+    const user = await db.user.create({
       data: {
         email: normalizedEmail,
-        firstName,
-        lastName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         password: passwordHash,
         role: 'CLIENT',
-        emailVerified: null, // Date | null per your schema
+        emailVerified: null,   // Date | null in your schema
         tokenVersion: 0,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
       },
     });
 
-    // 3) Create verification token + URL
-    const envBase =
+    const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.NEXTAUTH_URL ||
       '';
 
-    // fallback to request origin if envBase is empty
-    const reqOrigin = (() => {
-      try {
-        return new URL(req.url).origin;
-      } catch {
-        return '';
-      }
-    })();
-
-    const baseUrl = (envBase || reqOrigin).replace(/\/$/, '');
     const { verifyUrl } = await createEmailVerificationToken({
-      email: normalizedEmail,
+      email: user.email,
       baseUrl,
       expiresInMinutes: 60,
     });
 
-    // TODO: send verification email using your provider:
-    // await sendVerificationEmail(normalizedEmail, verifyUrl);
-    console.log('[Signup] verification link (dev):', verifyUrl);
+    // TODO: send email via provider. For now, log link in server logs.
+    console.log('[Signup] verification link:', verifyUrl);
 
     return NextResponse.json({
       success: true,
       message: 'Account created. Please check your email for a verification link.',
     });
   } catch (err: any) {
+    // Prisma error hygiene
+    const code = err?.code;
+    if (code === 'P2002') {
+      // Unique constraint (email)
+      return NextResponse.json(
+        { success: false, message: 'Email is already registered.' },
+        { status: 409 }
+      );
+    }
     console.error('[Signup] error:', err);
-    const msg =
-      err?.code === 'P2002'
-        ? 'Email is already registered.'
-        : 'Signup failed.';
     return NextResponse.json(
-      { success: false, message: msg },
+      {
+        success: false,
+        message: 'Signup failed.',
+        // surface minimal diagnostics to help us fix fast in Vercel logs:
+        diagnostics: { code: err?.code, meta: err?.meta, message: err?.message },
+      },
       { status: 500 }
     );
   }
 }
-
