@@ -112,3 +112,13 @@ export async function sendVerificationEmail(to: string, url: string) {
   });
 }
 */
+// lib/email-service.ts
+// ... keep your existing code (createEmailVerificationToken, createPasswordResetToken, etc.)
+
+export const EmailService = {
+  createEmailVerificationToken,
+  createPasswordResetToken,
+  // sendVerificationEmail, // uncomment if you implement it
+  // sendPasswordResetEmail, // idem
+};
+
