@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user role
-    const updatedUser = await db.users.update({
+    const updatedUser = await db.user.update({
       where: { id: userId },
       data: { role: role as any },
       select: {
