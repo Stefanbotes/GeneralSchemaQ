@@ -1,22 +1,57 @@
 generator client {
-    provider = "prisma-client-js"
-    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  // Add x64 too (Vercel often runs x64 on Linux-musl + OpenSSL 3):
+  binaryTargets = ["native", "linux-musl-x64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
-  // was: url = env("DATABASE_URL")
   url      = env("PRISMA_DATABASE_URL")
 }
 
+/* ------------------- AUTH MODELS (NextAuth-compatible) ------------------- */
 
+model User {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  firstName             String
+  lastName              String
+  password              String
+  role                  UserRole @default(CLIENT)
 
-model accounts {
-  id                String  @id @default(cuid())
+  // Important: NextAuth expects DateTime? here (not boolean)
+  emailVerified         DateTime?
+
+  // (Optional) keep your boolean too if you need it internally; otherwise remove it.
+  // If you keep it, rename to avoid confusion and keep them in sync at app level:
+  // isEmailVerified       Boolean  @default(false)
+
+  emailVerifiedAt       DateTime?
+  tokenVersion          Int       @default(0)
+  loginAttempts         Int       @default(0)
+  lockoutUntil          DateTime?
+  lastLogin             DateTime?
+  passwordChangedAt     DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  accounts              Account[]
+  sessions              Session[]
+  verificationTokens    VerificationToken[]
+  assessments           assessments[]
+  password_reset_tokens password_reset_tokens[]
+  rate_limit_records    rate_limit_records[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
+
   refresh_token     String?
   access_token      String?
   expires_at        Int?
@@ -24,19 +59,53 @@ model accounts {
   scope             String?
   id_token          String?
   session_state     String?
-  users             users   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  tokenVersion Int      @default(0)
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  // NextAuth expects these exact columns: identifier, token, expires
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+
+  // If you want a relation to a user, you can add a nullable userId, but
+  // the Prisma Adapter doesn't require it.
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+/* ------------------- YOUR EXISTING APP MODELS (unchanged) ------------------- */
+
 model assessment_questions {
-  id             String   @id // Question ID like "1.1.R1" from canonical source
+  id             String   @id
   order          Int      @unique
-  domain         String? // Domain/Section name (optional for legacy compatibility)
-  schema         String? // Schema name (e.g., "The Self-Doubter - Failure")
-  persona        String? // Persona name
-  healthyPersona String? // Healthy alternative persona
-  statement      String // Question text
+  domain         String?
+  schema         String?
+  persona        String?
+  healthyPersona String?
+  statement      String
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -48,14 +117,14 @@ model assessments {
   status            AssessmentStatus  @default(NOT_STARTED)
   agreedToTerms     Boolean           @default(false)
   agreedAt          DateTime?
-  responses         Json? // Legacy JSON storage - will be deprecated
+  responses         Json?
   leadershipPersona String?
   results           Json?
   startedAt         DateTime?
   completedAt       DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
-  users             users             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   lasbi_responses   lasbi_responses[]
 }
 
@@ -71,21 +140,16 @@ model leadership_personas {
   updatedAt       DateTime @updatedAt
 }
 
-// ============================================================================
-// LASBI STABLE IDENTIFIER STORAGE - v1.0.1
-// ============================================================================
-
-// Reference table: LASBI item metadata
+// LASBI
 model lasbi_items {
-  item_id         String   @id // cmf... (modern LASBI item ID)
-  canonical_id    String   @unique // "d.s.q" format (e.g., "1.1.1")
-  variable_id     String // "d.s" format (e.g., "1.1")
-  question_number Int // 1, 2, or 3
-  schema_label    String // Schema name for reference
+  item_id         String   @id
+  canonical_id    String   @unique
+  variable_id     String
+  question_number Int
+  schema_label    String
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  // Relations
   responses lasbi_responses[]
 
   @@index([canonical_id])
@@ -93,18 +157,16 @@ model lasbi_items {
   @@map("lasbi_items")
 }
 
-// Individual response storage with stable identifiers
 model lasbi_responses {
   response_id     String   @id @default(cuid())
   assessment_id   String
   item_id         String
-  canonical_id    String // Denormalized for convenience
-  variable_id     String // Denormalized for convenience
-  value           Int // 1..5
-  mapping_version String   @default("1.0.1") // Track which mapping version was used
+  canonical_id    String
+  variable_id     String
+  value           Int
+  mapping_version String   @default("1.0.1")
   created_at      DateTime @default(now())
 
-  // Relations
   assessment assessments @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
   item       lasbi_items @relation(fields: [item_id], references: [item_id], onDelete: Restrict)
 
@@ -115,8 +177,6 @@ model lasbi_responses {
   @@map("lasbi_responses")
 }
 
-// ============================================================================
-
 model password_reset_tokens {
   id        String   @id @default(cuid())
   token     String   @unique
@@ -124,7 +184,7 @@ model password_reset_tokens {
   expires   DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
-  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model rate_limit_records {
@@ -136,55 +196,10 @@ model rate_limit_records {
   windowStart DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  users       users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([ipAddress, action, windowStart])
   @@unique([userId, action, windowStart])
-}
-
-model sessions {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  tokenVersion Int      @default(0)
-  users        users    @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model users {
-  id                    String                  @id @default(cuid())
-  email                 String                  @unique
-  firstName             String
-  lastName              String
-  password              String
-  role                  UserRole                @default(CLIENT)
-  emailVerified         Boolean                 @default(false)
-  emailVerifiedAt       DateTime?
-  tokenVersion          Int                     @default(0)
-  loginAttempts         Int                     @default(0)
-  lockoutUntil          DateTime?
-  lastLogin             DateTime?
-  passwordChangedAt     DateTime?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  accounts              accounts[]
-  assessments           assessments[]
-  password_reset_tokens password_reset_tokens[]
-  rate_limit_records    rate_limit_records[]
-  sessions              sessions[]
-  verification_tokens   verification_tokens[]
-}
-
-model verification_tokens {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  email     String
-  userId    String?
-  expires   DateTime
-  createdAt DateTime @default(now())
-  users     users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([email, token])
 }
 
 enum AssessmentStatus {
@@ -198,3 +213,4 @@ enum UserRole {
   COACH
   ADMIN
 }
+
