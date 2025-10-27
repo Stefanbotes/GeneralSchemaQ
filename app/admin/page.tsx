@@ -58,7 +58,7 @@ export default async function AdminPage() {
 
   // Dashboard data
   try {
-    const [totaluser, totalAssessments, verifiedser, unverifiedser] =
+    const [totaluser, totalAssessments, verifieduser, unverifieduser] =
       await Promise.all([
         db.user.count(),
         db.assessment.count(),
@@ -152,7 +152,7 @@ export default async function AdminPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-600">{verifiedser}</div>
+                <div className="text-2xl font-bold text-emerald-600">{verifieduser}</div>
               </CardContent>
             </Card>
 
@@ -164,7 +164,7 @@ export default async function AdminPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{unverifiedser}</div>
+                <div className="text-2xl font-bold text-red-600">{unverifieduser}</div>
               </CardContent>
             </Card>
           </div>
@@ -174,8 +174,8 @@ export default async function AdminPage() {
             stats={{
               totaluser,
               totalAssessments,
-              verifiedser,
-              unverifiedser,
+              verifieduser,
+              unverifieduser,
             }}
           />
 
