@@ -1,4 +1,4 @@
-
+// app/auth/register/page.tsx (or wherever this file lives)
 // Registration page with comprehensive validation and security features
 'use client';
 
@@ -18,11 +18,12 @@ import { AnimatedLogo } from '@/components/ui/animated-logo';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+// ✅ Align with API: password min 8
 const registerSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').max(50, 'First name too long'),
-  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(4, 'Password must be at least 4 characters'),
+  firstName: z.string().trim().min(1, 'First name is required').max(50, 'First name too long'),
+  lastName: z.string().trim().min(1, 'Last name is required').max(50, 'Last name too long'),
+  email: z.string().trim().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -37,6 +38,15 @@ const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
     {text}
   </div>
 );
+
+function formatFieldErrors(fieldErrors?: Record<string, string[] | undefined>) {
+  if (!fieldErrors) return '';
+  const parts: string[] = [];
+  for (const [field, msgs] of Object.entries(fieldErrors)) {
+    if (msgs?.length) parts.push(`${field}: ${msgs[0]}`);
+  }
+  return parts.join(' · ');
+}
 
 function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -59,9 +69,8 @@ function RegisterForm() {
 
   const password = watch('password', '');
 
-  // Password validation
   const passwordRequirements = [
-    { met: password?.length >= 4, text: 'At least 4 characters' },
+    { met: password?.length >= 8, text: 'At least 8 characters' },
   ];
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -69,35 +78,42 @@ function RegisterForm() {
       setIsLoading(true);
       setError('');
 
+      // ✅ Only send what the API expects
+      const payload = {
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email.trim(),
+        password: data.password,
+      };
+
       const response = await fetch('/api/signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        if (result.details) {
-          // Handle validation errors
-          const errorMessages = Object.values(result.details).flat().join(', ');
-          setError(errorMessages);
-          toast.error(errorMessages);
-        } else {
-          setError(result.error || 'Registration failed');
-          toast.error(result.error || 'Registration failed');
-        }
+        // Server sends { message: string, fieldErrors?: Record }
+        const detail = formatFieldErrors(result?.fieldErrors);
+        const msg = [result?.message, detail].filter(Boolean).join(' — ') || 'Registration failed.';
+        setError(msg);
+        toast.error(msg, { duration: 8000 });
         return;
       }
 
-      toast.success('Account created successfully! Please check your email for verification.');
+      toast.success(result?.message || 'Account created! Check your email to verify.', { duration: 7000 });
+
+      // Send them to verify email page (or login)
       router.push('/auth/verify-email?email=' + encodeURIComponent(data.email));
+      // or: router.push('/auth/login?registered=1&callbackUrl=' + encodeURIComponent(callbackUrl));
       
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      toast.error('Registration failed. Please try again.');
+    } catch (err: any) {
+      const msg = err?.message || 'An unexpected error occurred. Please try again.';
+      setError(msg);
+      toast.error(msg, { duration: 8000 });
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +139,7 @@ function RegisterForm() {
               Create Account
             </CardTitle>
             <CardDescription>
-              Join Inner Personas Assessment to discover your Inner Personapotential
+              Join Inner Personas Assessment to discover your Inner Persona potential
             </CardDescription>
           </CardHeader>
 
@@ -140,7 +156,7 @@ function RegisterForm() {
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="firstName"
                       placeholder="John"
@@ -157,7 +173,7 @@ function RegisterForm() {
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="lastName"
                       placeholder="Doe"
@@ -175,7 +191,7 @@ function RegisterForm() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
@@ -193,7 +209,7 @@ function RegisterForm() {
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -206,9 +222,10 @@ function RegisterForm() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -230,7 +247,7 @@ function RegisterForm() {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -243,9 +260,10 @@ function RegisterForm() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     disabled={isLoading}
+                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -282,7 +300,6 @@ function RegisterForm() {
   );
 }
 
-// Loading component for suspense fallback
 function RegisterPageLoading() {
   return (
     <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
@@ -295,9 +312,7 @@ function RegisterPageLoading() {
             <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
               Create Account
             </CardTitle>
-            <CardDescription>
-              Loading...
-            </CardDescription>
+            <CardDescription>Loading...</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary600" />
@@ -308,7 +323,6 @@ function RegisterPageLoading() {
   );
 }
 
-// Main page component with Suspense wrapper
 export default function RegisterPage() {
   return (
     <Suspense fallback={<RegisterPageLoading />}>
