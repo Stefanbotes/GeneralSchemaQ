@@ -174,7 +174,7 @@ function exportAsJSON(assessments: any[], user: any[]) {
         results: assessment.results, // Include analysis results
       };
     }),
-    user: users.map(user => ({
+    user: user.map(user => ({
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,

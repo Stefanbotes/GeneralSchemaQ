@@ -47,7 +47,7 @@ export function RoleManagement({ user: initialUsers }: RoleManagementProps) {
       }
 
       // Update local state
-      setUsers(users.map(user => 
+      setUsers(user.map(user => 
         user.id === userId ? { ...user, role: newRole } : user
       ));
 
