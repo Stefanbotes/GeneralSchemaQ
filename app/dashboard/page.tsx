@@ -248,7 +248,7 @@ export default async function DashboardPage() {
             <CardContent>
               {user.assessments?.length > 0 ? (
                 <div className="space-y-4">
-                  {user.assessment.slice(0, 5).map((assessment: any) => (
+                  {(user.assessments ?? []).slice(0, 5).map((assessment: any) => (
                     <div key={assessment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">Inner PersonaAssessment</p>
