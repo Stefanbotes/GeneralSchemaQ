@@ -168,11 +168,11 @@ export function AdminClient({ stats }: AdminClientProps) {
               <div className="text-indigo-100">Assessments</div>
             </div>
             <div>
-              <div className="text-2xl font-bold">{stats.verifiedUsers}</div>
+              <div className="text-2xl font-bold">{stats.verifiedser}</div>
               <div className="text-indigo-100">Verified</div>
             </div>
             <div>
-              <div className="text-2xl font-bold">{stats.unverifiedUsers}</div>
+              <div className="text-2xl font-bold">{stats.unverifiedser}</div>
               <div className="text-indigo-100">Pending</div>
             </div>
           </div>
