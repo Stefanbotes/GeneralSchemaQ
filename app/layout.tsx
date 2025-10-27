@@ -5,7 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 
 import { SessionProviderWrapper } from "@/components/providers/session-provider";
-import { ClientNavbar } from "@/components/ui/client-navbar";
+import { ClientNavbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/ui/footer";
 import { Toaster } from "@/components/ui/sonner";
 
