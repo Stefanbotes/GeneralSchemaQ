@@ -10,7 +10,7 @@ async function main() {
 
   // Clear existing personas to update them with new enhanced personas
   console.log('🧹 Clearing existing personas...');
-  await prisma.leadership_personas.deleteMany({});
+  await prisma.leadershipPersona.deleteMany({});
 
   // Check if test accounts already exist
   console.log('👨‍💼 Checking test accounts...');
@@ -124,7 +124,7 @@ async function main() {
 
   // Clear existing questions and create Professional Inner PersonaSchema Assessment Questions (54 items)
   console.log('🧹 Skipping question clearing (will be handled separately)...');
-  // await prisma.assessment_questions.deleteMany({});
+  // await prisma.assessmentQuestion.deleteMany({});
   
   console.log('❓ Skipping question creation (schema mismatch - will be fixed separately)...');
   
@@ -212,7 +212,7 @@ async function main() {
   
   /* Commented out - needs to be updated to match schema
   for (const question of professionalQuestions) {
-    await prisma.assessment_questions.create({
+    await prisma.assessmentQuestion.create({
       data: question,
     });
   }
@@ -656,7 +656,7 @@ async function main() {
   ];
 
   for (const persona of personas) {
-    await prisma.leadership_personas.create({
+    await prisma.leadershipPersona.create({
       data: persona,
     });
   }
@@ -693,7 +693,7 @@ async function main() {
       bobResponses[i.toString()] = visionaryPattern[i - 1].toString();
     }
     
-    await prisma.assessments.create({
+    await prisma.assessment.create({
       data: {
         userId: bob.id,
         status: 'COMPLETED',
@@ -718,7 +718,7 @@ async function main() {
   // Create in-progress assessment for Carol
   const carol = users.find((u: any) => u.firstName === 'Carol');
   if (carol) {
-    await prisma.assessments.create({
+    await prisma.assessment.create({
       data: {
         userId: carol.id,
         status: 'IN_PROGRESS',
@@ -737,9 +737,9 @@ async function main() {
   console.log('✅ Database seeding completed successfully!');
   console.log('📊 Summary:');
   console.log(`   - ${await prisma.users.count()} users created`);
-  console.log(`   - ${await prisma.assessment_questions.count()} assessment questions created`);
-  console.log(`   - ${await prisma.leadership_personas.count()} Inner Personas created`);
-  console.log(`   - ${await prisma.assessments.count()} sample assessments created`);
+  console.log(`   - ${await prisma.assessmentQuestion.count()} assessment questions created`);
+  console.log(`   - ${await prisma.leadershipPersona.count()} Inner Personas created`);
+  console.log(`   - ${await prisma.assessment.count()} sample assessments created`);
   console.log('🔐 Test admin credentials: john@doe.com / johndoe123 (HIDDEN FROM USER)');
 }
 

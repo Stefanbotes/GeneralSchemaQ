@@ -44,9 +44,9 @@ async function main() {
   
   // Clear existing data
   console.log('\n🧹 Clearing existing questions and LASBI items...');
-  await prisma.lasbi_responses.deleteMany({});
-  await prisma.lasbi_items.deleteMany({});
-  await prisma.assessment_questions.deleteMany({});
+  await prisma.lasbiResponse.deleteMany({});
+  await prisma.lasbiItem.deleteMany({});
+  await prisma.assessmentQuestion.deleteMany({});
 
   console.log('📝 Creating assessment questions and LASBI items...');
   
@@ -64,7 +64,7 @@ async function main() {
       
       for (const question of variable.questions) {
         // Create assessment question
-        await prisma.assessment_questions.create({
+        await prisma.assessmentQuestion.create({
           data: {
             id: question.id,  // e.g., "1.1.1"
             order: question.order,
@@ -84,7 +84,7 @@ async function main() {
         // Create LASBI item with a modern item_id format
         const modernItemId = `cmf${question.id.replace(/\./g, '_')}`; // e.g., "cmf1_1_1"
         
-        await prisma.lasbi_items.create({
+        await prisma.lasbiItem.create({
           data: {
             item_id: modernItemId,
             canonical_id: question.id,

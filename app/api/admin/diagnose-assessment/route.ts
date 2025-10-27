@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Assessment
-    const assessment = await db.assessments.findFirst({
+    const assessment = await db.assessment.findFirst({
       where: { id: assessmentId, userId },
     });
 

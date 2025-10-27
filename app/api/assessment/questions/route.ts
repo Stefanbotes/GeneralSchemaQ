@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    const rows = await db.assessment_questions.findMany({
+    const rows = await db.assessmentQuestion.findMany({
       where: { isActive: true },
       orderBy: { order: 'asc' },
       select: {

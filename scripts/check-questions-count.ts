@@ -3,8 +3,8 @@ const prisma = new PrismaClient();
 
 async function main() {
   try {
-    const count = await prisma.assessment_questions.count();
-    const lasbiCount = await prisma.lasbi_items.count();
+    const count = await prisma.assessmentQuestion.count();
+    const lasbiCount = await prisma.lasbiItem.count();
     console.log(`✅ Questions in database: ${count}`);
     console.log(`✅ LASBI items in database: ${lasbiCount}`);
   } catch (error) {

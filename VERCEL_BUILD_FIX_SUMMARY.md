@@ -63,7 +63,7 @@ const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
-    const questions = await prisma.assessment_questions.findMany({
+    const questions = await prisma.assessmentQuestion.findMany({
       // ... query logic
     });
     // ... response logic
@@ -85,7 +85,7 @@ import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const questions = await db.assessment_questions.findMany({
+    const questions = await db.assessmentQuestion.findMany({
       // ... query logic
     });
     // ... response logic

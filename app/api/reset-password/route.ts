@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const { token, password } = parsed.data;
 
     // 1) Look up reset token (unique by token)
-    const resetToken = await db.password_reset_tokens.findUnique({
+    const resetToken = await db.passwordResetToken.findUnique({
       where: { token }, // token is @unique in your schema
       select: {
         id: true,
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       db.session.deleteMany({
         where: { userId: user.id },
       }),
-      db.password_reset_tokens.update({
+      db.passwordResetToken.update({
         where: { id: resetToken.id },
         data: { used: true },
       }),

@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Get all questions
-  const questions = await prisma.assessment_questions.findMany({
+  const questions = await prisma.assessmentQuestion.findMany({
     where: { isActive: true },
     orderBy: { order: 'asc' }
   });

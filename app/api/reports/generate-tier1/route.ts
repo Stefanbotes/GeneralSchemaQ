@@ -22,7 +22,7 @@ const isLikert6 = (n: unknown): n is number =>
 
 /** Load all LASBI items once (id map) to resolve canonical & schema */
 async function loadLasbiIndex() {
-  const rows = await (db as any).lasbi_items.findMany({
+  const rows = await (db as any).lasbiItem.findMany({
     select: { item_id: true, canonical_id: true, variable_id: true, schema_label: true },
   });
   const byItemId = new Map<string, any>();
@@ -74,7 +74,7 @@ function extractParticipantName(assessment: any, fallback?: string): string | un
 
 /** Build canonical → value map (1..6) from lasbi_responses rows */
 async function loadResponsesFromLasbi(assessmentId: string): Promise<Map<string, number>> {
-  const rows = await (db as any).lasbi_responses.findMany({
+  const rows = await (db as any).lasbiResponse.findMany({
     where: { assessment_id: assessmentId },
     select: { canonical_id: true, value: true },
   });
@@ -279,7 +279,7 @@ export async function POST(req: Request) {
     let canonicalToValue = new Map<string, number>();
 
     if (assessmentId) {
-      const assessment: any = await (db as any).assessments.findUnique({ where: { id: assessmentId } });
+      const assessment: any = await (db as any).assessment.findUnique({ where: { id: assessmentId } });
       if (!assessment) return NextResponse.json({ error: 'Assessment not found' }, { status: 404 });
 
       // try users table for name

@@ -14,7 +14,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const latest = await db.assessments.findFirst({
+    const latest = await db.assessment.findFirst({
       where: { userId: session.user.id, status: 'COMPLETED' },
       orderBy: { completedAt: 'desc' },
       select: { id: true, completedAt: true, status: true },

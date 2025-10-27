@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       responses = body.responses;
     } else if (body?.userId && body?.assessmentId) {
       // Look up assessment from database (admin interface pattern)
-      const assessment = await db.assessments.findFirst({
+      const assessment = await db.assessment.findFirst({
         where: {
           id: body.assessmentId,
           userId: body.userId,

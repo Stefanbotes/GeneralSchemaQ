@@ -14,27 +14,27 @@ async function main() {
     
     // 1. Clear response data first
     console.log('Clearing LASBI responses...');
-    const deletedLasbiResponses = await prisma.lasbi_responses.deleteMany({});
+    const deletedLasbiResponses = await prisma.lasbiResponse.deleteMany({});
     console.log(`✓ Deleted ${deletedLasbiResponses.count} LASBI responses`);
 
     // 2. Clear assessments
     console.log('Clearing assessments...');
-    const deletedAssessments = await prisma.assessments.deleteMany({});
+    const deletedAssessments = await prisma.assessment.deleteMany({});
     console.log(`✓ Deleted ${deletedAssessments.count} assessments`);
 
     // 3. Clear LASBI items
     console.log('Clearing LASBI items...');
-    const deletedLasbiItems = await prisma.lasbi_items.deleteMany({});
+    const deletedLasbiItems = await prisma.lasbiItem.deleteMany({});
     console.log(`✓ Deleted ${deletedLasbiItems.count} LASBI items`);
 
     // 4. Clear assessment questions
     console.log('Clearing assessment questions...');
-    const deletedQuestions = await prisma.assessment_questions.deleteMany({});
+    const deletedQuestions = await prisma.assessmentQuestion.deleteMany({});
     console.log(`✓ Deleted ${deletedQuestions.count} assessment questions`);
 
     // 5. Clear rate limit records
     console.log('Clearing rate limit records...');
-    const deletedRateLimits = await prisma.rate_limit_records.deleteMany({});
+    const deletedRateLimits = await prisma.rateLimitRecord.deleteMany({});
     console.log(`✓ Deleted ${deletedRateLimits.count} rate limit records`);
 
     // 6. Clear sessions
@@ -44,12 +44,12 @@ async function main() {
 
     // 7. Clear password reset tokens
     console.log('Clearing password reset tokens...');
-    const deletedPasswordResets = await prisma.password_reset_tokens.deleteMany({});
+    const deletedPasswordResets = await prisma.passwordResetToken.deleteMany({});
     console.log(`✓ Deleted ${deletedPasswordResets.count} password reset tokens`);
 
     // 8. Clear verification tokens
     console.log('Clearing verification tokens...');
-    const deletedVerificationTokens = await prisma.verification_tokens.deleteMany({});
+    const deletedVerificationTokens = await prisma.verificationToken.deleteMany({});
     console.log(`✓ Deleted ${deletedVerificationTokens.count} verification tokens`);
 
     // 9. Clear accounts
@@ -64,7 +64,7 @@ async function main() {
 
     // 11. Clear Inner Personas (optional)
     console.log('Clearing Inner Personas...');
-    const deletedPersonas = await prisma.leadership_personas.deleteMany({});
+    const deletedPersonas = await prisma.leadershipPersona.deleteMany({});
     console.log(`✓ Deleted ${deletedPersonas.count} Inner Personas`);
 
     console.log('\n✅ Database cleared successfully!');

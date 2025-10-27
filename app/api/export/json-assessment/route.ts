@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     // ===================================================================
     console.log('🔍 Fetching canonical responses from lasbi_responses table...');
     
-    const canonicalResponses = await db.lasbi_responses.findMany({
+    const canonicalResponses = await db.lasbiResponse.findMany({
       where: { assessment_id: assessment.id },
       select: {
         canonical_id: true,

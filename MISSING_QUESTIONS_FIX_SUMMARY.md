@@ -18,7 +18,7 @@
 
 1. **Checked API Endpoint**
    - Location: `/app/api/assessment/questions/route.ts`
-   - Queries: `db.assessment_questions.findMany({ where: { isActive: true } })`
+   - Queries: `db.assessmentQuestion.findMany({ where: { isActive: true } })`
    - Result: Query successful but returns empty array
 
 2. **Examined Question Data**

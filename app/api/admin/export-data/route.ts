@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get('format') || 'json';
     
     // Get all assessment data with user information
-    const assessments = await db.assessments.findMany({
+    const assessments = await db.assessment.findMany({
       include: {
         users: {
           select: {

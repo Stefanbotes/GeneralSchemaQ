@@ -27,8 +27,8 @@ async function main() {
   console.log('🧪 Testing seed logic...');
   
   // Check current state
-  const currentQuestions = await prisma.assessment_questions.count();
-  const currentLasbi = await prisma.lasbi_items.count();
+  const currentQuestions = await prisma.assessmentQuestion.count();
+  const currentLasbi = await prisma.lasbiItem.count();
   console.log(`Current questions: ${currentQuestions}`);
   console.log(`Current LASBI items: ${currentLasbi}`);
   

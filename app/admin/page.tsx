@@ -61,7 +61,7 @@ export default async function AdminPage() {
     const [totalUsers, totalAssessments, verifiedUsers, unverifiedUsers] =
       await Promise.all([
         db.user.count(),
-        db.assessments.count(),
+        db.assessment.count(),
         db.user.count({ where: { emailVerified: { not: null } } }), // Date set => verified
         db.user.count({ where: { emailVerified: null } }), // null => unverified
       ]);

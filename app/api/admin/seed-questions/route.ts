@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
 
     // --- Existing counts ---
     const [existingQ, existingL] = await Promise.all([
-      db.assessment_questions.count(),
-      db.lasbi_items.count(),
+      db.assessmentQuestion.count(),
+      db.lasbiItem.count(),
     ]);
 
     if (!force && (existingQ > 0 || existingL > 0)) {
@@ -149,11 +149,11 @@ export async function POST(req: NextRequest) {
     // --- Transaction: wipe (if force) + insert ---
     await db.$transaction(async (tx) => {
       if (force || existingQ > 0 || existingL > 0) {
-        await tx.lasbi_items.deleteMany({});
-        await tx.assessment_questions.deleteMany({});
+        await tx.lasbiItem.deleteMany({});
+        await tx.assessmentQuestion.deleteMany({});
       }
-      await tx.assessment_questions.createMany({ data: aq });
-      await tx.lasbi_items.createMany({ data: li });
+      await tx.assessmentQuestion.createMany({ data: aq });
+      await tx.lasbiItem.createMany({ data: li });
     });
 
     return NextResponse.json({
@@ -179,8 +179,8 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   try {
     const [qCount, lCount] = await Promise.all([
-      db.assessment_questions.count(),
-      db.lasbi_items.count(),
+      db.assessmentQuestion.count(),
+      db.lasbiItem.count(),
     ]);
     const isSeeded = qCount > 0 && lCount > 0;
     return NextResponse.json({

@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 
     // Transaction: create/update assessment + upserts
     const result = await db.$transaction(async (tx: any) => {
-      const existingAssessment = await tx.assessments.findFirst({
+      const existingAssessment = await tx.assessment.ndFirst({
         where: {
           userId: session.user.id,
           status: { not: 'COMPLETED' }
@@ -159,8 +159,8 @@ export async function POST(request: NextRequest) {
       };
 
       const assessment = existingAssessment
-        ? await tx.assessments.update({ where: { id: existingAssessment.id }, data: dataCommon })
-        : await tx.assessments.create({ data: { ...dataCommon, startedAt: new Date() } });
+        ? await tx.assessment.update({ where: { id: existingAssessment.id }, data: dataCommon })
+        : await tx.assessment.create({ data: { ...dataCommon, startedAt: new Date() } });
 
       // Per-item upserts (skip silently if mapping missing)
       if (validation.responses?.length && tripleToItemId.size > 0) {
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
-          await tx.lasbi_responses.upsert({
+          await tx.lasbiResponse.upsert({
             where: {
               assessment_id_item_id: {
                 assessment_id: assessment.id,
@@ -242,7 +242,7 @@ async function handleLegacySubmission(userId: string, submissionData: Submission
 
   const { leadershipPersona, report } = buildReport(submissionData, rawScores108);
 
-  const existingAssessment = await db.assessments.findFirst({
+  const existingAssessment = await db.assessment.dFirst({
     where: { userId, status: { not: 'COMPLETED' } },
     orderBy: { createdAt: 'desc' }
   });
@@ -270,8 +270,8 @@ async function handleLegacySubmission(userId: string, submissionData: Submission
   };
 
   const assessment = existingAssessment
-    ? await db.assessments.update({ where: { id: existingAssessment.id }, data: dataCommon })
-    : await db.assessments.create({ data: { ...dataCommon, startedAt: new Date() } });
+    ? await db.assessment.update({ where: { id: existingAssessment.id }, data: dataCommon })
+    : await db.assessment.create({ data: { ...dataCommon, startedAt: new Date() } });
 
   console.log('Legacy assessment saved:', {
     userId,

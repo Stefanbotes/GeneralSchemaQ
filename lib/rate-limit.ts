@@ -30,14 +30,14 @@ export class RateLimiter {
         ? { ipAddress: identifier, action, windowStart: { gte: windowStart } }
         : { userId: identifier, action, windowStart: { gte: windowStart } };
 
-      const existingRecord = await db.rate_limit_records.findFirst({
+      const existingRecord = await db.rateLimitRecord.findFirst({
         where: whereClause,
         orderBy: { createdAt: 'desc' }
       });
 
       if (!existingRecord) {
         // Create new rate limit record
-        await db.rate_limit_records.create({
+        await db.rateLimitRecord.create({
           data: {
             action,
             attempts: 1,
@@ -54,7 +54,7 @@ export class RateLimiter {
       }
 
       // Increment attempts
-      await db.rate_limit_records.update({
+      await db.rateLimitRecord.update({
         where: { id: existingRecord.id },
         data: { attempts: { increment: 1 } }
       });
@@ -86,7 +86,7 @@ export class RateLimiter {
     try {
       const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
       
-      await db.rate_limit_records.deleteMany({
+      await db.rateLimitRecord.deleteMany({
         where: {
           createdAt: { lt: cutoffTime }
         }
