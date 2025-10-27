@@ -1,100 +1,110 @@
 // app/api/reset-password/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { hash } from 'bcryptjs';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-export const maxDuration = 60;
 
-const Body = z.object({
-  token: z.string().min(1, 'Missing token'),
+const schema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-function badRequest(message: string, extra?: any) {
-  return NextResponse.json({ success: false, error: message, ...extra }, { status: 400 });
-}
-function unauthorized(message = 'Unauthorized') {
-  return NextResponse.json({ success: false, error: message }, { status: 401 });
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const json = await req.json().catch(() => ({}));
-    const parsed = Body.safeParse(json);
+    const parsed = schema.safeParse(json);
     if (!parsed.success) {
-      const first = parsed.error.issues?.[0]?.message ?? 'Invalid payload';
-      return badRequest(first, { details: parsed.error.format() });
+      const errs = parsed.error.flatten().fieldErrors;
+      return NextResponse.json({ success: false, error: errs }, { status: 400 });
     }
+
     const { token, password } = parsed.data;
 
-    // 1) Look up reset token (unique by token)
+    // 1) Look up the reset token
     const resetToken = await db.passwordResetToken.findUnique({
-      where: { token }, // token is @unique in your schema
+      where: { token }, // token is unique in your schema
       select: {
         id: true,
         token: true,
+        email: true,
         userId: true,
         expires: true,
-        used: true,
       },
     });
 
     if (!resetToken) {
-      return unauthorized('Invalid or unknown reset token.');
-    }
-    if (resetToken.used) {
-      return unauthorized('This reset token has already been used.');
-    }
-    if (resetToken.expires <= new Date()) {
-      return unauthorized('This reset token has expired.');
+      return NextResponse.json(
+        { success: false, message: 'Invalid or expired reset link.' },
+        { status: 400 }
+      );
     }
 
-    // 2) Ensure user exists
-    const user = await db.user.findUnique({
-      where: { id: resetToken.userId },
-      select: { id: true, email: true },
-    });
+    // 2) Check expiry
+    if (resetToken.expires && resetToken.expires.getTime() < Date.now()) {
+      // Clean up expired token
+      await db.passwordResetToken.delete({ where: { id: resetToken.id } });
+      return NextResponse.json(
+        { success: false, message: 'Reset link has expired. Please request a new one.' },
+        { status: 400 }
+      );
+    }
+
+    // 3) Identify user (prefer userId; fall back to email if present)
+    const user =
+      (resetToken.userId &&
+        (await db.user.findUnique({
+          where: { id: resetToken.userId },
+          select: { id: true, email: true },
+        }))) ||
+      (resetToken.email &&
+        (await db.user.findUnique({
+          where: { email: resetToken.email.toLowerCase() },
+          select: { id: true, email: true },
+        })));
+
     if (!user) {
-      return unauthorized('User not found for this token.');
+      // Clean up dangling token
+      await db.passwordResetToken.delete({ where: { id: resetToken.id } });
+      return NextResponse.json(
+        { success: false, message: 'Account not found for this token.' },
+        { status: 400 }
+      );
     }
 
-    // 3) Hash new password
-    const hashed = await hash(password, 12);
+    // 4) Hash new password
+    const passwordHash = await hash(password, 10);
 
-    // 4) Apply updates in a transaction:
-    //    - update user password (+ passwordChangedAt, + bump tokenVersion)
-    //    - invalidate all existing sessions for this user
-    //    - mark token as used
+    // 5) Transaction: update password, delete tokens, invalidate sessions
     await db.$transaction([
       db.user.update({
         where: { id: user.id },
         data: {
-          password: hashed,
+          password: passwordHash,
           passwordChangedAt: new Date(),
-          tokenVersion: { increment: 1 }, // useful if you also include version in your sessions/JWT logic
+          tokenVersion: { increment: 1 }, // bump to invalidate any JWT-derived sessions if you gate by tokenVersion
         },
       }),
+
+      // Remove the exact token (and optionally all tokens for the same email)
+      db.passwordResetToken.delete({
+        where: { id: resetToken.id },
+      }),
+
+      // Invalidate all existing sessions for this user
       db.session.deleteMany({
         where: { userId: user.id },
-      }),
-      db.passwordResetToken.update({
-        where: { id: resetToken.id },
-        data: { used: true },
       }),
     ]);
 
     return NextResponse.json({
       success: true,
-      message: 'Password has been reset successfully.',
+      message: 'Password has been reset successfully. Please sign in with your new password.',
     });
   } catch (err: any) {
-    console.error('[reset-password] error:', err);
-    return NextResponse.json(
-      { success: false, error: err?.message ?? 'Internal error' },
-      { status: 500 }
-    );
+    console.error('[ResetPassword] error:', err);
+    const msg = err?.message || 'Password reset failed.';
+    return NextResponse.json({ success: false, message: msg }, { status: 500 });
   }
 }
