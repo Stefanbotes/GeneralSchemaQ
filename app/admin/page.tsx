@@ -180,7 +180,7 @@ export default async function AdminPage() {
           />
 
           {/* Role Management */}
-          <RoleManagement user={recentUser } />
+          <RoleManagement user={recentUsers } />
 
           {/* Three-Tier Report Generation */}
           <Card className="bg-white shadow-lg">
