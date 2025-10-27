@@ -1,131 +1,99 @@
-
-// Reset password API endpoint
-export const dynamic = "force-dynamic";
-
+// app/api/reset-password/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { db } from '@/lib/db';
-import { PasswordUtils, TokenUtils } from '@/lib/auth-utils';
-import { RateLimiter } from '@/lib/rate-limit';
-import { EmailService } from '@/lib/email-service';
+import { z } from 'zod';
+import { hash } from 'bcryptjs';
 
-const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/,
-      'Password must contain uppercase, lowercase, number, and special character'
-    ),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
+const Body = z.object({
+  token: z.string().min(1, 'Missing token'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-export async function POST(request: NextRequest) {
+function badRequest(message: string, extra?: any) {
+  return NextResponse.json({ success: false, error: message, ...extra }, { status: 400 });
+}
+function unauthorized(message = 'Unauthorized') {
+  return NextResponse.json({ success: false, error: message }, { status: 401 });
+}
+
+export async function POST(req: NextRequest) {
   try {
-    const clientIP = RateLimiter.getClientIP(request);
-    
-    // Check rate limiting
-    const rateLimitResult = await RateLimiter.checkRateLimit('passwordReset', clientIP, 'ip');
-    
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { 
-          error: 'Too many password reset attempts. Please try again later.',
-          retryAfter: rateLimitResult.retryAfter 
-        },
-        { 
-          status: 429,
-          headers: {
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600'
-          }
-        }
-      );
+    const json = await req.json().catch(() => ({}));
+    const parsed = Body.safeParse(json);
+    if (!parsed.success) {
+      const first = parsed.error.issues?.[0]?.message ?? 'Invalid payload';
+      return badRequest(first, { details: parsed.error.format() });
     }
+    const { token, password } = parsed.data;
 
-    const body = await request.json();
-    
-    // Validate input
-    const validationResult = resetPasswordSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      );
-    }
-
-    const { token, password } = validationResult.data;
-    const hashedToken = TokenUtils.hashToken(token);
-
-    // Find password reset token
-    const resetToken = await db.password_reset_tokens.findFirst({
-      where: {
-        token: hashedToken,
-        expires: { gt: new Date() },
-        used: false,
-      },
-      include: {
-        users: true,
+    // 1) Look up reset token (unique by token)
+    const resetToken = await db.password_reset_tokens.findUnique({
+      where: { token }, // token is @unique in your schema
+      select: {
+        id: true,
+        token: true,
+        userId: true,
+        expires: true,
+        used: true,
       },
     });
 
     if (!resetToken) {
-      return NextResponse.json(
-        { error: 'Invalid or expired reset token' },
-        { status: 400 }
-      );
+      return unauthorized('Invalid or unknown reset token.');
+    }
+    if (resetToken.used) {
+      return unauthorized('This reset token has already been used.');
+    }
+    if (resetToken.expires <= new Date()) {
+      return unauthorized('This reset token has expired.');
     }
 
-    // Hash new password
-    const hashedPassword = await PasswordUtils.hash(password);
+    // 2) Ensure user exists
+    const user = await db.user.findUnique({
+      where: { id: resetToken.userId },
+      select: { id: true, email: true },
+    });
+    if (!user) {
+      return unauthorized('User not found for this token.');
+    }
 
-    // Update user password and invalidate sessions
+    // 3) Hash new password
+    const hashed = await hash(password, 12);
+
+    // 4) Apply updates in a transaction:
+    //    - update user password (+ passwordChangedAt, + bump tokenVersion)
+    //    - invalidate all existing sessions for this user
+    //    - mark token as used
     await db.$transaction([
       db.user.update({
-        where: { id: resetToken.userId },
+        where: { id: user.id },
         data: {
-          password: hashedPassword,
+          password: hashed,
           passwordChangedAt: new Date(),
-          tokenVersion: { increment: 1 }, // Invalidate existing sessions
-          loginAttempts: 0, // Reset login attempts
-          lockoutUntil: null,
+          tokenVersion: { increment: 1 }, // useful if you also include version in your sessions/JWT logic
         },
+      }),
+      db.session.deleteMany({
+        where: { userId: user.id },
       }),
       db.password_reset_tokens.update({
         where: { id: resetToken.id },
         data: { used: true },
       }),
-      // Invalidate all existing sessions for this user
-      db.sessions.deleteMany({
-        where: { userId: resetToken.userId },
-      }),
     ]);
 
-    // Send confirmation email
-    try {
-      await EmailService.sendPasswordChangeConfirmation(
-        resetToken.users.email,
-        resetToken.users.firstName
-      );
-    } catch (emailError) {
-      console.error('Failed to send password change confirmation:', emailError);
-      // Don't fail the password reset if email fails
-    }
-
     return NextResponse.json({
-      message: 'Password reset successfully. You can now log in with your new password.',
+      success: true,
+      message: 'Password has been reset successfully.',
     });
-
-  } catch (error) {
-    console.error('Password reset error:', error);
-    
+  } catch (err: any) {
+    console.error('[reset-password] error:', err);
     return NextResponse.json(
-      { error: 'An unexpected error occurred. Please try again.' },
+      { success: false, error: err?.message ?? 'Internal error' },
       { status: 500 }
     );
   }
