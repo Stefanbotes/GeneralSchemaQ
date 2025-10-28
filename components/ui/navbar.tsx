@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,7 @@ function classNames(...xs: Array<string | false | null | undefined>) {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const authed = status === 'authenticated';
 
@@ -163,7 +164,12 @@ export default function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-red-600 focus:text-red-600 cursor-pointer"
-                    onClick={() => signOut({ callbackUrl: origin + '/' })}
+                    onClick={async () => {
+                      // Prevent NextAuth from constructing a cross-host URL
+                      await signOut({ redirect: false });
+                      // Then navigate yourself on the SAME host
+                      router.push(origin + '/');
+                    }}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign out
