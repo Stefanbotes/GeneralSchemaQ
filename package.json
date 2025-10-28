@@ -1,4 +1,6 @@
 {
+  "name": "app",
+  "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "prisma db push --accept-data-loss && next build",
@@ -7,9 +9,13 @@
     "postinstall": "prisma generate",
     "vercel:build": "prisma generate && prisma db push --accept-data-loss && next build"
   },
+  "prisma": {
+    "seed": "tsx --require dotenv/config scripts/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "6.7.0",
     "prisma": "6.7.0",
+    "cmdk": "1.0.0",
 
     "@floating-ui/react": "0.26.0",
     "@headlessui/react": "1.7.18",
@@ -114,5 +120,12 @@
     "ts-node": "10.9.2",
     "tsx": "4.20.3",
     "typescript": "5.2.2"
-  }
+  },
+  "browserslist": [
+    "ie >= 11",
+    "> 0.5%",
+    "last 2 versions",
+    "not dead"
+  ]
 }
+
