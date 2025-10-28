@@ -6,6 +6,7 @@ import { hash } from 'bcryptjs';
 import { createEmailVerificationToken } from '@/lib/email-service';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -26,9 +27,9 @@ export async function POST(req: Request) {
     }
 
     const { firstName, lastName, email, password } = parsed.data;
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
 
-    // Ensure delegate is correct: db.user
+    // Check existing user
     const existing = await db.user.findUnique({
       where: { email: normalizedEmail },
       select: { id: true },
@@ -49,7 +50,13 @@ export async function POST(req: Request) {
         lastName: lastName.trim(),
         password: passwordHash,
         role: 'CLIENT',
-        emailVerified: null,   // Date | null in your schema
+
+        // ⛳ TEMP UNBLOCKER:
+        // Your live DB currently has users.emailVerified as NOT NULL.
+        // Setting it to a Date satisfies the constraint so signup works.
+        // (Later, once the DB column is nullable, you can change this back to null.)
+        emailVerified: new Date(),
+
         tokenVersion: 0,
       },
       select: {
@@ -60,29 +67,34 @@ export async function POST(req: Request) {
       },
     });
 
-    const baseUrl =
+    // Work out a base URL that always exists
+    const envBase =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.NEXTAUTH_URL ||
       '';
+    const origin = (() => {
+      try { return new URL(req.url).origin; } catch { return ''; }
+    })();
+    const baseUrl = envBase || origin;
 
+    // Create email verification link (still generated; you can ignore it if you’re treating users as verified)
     const { verifyUrl } = await createEmailVerificationToken({
       email: user.email,
       baseUrl,
       expiresInMinutes: 60,
     });
 
-    // TODO: send email via provider. For now, log link in server logs.
+    // For now, just log the link (or send via your provider)
     console.log('[Signup] verification link:', verifyUrl);
 
     return NextResponse.json({
       success: true,
-      message: 'Account created. Please check your email for a verification link.',
+      message: 'Account created.',
     });
   } catch (err: any) {
     // Prisma error hygiene
     const code = err?.code;
     if (code === 'P2002') {
-      // Unique constraint (email)
       return NextResponse.json(
         { success: false, message: 'Email is already registered.' },
         { status: 409 }
@@ -93,7 +105,6 @@ export async function POST(req: Request) {
       {
         success: false,
         message: 'Signup failed.',
-        // surface minimal diagnostics to help us fix fast in Vercel logs:
         diagnostics: { code: err?.code, meta: err?.meta, message: err?.message },
       },
       { status: 500 }
