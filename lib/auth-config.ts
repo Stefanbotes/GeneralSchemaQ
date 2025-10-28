@@ -1,9 +1,13 @@
+// lib/auth-config.ts
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { db } from "./db";
 
 export const authOptions: NextAuthOptions = {
+  // Ensures Vercel previews use the incoming request host if env is missing/mis-set
+  trustHost: true,
+
   // --- Core session / security setup ---
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
@@ -74,25 +78,20 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    /**
-     * --- Redirect guard to keep users on same deploy (fixes preview→prod jump) ---
-     */
+    // Keep users on the same deploy (preview/prod/local) during redirects
     async redirect({ url, baseUrl }) {
+      // Relative URLs → same host
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Absolute URLs → only allow if same origin
       try {
-        // Relative URLs → stay on same host
-        if (url.startsWith("/")) return `${baseUrl}${url}`;
-
-        // Absolute but same-origin URLs → allow
         const u = new URL(url);
         const b = new URL(baseUrl);
         if (u.origin === b.origin) return url;
-
-        // Otherwise fallback to current deploy base
-        return baseUrl;
       } catch {
-        // In case URL constructor fails, safe fallback
-        return baseUrl;
+        /* ignore */
       }
+      // Otherwise, stay on current deploy
+      return baseUrl;
     },
   },
 };
