@@ -151,15 +151,15 @@ export function generateEnhancedTier2Report(analysis: AnyRecord, options: Enhanc
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color:#1f2937; background:#f7fafc; max-width:920px; margin:0 auto; padding:20px; }
     .report { background:#fff; padding:50px; border-radius:12px; box-shadow:0 10px 15px rgba(0,0,0,.08); border:1px solid #e5e7eb; }
-    .hdr { text-align:center; border-bottom:3px solid #3b82f6; padding-bottom:24px; margin-bottom:36px; }
-    .logo { font-size:28px; font-weight:800; color:#2563eb; margin-bottom:8px; }
+    .hdr { text-align:center; border-bottom:3px solid bg-primary; padding-bottom:24px; margin-bottom:36px; }
+    .logo { font-size:28px; font-weight:800; color:bg-primary; margin-bottom:8px; }
     .meta p { margin:4px 0; color:#4b5563; }
-    .card { border:2px solid #3b82f6; border-radius:12px; padding:26px; margin:24px 0; background:linear-gradient(135deg,#ebf8ff 0%, #f0fff4 100%); }
+    .card { border:2px solid bg-primary; border-radius:12px; padding:26px; margin:24px 0; background:linear-gradient(135deg,#ebf8ff 0%, #f0fff4 100%); }
     .row { display:flex; align-items:center; gap:16px; }
-    .badge { background:#3b82f6; color:#fff; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; }
+    .badge { background:bg-primary; color:#fff; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; }
     .title { font-size:22px; font-weight:700; color:#1f2937; }
     .subtle { font-size:14px; color:#6b7280; font-style:italic; }
-    .section { background:#f8fafc; padding:20px; border-radius:8px; margin:18px 0; border-left:4px solid #3b82f6; }
+    .section { background:#f8fafc; padding:20px; border-radius:8px; margin:18px 0; border-left:4px solid bg-primary; }
     .coach { background:linear-gradient(135deg,#fef5e7 0%, #f0fff4 100%); padding:20px; border-radius:8px; border-left:4px solid #f59e0b; margin:18px 0; }
     .dev { background:linear-gradient(135deg,#f0f9ff 0%, #fef3c7 100%); padding:20px; border-radius:8px; border-left:4px solid #0284c7; margin:18px 0; }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:14px; }
