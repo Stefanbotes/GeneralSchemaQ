@@ -26,6 +26,10 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const authed = status === 'authenticated';
 
+  // --- Keep callbacks on the same deploy (preview/prod/local) ---
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const returnTo = origin + (pathname || '/');
+
   // Build safe name / initials without assuming firstName/lastName types
   const displayName = useMemo(() => {
     const u = session?.user;
@@ -98,80 +102,5 @@ export default function Navbar() {
           {/* Right: Auth / Profile */}
           <div className="flex items-center gap-2">
             {!authed ? (
-              <Button onClick={() => signIn()} size="sm" className="gap-2">
-                <LogIn className="h-4 w-4" />
-                Sign in
-              </Button>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <User className="h-4 w-4" />
-                    <span className="hidden sm:inline">{displayName}</span>
-                    <span className="inline sm:hidden rounded-full bg-[#fcd0b1]-600 text-white h-6 w-6 grid place-items-center text-xs">
-                      {initials}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="flex flex-col">
-                    <span className="font-medium">{displayName}</span>
-                    <span className="text-xs text-gray-500 truncate">{session?.user?.email}</span>
-                    <div className="mt-2 flex items-center gap-2">
-                      <Badge variant="outline">{role}</Badge>
-                      {isVerified ? (
-                        <Badge variant="secondary">Verified</Badge>
-                      ) : (
-                        <Badge variant="destructive">Unverified</Badge>
-                      )}
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-
-                  <Link href="/profile">
-                    <DropdownMenuItem className="cursor-pointer">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Profile
-                    </DropdownMenuItem>
-                  </Link>
-
-                  {coachLinks.map((l) => (
-                    <Link key={l.href} href={l.href}>
-                      <DropdownMenuItem className="cursor-pointer">
-                        {l.icon}
-                        {l.label}
-                      </DropdownMenuItem>
-                    </Link>
-                  ))}
-
-                  {adminLinks.map((l) => (
-                    <Link key={l.href} href={l.href}>
-                      <DropdownMenuItem className="cursor-pointer">
-                        {l.icon}
-                        {l.label}
-                      </DropdownMenuItem>
-                    </Link>
-                  ))}
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-red-600 focus:text-red-600 cursor-pointer"
-                    onClick={() => signOut({ callbackUrl: '/' })}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {/* Mobile menu button (if you have a sidebar/drawer) */}
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
+              <Button
+                onClick={() =>
