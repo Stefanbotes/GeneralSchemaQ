@@ -5,9 +5,6 @@ import { compare } from "bcryptjs";
 import { db } from "./db";
 
 export const authOptions: NextAuthOptions = {
-  // Ensures Vercel previews use the incoming request host if env is missing/mis-set
-  trustHost: true,
-
   // --- Core session / security setup ---
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
