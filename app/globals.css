@@ -2,28 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 
+  🌿 GENERAL SCHEMA THEME
+  Light: soft warm base (#FFF9F5)
+  Accent / Primary: deep teal (#095A62)
+*/
+
 @layer base {
   :root {
-    /* Light mode – calm, balanced, accessible */
-    --background: 24 60% 98%;         /* #FFF9F5 */
-    --foreground: 195 80% 10%;        /* deep teal text */
+    /* ===== LIGHT MODE ===== */
+    --background: 24 60% 98%;          /* #FFF9F5 warm white */
+    --foreground: 195 80% 10%;         /* deep teal text */
 
-    --card: 24 60% 98%;
+    --card: 24 60% 98%;                /* same as background */
     --card-foreground: 195 80% 10%;
 
     --popover: 24 60% 98%;
     --popover-foreground: 195 80% 10%;
 
-    --primary: 188 83% 21%;           /* #095A62 */
-    --primary-foreground: 24 60% 98%; /* off-white text on teal */
+    --primary: 188 83% 21%;            /* #095A62 deep teal */
+    --primary-foreground: 24 60% 98%;  /* warm off-white text */
 
-    --secondary: 188 30% 90%;         /* very light teal-tint background */
+    --secondary: 188 30% 90%;          /* soft teal-tinted bg */
     --secondary-foreground: 195 80% 15%;
 
-    --muted: 24 30% 92%;              /* subtle warm tone */
+    --muted: 24 30% 92%;               /* warm subtle tone */
     --muted-foreground: 195 20% 40%;
 
-    --accent: 188 35% 92%;
+    --accent: 24 65% 90%;              /* warm peach accent (≈ #fcd0b1) */
     --accent-foreground: 195 80% 15%;
 
     --destructive: 0 70% 55%;
@@ -37,9 +43,9 @@
   }
 
   .dark {
-    /* Dark mode – softer contrast, teal highlights */
-    --background: 195 60% 6%;         /* very dark teal */
-    --foreground: 24 60% 98%;         /* warm light text */
+    /* ===== DARK MODE ===== */
+    --background: 195 60% 6%;          /* dark teal surface */
+    --foreground: 24 60% 98%;          /* soft warm text */
 
     --card: 195 60% 8%;
     --card-foreground: 24 60% 98%;
@@ -47,7 +53,7 @@
     --popover: 195 60% 8%;
     --popover-foreground: 24 60% 98%;
 
-    --primary: 188 83% 35%;           /* lighter teal for dark mode */
+    --primary: 188 83% 35%;            /* slightly lighter teal for dark bg */
     --primary-foreground: 195 60% 6%;
 
     --secondary: 195 25% 20%;
@@ -56,7 +62,7 @@
     --muted: 195 25% 20%;
     --muted-foreground: 195 15% 65%;
 
-    --accent: 195 25% 20%;
+    --accent: 24 60% 40%;              /* muted peach highlight */
     --accent-foreground: 24 60% 98%;
 
     --destructive: 0 55% 45%;
@@ -68,17 +74,41 @@
   }
 }
 
+/* Apply the theme */
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }
-/* at very end of globals.css */
-@layer base {
-  :root { /* your light tokens */ }
-  .dark { /* your dark tokens */ }
+
+/* 
+  ===== OPTIONAL EXTRAS =====
+  If you want to override default link or button colors globally.
+*/
+a {
+  @apply text-primary hover:text-primary/80 transition-colors;
 }
 
+/* Buttons with solid teal and peach accent */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.btn-accent {
+  @apply bg-accent text-accent-foreground hover:bg-accent/80;
+}
+
+/* Debug helper: background color preview (remove later)
+body::before {
+  content: "Current Theme Colors";
+  display: block;
+  text-align: center;
+  padding: 0.5rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+*/
