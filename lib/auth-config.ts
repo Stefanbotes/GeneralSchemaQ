@@ -1,94 +1,72 @@
 // lib/auth-config.ts
-import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
-import { db } from "./db";
+import type { NextAuthOptions } from "next-auth"
+import Credentials from "next-auth/providers/credentials"
+import { PrismaClient } from "@prisma/client"
+import { compare } from "bcryptjs" // or whatever you use
+
+const prisma = new PrismaClient()
 
 export const authOptions: NextAuthOptions = {
-  // --- Core session / security setup ---
   session: { strategy: "jwt" },
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: { signIn: "/auth/login" },
+  pages: { signIn: "/auth/signin" },
 
-  // --- Auth provider(s) ---
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
+    Credentials({
+      name: "Email & Password",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
-        }
-
-        const user = await db.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            password: true,
-            role: true,
-            emailVerified: true, // Date | null
-            tokenVersion: true,
-          },
-        });
-
-        if (!user) throw new Error("Invalid credentials");
-        const ok = await compare(credentials.password, user.password);
-        if (!ok) throw new Error("Invalid credentials");
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email,
-          role: user.role,
-          emailVerified: user.emailVerified,
-          tokenVersion: user.tokenVersion,
-        } as any;
+      async authorize(creds) {
+        if (!creds?.email || !creds?.password) return null
+        const user = await prisma.user.findUnique({ where: { email: creds.email.toLowerCase() } })
+        if (!user) return null
+        const ok = await compare(creds.password, user.password)
+        if (!ok) return null
+        // Return minimal safe fields
+        return { id: user.id, email: user.email, role: user.role, tokenVersion: user.tokenVersion }
       },
     }),
   ],
 
-  // --- Callbacks ---
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        (token as any).id = (user as any).id;
-        (token as any).role = (user as any).role ?? "CLIENT";
-        (token as any).emailVerified = (user as any).emailVerified ?? null;
-        (token as any).tokenVersion = (user as any).tokenVersion ?? 0;
+    // Put role & tokenVersion on the JWT
+    async jwt({ token, user, trigger }) {
+      // On initial sign-in, copy from returned user
+      if (user?.email) {
+        token.email = user.email
+        // @ts-ignore - add custom values
+        token.role = (user as any).role
+        // @ts-ignore
+        token.tokenVersion = (user as any).tokenVersion ?? 0
       }
-      return token;
+
+      // Always refresh from DB so role changes are reflected after promote
+      if (token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: String(token.email).toLowerCase() },
+          select: { role: true, tokenVersion: true },
+        })
+        if (dbUser) {
+          // @ts-ignore
+          token.role = dbUser.role
+          // @ts-ignore
+          token.tokenVersion = dbUser.tokenVersion ?? 0
+        }
+      }
+      return token
     },
 
+    // Expose role on session.user.role
     async session({ session, token }) {
-      session.user = {
-        ...session.user,
-        id: (token as any).id,
-        role: (token as any).role,
-        emailVerified: (token as any).emailVerified ?? null,
-      };
-      return session;
-    },
-
-    // Keep users on the same deploy (preview/prod/local) during redirects
-    async redirect({ url, baseUrl }) {
-      // Relative URLs → same host
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Absolute URLs → only allow if same origin
-      try {
-        const u = new URL(url);
-        const b = new URL(baseUrl);
-        if (u.origin === b.origin) return url;
-      } catch {
-        /* ignore */
+      if (session.user) {
+        // @ts-ignore
+        session.user.role = token.role || "CLIENT"
+        // Optional: expose tokenVersion if you use it elsewhere
+        // @ts-ignore
+        session.user.tokenVersion = token.tokenVersion ?? 0
       }
-      // Otherwise, stay on current deploy
-      return baseUrl;
+      return session
     },
   },
-};
+}
