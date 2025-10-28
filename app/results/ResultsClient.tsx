@@ -100,7 +100,7 @@ export default function ResultsClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#fcd0b1]-50 to-slate-100 p-6">
       <div className="max-w-2xl mx-auto">
         <Card className="bg-white shadow-xl">
           <CardHeader className="text-center">

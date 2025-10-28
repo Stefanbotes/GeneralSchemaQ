@@ -74,7 +74,7 @@ export default function Navbar() {
         <div className="flex h-14 items-center justify-between">
           {/* Left: Brand */}
           <div className="flex items-center gap-4">
-            <Link href="/" className="font-semibold text-indigo-700">
+            <Link href="/" className="font-semibold text-[#fcd0b1]-700">
               Inner Personas
             </Link>
 
@@ -108,7 +108,7 @@ export default function Navbar() {
                   <Button variant="outline" size="sm" className="gap-2">
                     <User className="h-4 w-4" />
                     <span className="hidden sm:inline">{displayName}</span>
-                    <span className="inline sm:hidden rounded-full bg-indigo-600 text-white h-6 w-6 grid place-items-center text-xs">
+                    <span className="inline sm:hidden rounded-full bg-[#fcd0b1]-600 text-white h-6 w-6 grid place-items-center text-xs">
                       {initials}
                     </span>
                   </Button>

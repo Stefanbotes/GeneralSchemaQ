@@ -32,7 +32,7 @@ export default async function AdminPage() {
 
   if (!isAdminAccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-[#fcd0b1]-100 p-6 flex items-center justify-center">
         <Card className="bg-white shadow-lg max-w-md w-full">
           <CardHeader>
             <CardTitle className="flex items-center text-red-600">
@@ -110,7 +110,7 @@ export default async function AdminPage() {
     });
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-[#fcd0b1]-100 p-6">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -128,7 +128,7 @@ export default async function AdminPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-indigo-600">{totaluser}</div>
+                <div className="text-2xl font-bold text-[#fcd0b1]-600">{totaluser}</div>
               </CardContent>
             </Card>
 
@@ -204,9 +204,9 @@ export default async function AdminPage() {
                         Auto-downloaded on completion. Gentle, strengths-focused (2-3 paragraphs)
                       </p>
                     </div>
-                    <div className="p-3 bg-indigo-100 rounded">
+                    <div className="p-3 bg-[#fcd0b1]-100 rounded">
                       <strong>Tier 2: Leadership</strong>
-                      <p className="text-indigo-700 text-xs mt-1">
+                      <p className="text-[#fcd0b1]-700 text-xs mt-1">
                         Professional development focus. Inner Personas (8-12 pages)
                       </p>
                     </div>
@@ -228,7 +228,7 @@ export default async function AdminPage() {
           <Card className="bg-white shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <UserIcon className="h-5 w-5 mr-2 text-indigo-600" />
+                <UserIcon className="h-5 w-5 mr-2 text-[#fcd0b1]-600" />
                 Recent Users
               </CardTitle>
               <CardDescription>Latest user registrations and their status</CardDescription>
@@ -286,7 +286,7 @@ export default async function AdminPage() {
     console.error('Admin dashboard error:', error);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-[#fcd0b1]-100 p-6 flex items-center justify-center">
         <Card className="bg-white shadow-lg max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center text-red-600">

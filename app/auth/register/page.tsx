@@ -120,7 +120,7 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to home button */}
         <div className="mb-6">
@@ -135,7 +135,7 @@ function RegisterForm() {
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
               Create Account
             </CardTitle>
             <CardDescription>
@@ -275,7 +275,7 @@ function RegisterForm() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700"
+                className="w-full bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -302,14 +302,14 @@ function RegisterForm() {
 
 function RegisterPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
               Create Account
             </CardTitle>
             <CardDescription>Loading...</CardDescription>

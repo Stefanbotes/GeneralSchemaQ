@@ -19,11 +19,11 @@ export default async function ProfilePage() {
   const isVerified = Boolean(user?.emailVerified); // Date | null -> boolean
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#fcd0b1]-50 to-[#fcd0b1]-100 p-6">
       <div className="max-w-3xl mx-auto">
         <Card className="bg-white shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-indigo-700">Your Profile</CardTitle>
+            <CardTitle className="text-xl font-bold text-[#fcd0b1]-700">Your Profile</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

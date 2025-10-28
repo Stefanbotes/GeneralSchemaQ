@@ -58,7 +58,7 @@ export function RoleManagement({ users: initialUsers }: RoleManagementProps) {
       case 'ADMIN':
         return 'bg-red-100 text-red-800';
       case 'COACH':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-[#fcd0b1]-100 text-[#fcd0b1]-800';
       case 'CLIENT':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -70,7 +70,7 @@ export function RoleManagement({ users: initialUsers }: RoleManagementProps) {
     <Card className="bg-white shadow-lg border">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Settings className="h-5 w-5 mr-2 text-indigo-600" />
+          <Settings className="h-5 w-5 mr-2 text-[#fcd0b1]-600" />
           Role Management (Users: {users?.length || 0})
         </CardTitle>
         <CardDescription>Manage user roles and access permissions</CardDescription>

@@ -81,7 +81,7 @@ function VerifyEmailForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to login button */}
         <div className="mb-6">
@@ -96,7 +96,7 @@ function VerifyEmailForm() {
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
               Email Verification
             </CardTitle>
             <CardDescription>
@@ -164,7 +164,7 @@ function VerifyEmailForm() {
                 </p>
                 <Button
                   onClick={() => router.push('/auth/login')}
-                  className="w-full mt-4 bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700"
+                  className="w-full mt-4 bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700"
                 >
                   Continue to Sign In
                 </Button>
@@ -220,14 +220,14 @@ function VerifyEmailForm() {
 // Loading component for suspense fallback
 function VerifyEmailPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
               Email Verification
             </CardTitle>
             <CardDescription>

@@ -153,7 +153,7 @@ export function AdminClient({ stats }: AdminClientProps) {
       </Card>
 
       {/* Quick Stats Summary */}
-      <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+      <Card className="bg-gradient-to-r from-[#fcd0b1]-500 to-purple-600 text-white">
         <CardHeader>
           <CardTitle className="text-white">Current Database Stats</CardTitle>
         </CardHeader>
@@ -161,19 +161,19 @@ export function AdminClient({ stats }: AdminClientProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold">{stats.totaluser}</div>
-              <div className="text-indigo-100">Total Users</div>
+              <div className="text-[#fcd0b1]-100">Total Users</div>
             </div>
             <div>
               <div className="text-2xl font-bold">{stats.totalAssessments}</div>
-              <div className="text-indigo-100">Assessments</div>
+              <div className="text-[#fcd0b1]-100">Assessments</div>
             </div>
             <div>
               <div className="text-2xl font-bold">{stats.verifieduser}</div>
-              <div className="text-indigo-100">Verified</div>
+              <div className="text-[#fcd0b1]-100">Verified</div>
             </div>
             <div>
               <div className="text-2xl font-bold">{stats.unverifieduser}</div>
-              <div className="text-indigo-100">Pending</div>
+              <div className="text-[#fcd0b1]-100">Pending</div>
             </div>
           </div>
         </CardContent>

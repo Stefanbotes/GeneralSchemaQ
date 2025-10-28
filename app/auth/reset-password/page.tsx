@@ -107,7 +107,7 @@ function ResetPasswordForm() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <Card className="bg-white shadow-xl">
             <CardHeader className="space-y-4 text-center">
@@ -131,7 +131,7 @@ function ResetPasswordForm() {
               
               <Button
                 onClick={() => router.push('/auth/login')}
-                className="w-full bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700"
+                className="w-full bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700"
               >
                 Continue to Sign In
               </Button>
@@ -143,7 +143,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to login button */}
         <div className="mb-6">
@@ -158,7 +158,7 @@ function ResetPasswordForm() {
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
               Set New Password
             </CardTitle>
             <CardDescription>
@@ -242,7 +242,7 @@ function ResetPasswordForm() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r bg-primary)600 to-indigo-600 hover:bg-primary)700 hover:to-indigo-700"
+                className="w-full bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700"
                 disabled={isLoading || !token}
               >
                 {isLoading ? 'Resetting Password...' : 'Reset Password'}
@@ -258,14 +258,14 @@ function ResetPasswordForm() {
 // Loading component for suspense fallback
 function ResetPasswordPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-indigo-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
               Set New Password
             </CardTitle>
             <CardDescription>
