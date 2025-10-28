@@ -247,7 +247,7 @@ Once configured, your app will send:
 ### 1. Verification Emails
 - **When:** New user registers
 - **Expiry:** 24 hours
-- **Design:** Blue gradient header, professional layout
+- **Design:** bg-background gradient header, professional layout
 - **Content:** Welcome message, verification button, security notice
 
 ### 2. Password Reset Emails

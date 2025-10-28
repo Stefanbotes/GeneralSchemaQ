@@ -609,7 +609,7 @@ You're almost there! Time to launch your app. 🎉
 
 1. **If you're still on the Configure Project page:**
    - Scroll to the bottom
-   - Click the big blue **"Deploy"** button
+   - Click the big bg-background **"Deploy"** button
 
 2. **If you've already navigated away:**
    - Go to your project on Vercel

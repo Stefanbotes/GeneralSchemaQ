@@ -301,7 +301,7 @@ export function AssessmentClient() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-indigo-100">
         <Card className="bg-white shadow-xl max-w-md w-full">
           <CardContent className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bg-background-600 mx-auto mb-4"></div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Loading Assessment</h3>
             <p className="text-gray-500">Preparing your 108-question Inner Persona assessment...</p>
           </CardContent>
