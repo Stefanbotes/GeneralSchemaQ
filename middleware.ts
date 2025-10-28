@@ -1,135 +1,70 @@
+// remove /api/* from these lists
+const protectedRoutes = ['/dashboard','/assessment','/admin','/profile']
+const adminRoutes = ['/admin']
+const coachRoutes = ['/coach']
+const publicRoutes = ['/', '/auth/login','/auth/register','/auth/forgot-password','/auth/reset-password','/auth/verify-email']
 
-// Security middleware for authentication and CSRF protection
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import { SecurityUtils } from './lib/auth-utils';
-
-// Protected routes that require authentication
-const protectedRoutes = [
-  '/dashboard',
-  '/assessment',
-  '/admin',
-  '/profile',
-  '/api/assessment',
-  '/api/admin',
-];
-
-// Admin-only routes
-const adminRoutes = [
-  '/admin',
-  '/api/admin',
-];
-
-// Coach or higher routes
-const coachRoutes = [
-  '/coach',
-  '/api/coach',
-];
-
-// Public routes that don't require authentication
-const publicRoutes = [
-  '/',
-  '/auth/login',
-  '/auth/register',
-  '/auth/forgot-password',
-  '/auth/reset-password',
-  '/auth/verify-email',
-  '/api/auth',
-  '/api/signup',
-  '/api/verify-email',
-  '/api/forgot-password',
-  '/api/reset-password',
-];
+function withSecurityHeaders(res: NextResponse) {
+  const headers = SecurityUtils.getSecurityHeaders()
+  for (const [k, v] of Object.entries(headers)) res.headers.set(k, v as string)
+  return res
+}
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  const { pathname, search } = request.nextUrl
+  const baseResponse = withSecurityHeaders(NextResponse.next())
 
-  // Apply security headers
-  const response = NextResponse.next();
-  const securityHeaders = SecurityUtils.getSecurityHeaders();
-  
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-
-  // Skip middleware for public routes and static files
+  // early exit for public/static
   if (
-    publicRoutes.some(route => pathname.startsWith(route)) ||
+    publicRoutes.some(r => pathname.startsWith(r)) ||
     pathname.startsWith('/_next') ||
     pathname.includes('.') ||
     pathname === '/favicon.ico'
   ) {
-    return response;
+    return baseResponse
   }
 
   try {
-    // Get the JWT token
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
 
-    // Check if route requires authentication
-    const requiresAuth = protectedRoutes.some(route => pathname.startsWith(route));
-    
+    const requiresAuth = protectedRoutes.some(r => pathname.startsWith(r))
     if (requiresAuth && !token) {
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('callbackUrl', pathname);
-      return NextResponse.redirect(loginUrl);
+      const loginUrl = new URL('/auth/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', pathname + search)
+      return withSecurityHeaders(NextResponse.redirect(loginUrl))
     }
 
     if (token) {
-      // Check email verification
-      if (!token.emailVerified && !pathname.startsWith('/auth/verify-email')) {
-        const verifyUrl = new URL('/auth/verify-email', request.url);
-        return NextResponse.redirect(verifyUrl);
-      }
+      // ⚠️ Remove this unless you've added emailVerified to the JWT in your NextAuth callbacks
+      // if (!token.emailVerified && !pathname.startsWith('/auth/verify-email')) {
+      //   return withSecurityHeaders(NextResponse.redirect(new URL('/auth/verify-email', request.url)))
+      // }
 
-      // Check role-based access
-      if (adminRoutes.some(route => pathname.startsWith(route))) {
-        if (token.role !== 'ADMIN') {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
+      if (adminRoutes.some(r => pathname.startsWith(r)) && token.role !== 'ADMIN') {
+        return withSecurityHeaders(NextResponse.redirect(new URL('/dashboard', request.url)))
       }
-
-      if (coachRoutes.some(route => pathname.startsWith(route))) {
-        if (token.role !== 'COACH' && token.role !== 'ADMIN') {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
+      if (coachRoutes.some(r => pathname.startsWith(r)) && token.role !== 'COACH' && token.role !== 'ADMIN') {
+        return withSecurityHeaders(NextResponse.redirect(new URL('/dashboard', request.url)))
       }
-
-      // Redirect authenticated users away from auth pages
       if (pathname.startsWith('/auth/') && pathname !== '/auth/verify-email') {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+        return withSecurityHeaders(NextResponse.redirect(new URL('/dashboard', request.url)))
       }
     }
 
-    return response;
-  } catch (error) {
-    console.error('Middleware error:', error);
-    
-    // On error, redirect to login for protected routes
-    if (protectedRoutes.some(route => pathname.startsWith(route))) {
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('callbackUrl', pathname);
-      return NextResponse.redirect(loginUrl);
+    return baseResponse
+  } catch (err) {
+    console.error('Middleware error:', err)
+    const needsAuth = protectedRoutes.some(r => pathname.startsWith(r))
+    if (needsAuth) {
+      const loginUrl = new URL('/auth/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', pathname + search)
+      return withSecurityHeaders(NextResponse.redirect(loginUrl))
     }
-    
-    return response;
+    return baseResponse
   }
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for:
-     * - /api/* (API routes)
-     * - /_next/static (static files)  
-     * - /_next/image (image optimization files)
-     * - /favicon.ico (favicon file)
-     * - Files with extensions
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)',
-  ],
-};
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)'],
+}
+
