@@ -337,7 +337,7 @@ export function AssessmentClient() {
                   <Label htmlFor="team">Team/Organization *</Label>
                   <Input id="team" name="team" value={bioData.team} onChange={handleBioChange} required />
                 </div>
-                <Button type="submit" className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700" size="lg">
+                <Button type="submit" className="w-full bg-gradient-to-r from-indigo-600 to-bg-background-600 hover:from-indigo-700 hover:to-bg-background-700" size="lg">
                   Begin Assessment
                 </Button>
               </form>
@@ -418,7 +418,7 @@ export function AssessmentClient() {
                 <Button
                   onClick={handleSubmit}
                   disabled={Object.keys(responses).length !== questions.length}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 flex items-center space-x-2"
+                  className="bg-gradient-to-r from-green-600 to-bg-background-600 hover:from-green-700 hover:to-bg-background-700 flex items-center space-x-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>Complete Assessment</span>
@@ -427,7 +427,7 @@ export function AssessmentClient() {
                 <Button
                   onClick={handleNext}
                   disabled={currentQuestions.filter((q) => responses[q.id]).length !== currentQuestions.length}
-                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 flex items-center space-x-2"
+                  className="bg-gradient-to-r from-indigo-600 to-bg-background-600 hover:from-indigo-700 hover:to-bg-background-700 flex items-center space-x-2"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-4 h-4" />

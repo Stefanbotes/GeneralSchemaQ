@@ -64,7 +64,7 @@ export default function HomePage() {
                   id="terms"
                   checked={agreedToTerms}
                   onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                  className="scale-125 accent-blue-500"
+                  className="scale-125 accent-bg-background-500"
                 />
                 <label htmlFor="terms" className="font-medium cursor-pointer">
                   I understand and agree to these terms
