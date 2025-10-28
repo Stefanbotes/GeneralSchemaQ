@@ -7,11 +7,11 @@ generator client {
   // remove this line entirely (Prisma will default to "native"), or keep just ["linux-musl"].
   binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
 }
-
 // ---------- Datasource ----------
 datasource db {
-  provider = "postgresql"
-  url      = env("PRISMA_DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")       // pooled for Prisma Client
+  directUrl = env("POSTGRES_URL_NON_POOLING")  // direct for migrations/scripts
 }
 
 // ======================================================
