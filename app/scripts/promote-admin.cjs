@@ -3,11 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = process.argv[2];
-  if (!email) {
-    console.error('Usage: node scripts/promote-admin.cjs <email>');
-    process.exit(1);
-  }
+const email = 'stefan@talentconnection.co.za';
   const normalized = email.toLowerCase();
 
   const user = await prisma.user.update({
