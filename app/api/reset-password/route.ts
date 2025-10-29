@@ -1,14 +1,17 @@
 // app/api/reset-password/route.ts
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { hash } from 'bcryptjs';
+import { hash as bcryptHash } from 'bcryptjs';
+import crypto from 'crypto';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 const schema = z.object({
   token: z.string().min(1, 'Reset token is required'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  // Optionally add confirmPassword here and compare if your UI sends it.
 });
 
 export async function POST(req: Request) {
@@ -22,9 +25,12 @@ export async function POST(req: Request) {
 
     const { token, password } = parsed.data;
 
-    // 1) Look up the reset token
+    // 1) Hash the plaintext token to match what we stored in DB
+    const hashed = crypto.createHash('sha256').update(token).digest('hex');
+
+    // 2) Look up the reset token by its *hashed* value
     const resetToken = await db.passwordResetToken.findUnique({
-      where: { token }, // token is unique in your schema
+      where: { token: hashed }, // token is UNIQUE in your schema
       select: {
         id: true,
         token: true,
@@ -41,7 +47,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2) Check expiry
+    // 3) Check expiry
     if (resetToken.expires && resetToken.expires.getTime() < Date.now()) {
       // Clean up expired token
       await db.passwordResetToken.delete({ where: { id: resetToken.id } });
@@ -51,7 +57,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3) Identify user (prefer userId; fall back to email if present)
+    // 4) Identify the user (prefer userId; fallback to email)
     const user =
       (resetToken.userId &&
         (await db.user.findUnique({
@@ -73,26 +79,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4) Hash new password
-    const passwordHash = await hash(password, 10);
+    // 5) Hash the new password
+    const passwordHash = await bcryptHash(password, 10);
 
-    // 5) Transaction: update password, delete tokens, invalidate sessions
+    // 6) Transaction: update password, delete tokens, invalidate sessions
     await db.$transaction([
       db.user.update({
         where: { id: user.id },
         data: {
           password: passwordHash,
           passwordChangedAt: new Date(),
-          tokenVersion: { increment: 1 }, // bump to invalidate any JWT-derived sessions if you gate by tokenVersion
+          tokenVersion: { increment: 1 }, // helps invalidate JWTs if you rely on tokenVersion
         },
       }),
-
-      // Remove the exact token (and optionally all tokens for the same email)
       db.passwordResetToken.delete({
         where: { id: resetToken.id },
       }),
-
-      // Invalidate all existing sessions for this user
       db.session.deleteMany({
         where: { userId: user.id },
       }),
@@ -108,3 +110,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, message: msg }, { status: 500 });
   }
 }
+
