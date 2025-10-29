@@ -1,62 +1,64 @@
-
-// Dashboard page for authenticated users
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { db } from '@/lib/db';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
-import { 
-  User, 
-  BarChart3, 
-  Clock, 
-  CheckCircle, 
-  PlayCircle, 
+// app/dashboard/page.tsx
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
+import { db } from "@/lib/db";
+import Link from "next/link";
+import {
+  User as UserIcon,
+  BarChart3,
+  Clock,
+  CheckCircle,
+  PlayCircle,
   Trophy,
   Calendar,
-  Users,
   Shield,
-  Download
-} from 'lucide-react';
+  Download,
+} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user) {
-    redirect('/auth/login');
+  // Must be logged in
+  if (!session?.user?.email) {
+    redirect("/auth/login");
   }
 
-  // Fetch user's assessment data
+  // Prefer userId, fallback to email
+  const where =
+    session.user.id && typeof session.user.id === "string"
+      ? { id: session.user.id }
+      : { email: session.user.email.toLowerCase() };
+
   const user = await db.user.findUnique({
-    where: { id: session.user.id },
+    where,
     include: {
-      assessments: {
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-      },
+      assessments: { orderBy: { createdAt: "desc" }, take: 5 },
     },
   });
 
   if (!user) {
-    redirect('/auth/login');
+    // Account not found (deleted/changed) → force re-auth
+    redirect("/auth/login");
   }
 
   const latestAssessment = user.assessments?.[0];
-  const completedAssessments = user.assessments?.filter((a: any) => a.status === 'COMPLETED').length || 0;
-  
-  // Calculate user stats
-  const memberSince = user.createdAt.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long' 
+  const completedAssessments =
+    user.assessments?.filter((a: any) => a.status === "COMPLETED").length || 0;
+
+  const memberSince = user.createdAt.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-[#fcd0b1]">
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Header */}
         <div className="mb-8">
@@ -64,7 +66,7 @@ export default async function DashboardPage() {
             Welcome back, {user.firstName}!
           </h1>
           <p className="text-gray-600">
-            Track your Inner Personadevelopment journey and explore your growth opportunities.
+            Track your Inner Persona development journey and explore your growth opportunities.
           </p>
         </div>
 
@@ -79,8 +81,8 @@ export default async function DashboardPage() {
                     {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
                   </p>
                 </div>
-                <div className="p-3 bg-primary100 rounded-full">
-                  <Shield className="h-6 w-6 text-primary600" />
+                <div className="p-3 bg-primary-100 rounded-full">
+                  <Shield className="h-6 w-6 text-primary-600" />
                 </div>
               </div>
             </CardContent>
@@ -119,12 +121,12 @@ export default async function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Status</p>
-                  <Badge variant={user.emailVerified ? 'default' : 'destructive'}>
-                    {user.emailVerified ? 'Verified' : 'Pending'}
+                  <Badge variant={user.emailVerified ? "default" : "destructive"}>
+                    {user.emailVerified ? "Verified" : "Pending"}
                   </Badge>
                 </div>
                 <div className="p-3 bg-orange-100 rounded-full">
-                  <User className="h-6 w-6 text-orange-600" />
+                  <UserIcon className="h-6 w-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
@@ -139,26 +141,27 @@ export default async function DashboardPage() {
                 <BarChart3 className="h-5 w-5 mr-2" />
                 Assessment Progress
               </CardTitle>
-              <CardDescription>
-                Your current Inner Personaassessment status
-              </CardDescription>
+              <CardDescription>Your current Inner Persona assessment status</CardDescription>
             </CardHeader>
             <CardContent>
               {latestAssessment ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Status</span>
-                    <Badge 
+                    <Badge
                       variant={
-                        latestAssessment.status === 'COMPLETED' ? 'default' :
-                        latestAssessment.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
+                        latestAssessment.status === "COMPLETED"
+                          ? "default"
+                          : latestAssessment.status === "IN_PROGRESS"
+                          ? "secondary"
+                          : "outline"
                       }
                     >
-                      {latestAssessment.status.replace('_', ' ').toLowerCase()}
+                      {latestAssessment.status.replace("_", " ").toLowerCase()}
                     </Badge>
                   </div>
-                  
-                  {latestAssessment.status === 'IN_PROGRESS' && (
+
+                  {latestAssessment.status === "IN_PROGRESS" && (
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Progress</span>
@@ -168,22 +171,26 @@ export default async function DashboardPage() {
                     </div>
                   )}
 
-                  {latestAssessment.status === 'COMPLETED' && latestAssessment.leadershipPersona && (
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center mb-2">
-                        <Trophy className="h-5 w-5 text-green-600 mr-2" />
-                        <span className="font-semibold text-green-800">Assessment Complete!</span>
+                  {latestAssessment.status === "COMPLETED" &&
+                    latestAssessment.leadershipPersona && (
+                      <div className="p-4 bg-green-50 rounded-lg">
+                        <div className="flex items-center mb-2">
+                          <Trophy className="h-5 w-5 text-green-600 mr-2" />
+                          <span className="font-semibold text-green-800">
+                            Assessment Complete!
+                          </span>
+                        </div>
+                        <p className="text-sm text-green-700">
+                          Your Inner Persona:{" "}
+                          <strong>{latestAssessment.leadershipPersona}</strong>
+                        </p>
                       </div>
-                      <p className="text-sm text-green-700">
-                        Your Inner Persona: <strong>{latestAssessment.leadershipPersona}</strong>
-                      </p>
-                    </div>
-                  )}
+                    )}
 
                   <div className="flex gap-2">
-                    {latestAssessment.status !== 'COMPLETED' ? (
+                    {latestAssessment.status !== "COMPLETED" ? (
                       <Link href="/assessment">
-                        <Button className="bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700">
+                        <Button className="bg-gradient-to-r from-primary-600 to-[#fcd0b1] hover:from-primary-700 hover:to-[#fcd0b1]">
                           <PlayCircle className="h-4 w-4 mr-2" />
                           Continue Assessment
                         </Button>
@@ -196,10 +203,18 @@ export default async function DashboardPage() {
                             View Results
                           </Button>
                         </Link>
-                        <form action="/api/reports/generate-tier1" method="POST" className="inline">
-                          <input type="hidden" name="userId" value={session.user.id} />
-                          <input type="hidden" name="assessmentId" value={latestAssessment.id} />
-                          <Button 
+                        <form
+                          action="/api/reports/generate-tier1"
+                          method="POST"
+                          className="inline"
+                        >
+                          <input type="hidden" name="userId" value={user.id} />
+                          <input
+                            type="hidden"
+                            name="assessmentId"
+                            value={latestAssessment.id}
+                          />
+                          <Button
                             type="submit"
                             className="bg-green-600 hover:bg-green-700 text-white"
                           >
@@ -214,17 +229,20 @@ export default async function DashboardPage() {
               ) : (
                 <div className="text-center py-6">
                   <div className="mb-4">
-                    <div className="w-16 h-16 bg-primary100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <PlayCircle className="h-8 w-8 text-primary600" />
+                    <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <PlayCircle className="h-8 w-8 text-primary-600" />
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Ready to Begin?</h3>
                     <p className="text-gray-600 mb-4">
-                      Start your Inner Personaassessment to discover your unique Inner Persona.
+                      Start your Inner Persona assessment to discover your unique Inner Persona.
                     </p>
                   </div>
-                  
+
                   <Link href="/assessment">
-                    <Button size="lg" className="bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700">
+                    <Button
+                      size="lg"
+                      className="bg-gradient-to-r from-primary-600 to-[#fcd0b1] hover:from-primary-700 hover:to-[#fcd0b1]"
+                    >
                       <PlayCircle className="h-4 w-4 mr-2" />
                       Start Assessment
                     </Button>
@@ -241,28 +259,32 @@ export default async function DashboardPage() {
                 <Clock className="h-5 w-5 mr-2" />
                 Recent Activity
               </CardTitle>
-              <CardDescription>
-                Your latest assessment activities
-              </CardDescription>
+              <CardDescription>Your latest assessment activities</CardDescription>
             </CardHeader>
             <CardContent>
               {user.assessments?.length > 0 ? (
                 <div className="space-y-4">
                   {(user.assessments ?? []).slice(0, 5).map((assessment: any) => (
-                    <div key={assessment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={assessment.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
                       <div>
-                        <p className="font-medium">Inner PersonaAssessment</p>
+                        <p className="font-medium">Inner Persona Assessment</p>
                         <p className="text-sm text-gray-600">
                           {assessment.createdAt.toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge 
+                      <Badge
                         variant={
-                          assessment.status === 'COMPLETED' ? 'default' :
-                          assessment.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
+                          assessment.status === "COMPLETED"
+                            ? "default"
+                            : assessment.status === "IN_PROGRESS"
+                            ? "secondary"
+                            : "outline"
                         }
                       >
-                        {assessment.status.replace('_', ' ').toLowerCase()}
+                        {assessment.status.replace("_", " ").toLowerCase()}
                       </Badge>
                     </div>
                   ))}
@@ -271,7 +293,9 @@ export default async function DashboardPage() {
                 <div className="text-center py-6 text-gray-500">
                   <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>No activity yet</p>
-                  <p className="text-sm">Start your first assessment to see your progress here</p>
+                  <p className="text-sm">
+                    Start your first assessment to see your progress here
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -285,9 +309,11 @@ export default async function DashboardPage() {
             <Link href="/assessment">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
-                  <PlayCircle className="h-8 w-8 mx-auto mb-2 text-primary600" />
+                  <PlayCircle className="h-8 w-8 mx-auto mb-2 text-primary-600" />
                   <h3 className="font-semibold">Start Assessment</h3>
-                  <p className="text-sm text-gray-600">Begin your Inner Personaevaluation</p>
+                  <p className="text-sm text-gray-600">
+                    Begin your Inner Persona evaluation
+                  </p>
                 </CardContent>
               </Card>
             </Link>
@@ -295,14 +321,14 @@ export default async function DashboardPage() {
             <Link href="/profile">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
-                  <User className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                  <UserIcon className="h-8 w-8 mx-auto mb-2 text-green-600" />
                   <h3 className="font-semibold">Update Profile</h3>
                   <p className="text-sm text-gray-600">Manage your account settings</p>
                 </CardContent>
               </Card>
             </Link>
 
-            {user.role === 'ADMIN' && (
+            {user.role === "ADMIN" && (
               <Link href="/admin">
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                   <CardContent className="p-6 text-center">
