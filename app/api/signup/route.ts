@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { hash } from 'bcryptjs';
 import { createEmailVerificationToken } from '@/lib/email-service';
-import { sendVerificationEmail } from '@/lib/mailer'; // make sure lib/mailer.ts exists
+import { sendVerificationEmail } from '@/lib/mailer';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -18,7 +18,7 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => ({} as unknown));
+    const body = await req.json().catch(() => ({}));
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -30,10 +30,9 @@ export async function POST(req: Request) {
     const { firstName, lastName, email, password } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user already exists
     const existing = await db.user.findUnique({
       where: { email: normalizedEmail },
-      select: { id: true },
+      select: { id: true, emailVerified: true },
     });
     if (existing) {
       return NextResponse.json(
@@ -42,7 +41,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Hash password and create user
     const passwordHash = await hash(password, 10);
 
     const user = await db.user.create({
@@ -52,63 +50,38 @@ export async function POST(req: Request) {
         lastName: lastName.trim(),
         password: passwordHash,
         role: 'CLIENT',
-
-        // TEMP: your live DB currently requires this column (NOT NULL)
-        // Set it to a Date so signup works immediately.
-        // Later, once you make the column nullable, change this to `null` to enforce verification.
+        // if you want “must click email” turn this to null
         emailVerified: new Date(),
-
         tokenVersion: 0,
       },
-      select: { id: true, email: true, firstName: true, lastName: true },
+      select: { id: true, email: true },
     });
 
-    // Base URL for links
-    const envBase =
+    const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.NEXTAUTH_URL ||
-      '';
-    const origin = (() => {
-      try {
-        return new URL(req.url).origin;
-      } catch {
-        return '';
-      }
-    })();
-    const baseUrl = envBase || origin;
+      new URL(req.url).origin;
 
-    // Create a verification link (even though user is verified for now)
     const { verifyUrl } = await createEmailVerificationToken({
       email: user.email,
       baseUrl,
       expiresInMinutes: 60,
     });
 
-    // Try to send email if SMTP is configured; otherwise just log it
-    const hasSmtp =
-      !!process.env.SMTP_HOST &&
-      !!process.env.SMTP_USER &&
-      !!process.env.SMTP_PASS;
-
-    if (hasSmtp) {
-      try {
-        await sendVerificationEmail(user.email, verifyUrl);
-      } catch (e) {
-        console.warn('[Signup] email send failed, falling back to log:', (e as Error)?.message);
-        console.log('[Signup] verification link:', verifyUrl);
-      }
-    } else {
+    // Try to send; log on fallback
+    try {
+      await sendVerificationEmail(user.email, verifyUrl);
+      console.log('[Signup] verification sent:', { to: user.email });
+    } catch (e: any) {
+      console.warn('[Signup] email send failed:', e?.message);
       console.log('[Signup] verification link:', verifyUrl);
     }
 
     return NextResponse.json({
       success: true,
-      message: hasSmtp
-        ? 'Account created. Please check your email for a verification link.'
-        : 'Account created. (Email service not configured; verify link logged on server.)',
+      message: 'Account created. Check your email for a verification link.',
     });
   } catch (err: any) {
-    // Prisma error hygiene
     if (err?.code === 'P2002') {
       return NextResponse.json(
         { success: false, message: 'Email is already registered.' },
@@ -117,11 +90,7 @@ export async function POST(req: Request) {
     }
     console.error('[Signup] error:', err);
     return NextResponse.json(
-      {
-        success: false,
-        message: 'Signup failed.',
-        diagnostics: { code: err?.code, meta: err?.meta, message: err?.message },
-      },
+      { success: false, message: 'Signup failed.' },
       { status: 500 }
     );
   }
