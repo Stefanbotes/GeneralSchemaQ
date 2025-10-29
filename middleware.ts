@@ -1,9 +1,8 @@
-// middleware.ts (at project root or /src)
+// middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { SecurityUtils } from "./lib/auth-utils";
 
-// Routes config (no /api/* here – matcher excludes it)
 const protectedRoutes = ["/dashboard", "/assessment", "/admin", "/profile"];
 const adminRoutes = ["/admin"];
 const coachRoutes = ["/coach"];
@@ -14,43 +13,56 @@ function withSecurityHeaders<T extends Response>(res: T): T {
   for (const [k, v] of Object.entries(headers)) res.headers.set(k, v as string);
   return res;
 }
+function startsWithSeg(pathname: string, base: string) {
+  return pathname === base || pathname.startsWith(base + "/");
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  // public/static early exit
-  if (
-    publicRoutes.some((r) => pathname.startsWith(r)) ||
+  if (request.method === "OPTIONS") {
+    return withSecurityHeaders(NextResponse.next());
+  }
+
+  const isPublic =
+    publicRoutes.some((r) => startsWithSeg(pathname, r)) ||
     pathname.startsWith("/_next") ||
     pathname.includes(".") ||
-    pathname === "/favicon.ico"
-  ) {
+    pathname === "/favicon.ico";
+
+  if (isPublic) {
     return withSecurityHeaders(NextResponse.next());
   }
 
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-    const requiresAuth = protectedRoutes.some((r) => pathname.startsWith(r));
+    const requiresAuth = protectedRoutes.some((r) => startsWithSeg(pathname, r));
     if (requiresAuth && !token) {
       const loginUrl = new URL("/auth/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname + search);
+      if (!startsWithSeg(pathname, "/auth/login")) {
+        loginUrl.searchParams.set("callbackUrl", pathname + search);
+      }
       return withSecurityHeaders(NextResponse.redirect(loginUrl));
     }
 
     if (token) {
-      // Only keep this if you actually put emailVerified on the JWT
-      // if (!token.emailVerified && !pathname.startsWith("/auth/verify-email")) {
+      // Optional email-verify gate:
+      // if (!token.emailVerified && !startsWithSeg(pathname, "/auth/verify-email")) {
       //   return withSecurityHeaders(NextResponse.redirect(new URL("/auth/verify-email", request.url)));
       // }
 
-      if (adminRoutes.some((r) => pathname.startsWith(r)) && token.role !== "ADMIN") {
+      const isAdminRoute = adminRoutes.some((r) => startsWithSeg(pathname, r));
+      if (isAdminRoute && token.role !== "ADMIN") {
         return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
       }
-      if (coachRoutes.some((r) => pathname.startsWith(r)) && token.role !== "COACH" && token.role !== "ADMIN") {
+
+      const isCoachRoute = coachRoutes.some((r) => startsWithSeg(pathname, r));
+      if (isCoachRoute && token.role !== "COACH" && token.role !== "ADMIN") {
         return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
       }
-      if (pathname.startsWith("/auth/") && pathname !== "/auth/verify-email") {
+
+      if (startsWithSeg(pathname, "/auth") && !startsWithSeg(pathname, "/auth/verify-email")) {
         return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
       }
     }
@@ -58,10 +70,12 @@ export async function middleware(request: NextRequest) {
     return withSecurityHeaders(NextResponse.next());
   } catch (err) {
     console.error("Middleware error:", err);
-    const needsAuth = protectedRoutes.some((r) => pathname.startsWith(r));
+    const needsAuth = protectedRoutes.some((r) => startsWithSeg(pathname, r));
     if (needsAuth) {
       const loginUrl = new URL("/auth/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname + search);
+      if (!startsWithSeg(pathname, "/auth/login")) {
+        loginUrl.searchParams.set("callbackUrl", pathname + search);
+      }
       return withSecurityHeaders(NextResponse.redirect(loginUrl));
     }
     return withSecurityHeaders(NextResponse.next());
