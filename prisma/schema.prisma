@@ -3,8 +3,8 @@
 // ======================================================
 generator client {
   provider = "prisma-client-js"
-  output   = "node_modules/@prisma/client"  // silences Prisma 7 deprecation
-  
+  // Explicit output silences Prisma 7 deprecation
+  output   = "node_modules/@prisma/client"
 }
 
 // ======================================================
@@ -123,7 +123,9 @@ model Assessment {
 
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   lasbiResponses    LasbiResponse[]
-  reportArtifact    ReportArtifact?
+
+  // 1–1 back relation to ReportArtifact (named for clarity)
+  reportArtifact    ReportArtifact?  @relation("AssessmentReportArtifact")
 
   @@index([userId, completedAt])
   @@index([status, completedAt])
@@ -225,7 +227,8 @@ model ReportArtifact {
   generatedAt     DateTime @default(now())
   generatedBy     String   // "system" or userId
 
-  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  // Owns the FK, named relation to Assessment
+  assessment      Assessment @relation("AssessmentReportArtifact", fields: [assessmentId], references: [id], onDelete: Cascade)
   user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -248,4 +251,3 @@ enum UserRole {
   COACH
   ADMIN
 }
-
