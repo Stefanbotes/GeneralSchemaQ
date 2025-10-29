@@ -25,21 +25,20 @@ type ReportUser = {
   role?: 'CLIENT' | 'COACH' | 'ADMIN' | string;
   emailVerified?: boolean | Date | null;
   createdAt?: string | Date;
-  assessments: CompletedAssessment[]; // most recent first (as selected in AdminPage)
+  assessments: CompletedAssessment[];
 };
 
 export interface ReportGenerationProps {
-  users: ReportUser[]; // <-- include `users`
+  users: ReportUser[];
 }
 
 export function ReportGenerationInterface({ users }: ReportGenerationProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [generating, setGenerating] = useState<null | { tier: number | 'json'; userId: string }>(null);
+  const [generating, setGenerating] = useState<null | { tier: 1 | 2 | 3 | 'json'; userId: string }>(null);
   const selectedUser = useMemo(() => users.find(u => u.id === selectedUserId), [users, selectedUserId]);
 
   const latestAssessment = useMemo<CompletedAssessment | null>(() => {
     if (!selectedUser?.assessments?.length) return null;
-    // AdminPage already orders desc + take:1, but be defensive:
     const arr = [...selectedUser.assessments].sort((a, b) => {
       const ta = a.completedAt ? new Date(a.completedAt).getTime() : 0;
       const tb = b.completedAt ? new Date(b.completedAt).getTime() : 0;
@@ -50,7 +49,7 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
 
   const canGenerate = Boolean(selectedUser && latestAssessment?.status === 'COMPLETED');
 
-  async function doGenerate(tier: 2 | 3 | 'json') {
+  async function doGenerate(tier: 1 | 2 | 3 | 'json') {
     if (!selectedUser || !latestAssessment?.id) {
       toast.error('Select a user with a completed assessment.');
       return;
@@ -58,7 +57,6 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
     setGenerating({ tier, userId: selectedUser.id });
     try {
       if (tier === 'json') {
-        // diagnostic route (expects { userId, assessmentId })
         const res = await fetch('/api/admin/diagnose-assessment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -66,9 +64,7 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
           body: JSON.stringify({ userId: selectedUser.id, assessmentId: latestAssessment.id }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw new Error(data?.error || 'Diagnosis failed');
-        }
+        if (!res.ok) throw new Error(data?.error || 'Diagnosis failed');
         toast.success('Assessment diagnostics ready – opening JSON in a new tab');
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -77,8 +73,13 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
         return;
       }
 
-      // Tier 2/3 report generation – adjust endpoints to match your API
-      const endpoint = tier === 2 ? '/api/reports/generate-tier2' : '/api/reports/generate-tier3';
+      const endpoint =
+        tier === 1
+          ? '/api/reports/generate-tier1'
+          : tier === 2
+          ? '/api/reports/generate-tier2'
+          : '/api/reports/generate-tier3';
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -91,13 +92,19 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
         throw new Error(txt || `Tier ${tier} report generation failed`);
       }
 
-      // Expecting a downloadable file (PDF/HTML). If your API returns JSON with a URL, adapt here.
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const safeName = `${selectedUser.firstName ?? ''}_${selectedUser.lastName ?? ''}`.replace(/\s+/g, '_') || selectedUser.email;
-      a.download = tier === 2 ? `Leadership_Report_${safeName}.pdf` : `Clinical_Report_${safeName}.pdf`;
+      const safeName =
+        `${selectedUser.firstName ?? ''}_${selectedUser.lastName ?? ''}`.replace(/\s+/g, '_') ||
+        selectedUser.email;
+      a.download =
+        tier === 1
+          ? `Public_Summary_${safeName}.html`
+          : tier === 2
+          ? `Leadership_Report_${safeName}.pdf`
+          : `Clinical_Report_${safeName}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -162,6 +169,16 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
         </div>
 
         <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={() => doGenerate(1)}
+            disabled={!canGenerate || !!generating}
+            variant="secondary"
+            className="flex items-center gap-2"
+          >
+            {generating?.tier === 1 ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+            Generate Tier 1 (Public)
+          </Button>
+
           <Button
             onClick={() => doGenerate(2)}
             disabled={!canGenerate || !!generating}
