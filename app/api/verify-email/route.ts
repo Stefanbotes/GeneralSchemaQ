@@ -16,11 +16,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing email or token" }, { status: 400 });
     }
 
-    // Hash incoming plaintext to match what we stored
+    // Hash incoming plaintext to match stored value
     const hashed = crypto.createHash("sha256").update(token).digest("hex");
 
-    // If your Prisma model includes @@unique([identifier, token]),
-    // Prisma exposes a compound unique finder alias like identifier_token
+    // Fetch token record first
     const record = await db.verificationToken.findFirst({
       where: { identifier: email, token: hashed },
       select: { identifier: true, expires: true },
@@ -29,26 +28,51 @@ export async function GET(req: Request) {
     if (!record) {
       return NextResponse.json({ ok: false, error: "Invalid or already used token" }, { status: 400 });
     }
+
     if (record.expires && record.expires < new Date()) {
-      // Cleanup expired token
+      // Clean up expired tokens for this identifier and report expiry
       await db.verificationToken.deleteMany({ where: { identifier: email } });
       return NextResponse.json({ ok: false, error: "Token expired" }, { status: 400 });
     }
 
-    // Mark user as verified
-    await db.user.update({
-      where: { email },
-      data: { emailVerified: new Date() },
+    // Transaction: verify user + clear all tokens
+    const result = await db.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { email },
+        select: { id: true, emailVerified: true },
+      });
+
+      if (!user) {
+        // User no longer exists — remove tokens and abort gracefully
+        await tx.verificationToken.deleteMany({ where: { identifier: email } });
+        return { ok: false as const, reason: "Account not found" };
+      }
+
+      // Mark verified and (optionally) bump tokenVersion to refresh sessions
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: new Date(),
+          tokenVersion: { increment: 1 },
+        },
+      });
+
+      // Remove all tokens for this identifier
+      await tx.verificationToken.deleteMany({ where: { identifier: email } });
+
+      return { ok: true as const };
     });
 
-    // Remove all tokens for this email
-    await db.verificationToken.deleteMany({ where: { identifier: email } });
+    if (!result.ok) {
+      return NextResponse.json({ ok: false, error: result.reason }, { status: 400 });
+    }
 
-    // Optionally redirect to a nice page:
-    // return NextResponse.redirect(new URL("/auth/login?verified=1", url.origin));
+    // Prefer a redirect UX (uncomment to use)
+    // return NextResponse.redirect(new URL("/auth/login?verified=1", url.origin), { status: 302 });
 
     return NextResponse.json({ ok: true, message: "Email verified" });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message ?? "verify failed" }, { status: 500 });
   }
 }
+
