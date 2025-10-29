@@ -1,13 +1,22 @@
-// prisma/schema.prisma
-
-// ---------- Generator ----------
+// ======================================================
+//  PRISMA CLIENT GENERATOR
+// ======================================================
 generator client {
   provider      = "prisma-client-js"
-  // These targets are safe for Vercel/Linux. If you hit a binary error, you can
-  // remove this line entirely (Prisma will default to "native"), or keep just ["linux-musl"].
-  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+  // Explicit output path prevents deprecation warnings
+  output        = "node_modules/@prisma/client"
+  // Multiple targets ensure cross-platform compatibility (Vercel, Linux, local)
+  binaryTargets = [
+    "native",
+    "linux-musl",
+    "linux-musl-openssl-3.0.x",
+    "linux-musl-arm64-openssl-3.0.x"
+  ]
 }
-// ---------- Datasource ----------
+
+// ======================================================
+//  DATABASE CONNECTION
+// ======================================================
 datasource db {
   provider  = "postgresql"
   url       = env("POSTGRES_PRISMA_URL")       // pooled for Prisma Client
@@ -15,7 +24,7 @@ datasource db {
 }
 
 // ======================================================
-// MODELS (singular, mapped to existing plural tables)
+//  MODELS
 // ======================================================
 
 model User {
@@ -34,12 +43,14 @@ model User {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
+  // Relations
   accounts            Account[]
   sessions            Session[]
   assessments         Assessment[]
   passwordResetTokens PasswordResetToken[]
   rateLimitRecords    RateLimitRecord[]
   verificationTokens  VerificationToken[]
+  reportArtifacts     ReportArtifact[]
 
   @@map("users")
 }
@@ -119,7 +130,10 @@ model Assessment {
 
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   lasbiResponses    LasbiResponse[]
+  reportArtifact    ReportArtifact?
 
+  @@index([userId, completedAt])
+  @@index([status, completedAt])
   @@map("assessments")
 }
 
@@ -152,7 +166,6 @@ model LeadershipPersona {
   @@map("leadership_personas")
 }
 
-// LASBI mapping metadata (stable identifiers)
 model LasbiItem {
   item_id         String   @id
   canonical_id    String   @unique
@@ -166,6 +179,7 @@ model LasbiItem {
 
   @@index([canonical_id])
   @@index([variable_id])
+  @@index([schema_label])
   @@map("lasbi_items")
 }
 
@@ -184,6 +198,7 @@ model LasbiResponse {
 
   @@unique([assessment_id, item_id], name: "assessment_id_item_id")
   @@index([assessment_id])
+  @@index([assessment_id, canonical_id])
   @@index([variable_id])
   @@index([canonical_id])
   @@map("lasbi_responses")
@@ -206,8 +221,27 @@ model RateLimitRecord {
   @@map("rate_limit_records")
 }
 
+model ReportArtifact {
+  id              String   @id @default(cuid())
+  assessmentId    String   @unique
+  userId          String
+  type            String   // e.g. "TIER1"
+  format          String   // "html" | "pdf"
+  storageUrl      String
+  templateVersion String
+  generatedAt     DateTime @default(now())
+  generatedBy     String   // "system" or userId
+
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@map("report_artifacts")
+}
+
 // ======================================================
-// ENUMS
+//  ENUMS
 // ======================================================
 
 enum AssessmentStatus {
@@ -221,3 +255,4 @@ enum UserRole {
   COACH
   ADMIN
 }
+
