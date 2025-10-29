@@ -3,8 +3,10 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { createPasswordResetToken } from '@/lib/email-service';
+import { sendPasswordResetEmail } from '@/lib/mailer'; // ✅ send real mail
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs'; // ✅ ensure Node runtime (SMTP/envs available)
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -28,13 +30,11 @@ const buckets: Map<string, Bucket> = globalAny.__forgotPwdBuckets;
 function getClientIp(req: Request): string {
   const xf = req.headers.get('x-forwarded-for');
   if (xf) {
-    // may contain a list; first is original client
     const first = xf.split(',')[0]?.trim();
     if (first) return first;
   }
   const realIp = req.headers.get('x-real-ip');
   if (realIp) return realIp;
-  // last resort (not ideal on serverless)
   return 'unknown';
 }
 
@@ -42,8 +42,9 @@ function consume(ip: string) {
   const now = Date.now();
   const existing = buckets.get(ip);
   if (!existing || existing.resetAt <= now) {
-    buckets.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return { ok: true, remaining: MAX_ATTEMPTS - 1, resetAt: now + WINDOW_MS };
+    const resetAt = now + WINDOW_MS;
+    buckets.set(ip, { count: 1, resetAt });
+    return { ok: true, remaining: MAX_ATTEMPTS - 1, resetAt };
   }
   if (existing.count >= MAX_ATTEMPTS) {
     return { ok: false, remaining: 0, resetAt: existing.resetAt };
@@ -75,30 +76,40 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const email = parsed.data.email.toLowerCase();
+    const email = parsed.data.email.toLowerCase().trim();
 
-    // Look up the user (we won't disclose existence in the response)
+    // Look up the user (do not disclose existence in response)
     const user = await db.user.findUnique({
       where: { email },
       select: { id: true, email: true },
     });
 
     if (user) {
-      const baseUrl =
+      const envBase =
         process.env.NEXT_PUBLIC_APP_URL ||
         process.env.NEXTAUTH_URL ||
-        '';
+        new URL(req.url).origin; // ✅ reliable fallback
 
       const { resetUrl } = await createPasswordResetToken({
         email,
-        baseUrl,
+        baseUrl: envBase,
         userId: user.id,
         expiresInMinutes: 30,
       });
 
-      // TODO: send resetUrl via your email provider
-      // await sendPasswordResetEmail(email, resetUrl);
-      console.log('[ForgotPassword] reset link (dev):', resetUrl);
+      // ✅ Send the email (falls back to server log if SMTP not set)
+      const hasSmtp = !!process.env.SMTP_HOST && !!process.env.SMTP_USER && !!process.env.SMTP_PASS;
+      if (hasSmtp) {
+        try {
+          await sendPasswordResetEmail(email, resetUrl);
+          console.log('[ForgotPassword] reset email sent:', { to: email });
+        } catch (e: any) {
+          console.warn('[ForgotPassword] email send failed, logging link instead:', e?.message);
+          console.log('[ForgotPassword] reset link (dev):', resetUrl);
+        }
+      } else {
+        console.log('[ForgotPassword] reset link (dev):', resetUrl);
+      }
     }
 
     // Always respond success (prevents user enumeration)
