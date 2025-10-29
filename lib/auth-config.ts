@@ -68,36 +68,65 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  callbacks: {
-    async jwt({ token, user }) {
-      // On initial sign-in, seed from the returned user
-      if (user?.email) {
-        token.email = user.email;
-        // @ts-ignore
-        token.role = (user as any).role || "CLIENT";
-        // @ts-ignore
-        token.tokenVersion = (user as any).tokenVersion ?? 0;
-        // @ts-ignore
-        token.emailVerified = (user as any).emailVerified ?? null;
-      }
+callbacks: {
+  async jwt({ token, user }) {
+    // On initial sign-in
+    if (user?.email) {
+      // ensure the user id is on the token
+      // @ts-ignore
+      token.sub = (user as any).id || token.sub;
+      // @ts-ignore
+      token.id = (user as any).id || token.id;
 
-      // Keep role/emailVerified/tokenVersion fresh so promotions/verification reflect immediately
-      if (token.email) {
-        const dbUser = await db.user.findUnique({
-          where: { email: String(token.email).toLowerCase() },
-          select: { role: true, tokenVersion: true, emailVerified: true },
-        });
-        if (dbUser) {
-          // @ts-ignore
-          token.role = dbUser.role || "CLIENT";
-          // @ts-ignore
-          token.tokenVersion = dbUser.tokenVersion ?? 0;
-          // @ts-ignore
-          token.emailVerified = dbUser.emailVerified ?? null;
-        }
+      token.email = user.email;
+      // @ts-ignore
+      token.role = (user as any).role || "CLIENT";
+      // @ts-ignore
+      token.tokenVersion = (user as any).tokenVersion ?? 0;
+      // @ts-ignore
+      token.emailVerified = (user as any).emailVerified ?? null;
+    }
+
+    // Keep role/emailVerified/tokenVersion fresh
+    if (token.email) {
+      const dbUser = await db.user.findUnique({
+        where: { email: String(token.email).toLowerCase() },
+        select: { id: true, role: true, tokenVersion: true, emailVerified: true },
+      });
+      if (dbUser) {
+        // @ts-ignore
+        token.sub = dbUser.id || token.sub; // keep id synced
+        // @ts-ignore
+        token.id = dbUser.id || token.id;
+        // @ts-ignore
+        token.role = dbUser.role || "CLIENT";
+        // @ts-ignore
+        token.tokenVersion = dbUser.tokenVersion ?? 0;
+        // @ts-ignore
+        token.emailVerified = dbUser.emailVerified ?? null;
       }
-      return token;
-    },
+    }
+    return token;
+  },
+
+  async session({ session, token }) {
+    if (session.user) {
+      // prefer token.sub, fallback token.id
+      // @ts-ignore
+      session.user.id = (token?.sub as string) || (token as any)?.id || session.user.id;
+      // @ts-ignore
+      session.user.role = (token as any).role || "CLIENT";
+      // @ts-ignore
+      session.user.tokenVersion = (token as any).tokenVersion ?? 0;
+      // stringify -> Date if you want it as Date on Session:
+      const ev = (token as any).emailVerified as string | null;
+      // @ts-ignore
+      session.user.emailVerified = ev ? new Date(ev) : null;
+    }
+    return session;
+  },
+},
+
 
     async session({ session, token }) {
       if (session.user) {
