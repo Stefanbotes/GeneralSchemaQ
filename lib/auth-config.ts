@@ -4,16 +4,11 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { db } from "@/lib/db";
 
-// Gatekeeper: require verified email to sign in?
 const REQUIRE_VERIFIED_EMAIL =
   (process.env.REQUIRE_VERIFIED_EMAIL ?? "true").toLowerCase() === "true";
 
-// NOTE: Ensure NEXTAUTH_SECRET is set in Vercel env.
-// Also set NEXTAUTH_URL or NEXT_PUBLIC_APP_URL for correct callback URLs.
-
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
-  // Your app uses /auth/login
   pages: { signIn: "/auth/login" },
 
   providers: [
@@ -35,13 +30,12 @@ export const authOptions: NextAuthOptions = {
             password: true,
             role: true,
             tokenVersion: true,
-            emailVerified: true,   // needed if you want to gate logins
-            lockoutUntil: true,    // optional if you use lockouts
+            emailVerified: true,
+            lockoutUntil: true,
           },
         });
         if (!user) return null;
 
-        // Optional: lockout window
         if (user.lockoutUntil && user.lockoutUntil > new Date()) {
           return null;
         }
@@ -49,112 +43,94 @@ export const authOptions: NextAuthOptions = {
         const ok = await compare(creds.password, user.password);
         if (!ok) return null;
 
-        // Gate on verification if desired
         if (REQUIRE_VERIFIED_EMAIL && !user.emailVerified) {
-          // refuse to sign in until they verify (your UI should show a message / resend flow)
           return null;
         }
 
-        // Minimal, safe fields for JWT seed
+        // Seed minimal safe fields into JWT on first sign-in
         return {
           id: user.id,
           email: user.email,
           role: user.role,
           tokenVersion: user.tokenVersion ?? 0,
-          // we’ll copy emailVerified via callbacks too
           emailVerified: user.emailVerified ?? null,
         } as any;
       },
     }),
   ],
 
-callbacks: {
-  async jwt({ token, user }) {
-    // On initial sign-in
-    if (user?.email) {
-      // ensure the user id is on the token
-      // @ts-ignore
-      token.sub = (user as any).id || token.sub;
-      // @ts-ignore
-      token.id = (user as any).id || token.id;
+  callbacks: {
+    async jwt({ token, user }) {
+      // On initial sign-in, copy fields from returned user
+      if (user?.email) {
+        // ensure id on token (both sub and id for safety)
+        // @ts-ignore
+        token.sub = (user as any).id || token.sub;
+        // @ts-ignore
+        token.id = (user as any).id || token.id;
 
-      token.email = user.email;
-      // @ts-ignore
-      token.role = (user as any).role || "CLIENT";
-      // @ts-ignore
-      token.tokenVersion = (user as any).tokenVersion ?? 0;
-      // @ts-ignore
-      token.emailVerified = (user as any).emailVerified ?? null;
-    }
-
-    // Keep role/emailVerified/tokenVersion fresh
-    if (token.email) {
-      const dbUser = await db.user.findUnique({
-        where: { email: String(token.email).toLowerCase() },
-        select: { id: true, role: true, tokenVersion: true, emailVerified: true },
-      });
-      if (dbUser) {
+        token.email = user.email;
         // @ts-ignore
-        token.sub = dbUser.id || token.sub; // keep id synced
+        token.role = (user as any).role || "CLIENT";
         // @ts-ignore
-        token.id = dbUser.id || token.id;
+        token.tokenVersion = (user as any).tokenVersion ?? 0;
         // @ts-ignore
-        token.role = dbUser.role || "CLIENT";
-        // @ts-ignore
-        token.tokenVersion = dbUser.tokenVersion ?? 0;
-        // @ts-ignore
-        token.emailVerified = dbUser.emailVerified ?? null;
+        token.emailVerified = (user as any).emailVerified ?? null;
       }
-    }
-    return token;
-  },
 
-  async session({ session, token }) {
-    if (session.user) {
-      // prefer token.sub, fallback token.id
-      // @ts-ignore
-      session.user.id = (token?.sub as string) || (token as any)?.id || session.user.id;
-      // @ts-ignore
-      session.user.role = (token as any).role || "CLIENT";
-      // @ts-ignore
-      session.user.tokenVersion = (token as any).tokenVersion ?? 0;
-      // stringify -> Date if you want it as Date on Session:
-      const ev = (token as any).emailVerified as string | null;
-      // @ts-ignore
-      session.user.emailVerified = ev ? new Date(ev) : null;
-    }
-    return session;
-  },
-},
-
+      // Keep token fresh from DB so promotions/verification reflect
+      if (token.email) {
+        const dbUser = await db.user.findUnique({
+          where: { email: String(token.email).toLowerCase() },
+          select: { id: true, role: true, tokenVersion: true, emailVerified: true },
+        });
+        if (dbUser) {
+          // @ts-ignore
+          token.sub = dbUser.id || token.sub;
+          // @ts-ignore
+          token.id = dbUser.id || token.id;
+          // @ts-ignore
+          token.role = dbUser.role || "CLIENT";
+          // @ts-ignore
+          token.tokenVersion = dbUser.tokenVersion ?? 0;
+          // @ts-ignore (JWT stores dates as strings; fine for our mapping below)
+          token.emailVerified = dbUser.emailVerified ?? null;
+        }
+      }
+      return token;
+    },
 
     async session({ session, token }) {
       if (session.user) {
+        // prefer token.sub, fallback token.id
+        // @ts-ignore
+        session.user.id = (token?.sub as string) || (token as any)?.id || session.user.id;
         // @ts-ignore
         session.user.role = (token as any).role || "CLIENT";
         // @ts-ignore
         session.user.tokenVersion = (token as any).tokenVersion ?? 0;
+        const ev = (token as any).emailVerified as string | null;
         // @ts-ignore
-        session.user.emailVerified = (token as any).emailVerified ?? null;
+        session.user.emailVerified = ev ? new Date(ev) : null;
       }
       return session;
     },
   },
 
-  // Nice-to-have: keep audit fields current
+  // Use arrow function property to avoid parser quirks
   events: {
-    async signIn({ user }) {
-      // best-effort; don’t block auth if it fails
+    signIn: async ({ user }) => {
       try {
         await db.user.update({
           where: { id: (user as any).id },
           data: { lastLogin: new Date(), loginAttempts: 0 },
         });
-      } catch {}
+      } catch {
+        // best-effort: do not block sign-in
+      }
     },
   },
 
-  // Helpful during setup; remove or guard by NODE_ENV in production if noisy
   // debug: process.env.NODE_ENV !== "production",
 };
 
