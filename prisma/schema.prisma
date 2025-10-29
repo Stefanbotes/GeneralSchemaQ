@@ -2,15 +2,13 @@
 //  PRISMA CLIENT GENERATOR
 // ======================================================
 generator client {
-  provider      = "prisma-client-js"
-  // Explicit output path prevents deprecation warnings
-  output        = "node_modules/@prisma/client"
-  // Multiple targets ensure cross-platform compatibility (Vercel, Linux, local)
+  provider = "prisma-client-js"
+  output   = "node_modules/@prisma/client"  // silences Prisma 7 deprecation
+  // Valid targets for Prisma 6
   binaryTargets = [
     "native",
-    "linux-musl",
-    "linux-musl-openssl-3.0.x",
-    "linux-musl-arm64-openssl-3.0.x"
+    "debian-openssl-3.0.x",
+    "linux-musl"
   ]
 }
 
