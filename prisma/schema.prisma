@@ -1,10 +1,10 @@
 // ======================================================
 //  PRISMA CLIENT GENERATOR
 // ======================================================
+
+}
 generator client {
   provider = "prisma-client-js"
-  // Explicit output silences Prisma 7 deprecation
-  output   = "node_modules/@prisma/client"
 }
 
 // ======================================================
