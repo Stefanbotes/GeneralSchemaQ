@@ -1,13 +1,51 @@
-import { NextResponse } from 'next/server';
+// app/api/reports/generate-tier1/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-config';
 import { z } from 'zod';
 import { db } from '@/lib/db';
+
+// Optional Tier-1 copy blocks (provide these in your codebase)
+import {
+  schemaToPublic,
+  schemaToHealthy,
+  schemaToDomain,
+  narrativeFor,
+  personaCopy,
+} from '@/lib/tier1-persona-copy';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+// --------- util: memoize LASBI index for perf ----------
+type LasbiIndex = {
+  rows: any[];
+  byItemId: Map<string, any>;
+  byCanonical: Map<string, any>;
+};
+declare global {
+  // eslint-disable-next-line no-var
+  var __lasbiIndex: LasbiIndex | undefined;
+}
+async function loadLasbiIndex(): Promise<LasbiIndex> {
+  if (globalThis.__lasbiIndex) return globalThis.__lasbiIndex;
+  const rows = await (db as any).lasbiItem.findMany({
+    select: { item_id: true, canonical_id: true, variable_id: true, schema_label: true },
+  });
+  const byItemId = new Map<string, any>();
+  const byCanonical = new Map<string, any>();
+  for (const r of rows) {
+    byItemId.set(r.item_id, r);
+    byCanonical.set(r.canonical_id, r);
+  }
+  globalThis.__lasbiIndex = { rows, byItemId, byCanonical };
+  return globalThis.__lasbiIndex;
+}
+// -------------------------------------------------------
+
 const PayloadSchema = z.object({
+  userId: z.string().min(1).optional(),     // NEW: align with Admin UI
   assessmentId: z.string().min(1).optional(),
-  // Prefer a map so we can canonize keys; array is allowed but only supports overall.
   responses: z
     .union([
       z.array(z.number()).nonempty().optional(),
@@ -20,45 +58,20 @@ const PayloadSchema = z.object({
 const isLikert6 = (n: unknown): n is number =>
   typeof n === 'number' && Number.isFinite(n) && Number.isInteger(n) && n >= 1 && n <= 6;
 
-/** Load all LASBI items once (id map) to resolve canonical & schema */
-async function loadLasbiIndex() {
-  const rows = await (db as any).lasbiItem.findMany({
-    select: { item_id: true, canonical_id: true, variable_id: true, schema_label: true },
-  });
-  const byItemId = new Map<string, any>();
-  const byCanonical = new Map<string, any>();
-  for (const r of rows) {
-    byItemId.set(r.item_id, r);
-    byCanonical.set(r.canonical_id, r);
-  }
-  return { rows, byItemId, byCanonical };
-}
-
-/** Turn "1.1.R2" → "1.1.2"; already "1.1.2" returns as-is; "cmf..." resolved via lasbi_items.item_id */
 function toCanonicalId(rawId: string, lasbiByItemId: Map<string, any>): string | null {
   if (!rawId) return null;
-
-  // Already canonical d.s.q?
   if (/^\d+\.\d+\.\d+$/.test(rawId)) return rawId;
-
-  // cmf... style? (modern LASBI item id)
   const hit = lasbiByItemId.get(rawId);
   if (hit?.canonical_id) return hit.canonical_id as string;
-
-  // "1.1.R2" / "1.1.Q2" → "1.1.2"
   const rx = /^(\d+)\.(\d+)\.(?:R|Q)?(\d+)$/i;
   const m = rawId.match(rx);
   if (m) return `${m[1]}.${m[2]}.${m[3]}`;
-
-  // "1.1-R2", "1_1_R2" → sanitize separators
   const s = rawId.replace(/[_-]/g, '.');
   const m2 = s.match(rx);
   if (m2) return `${m2[1]}.${m2[2]}.${m2[3]}`;
-
-  return null; // unknown shape
+  return null;
 }
 
-/** From various shapes, extract name if present */
 function extractParticipantName(assessment: any, fallback?: string): string | undefined {
   const candidates = [
     fallback,
@@ -72,30 +85,25 @@ function extractParticipantName(assessment: any, fallback?: string): string | un
   return found && found.trim().length ? found : undefined;
 }
 
-/** Build canonical → value map (1..6) from lasbi_responses rows */
 async function loadResponsesFromLasbi(assessmentId: string): Promise<Map<string, number>> {
   const rows = await (db as any).lasbiResponse.findMany({
     where: { assessment_id: assessmentId },
     select: { canonical_id: true, value: true },
   });
-
   const m = new Map<string, number>();
   for (const r of rows) {
     const v = Number(r.value);
     if (!isNaN(v) && isLikert6(v)) m.set(String(r.canonical_id), v);
-    // If legacy 1..5 exists, it still passes isLikert6()
   }
   return m;
 }
 
-/** Fallback: extract from assessments.responses JSON (map of UI ids to {value}) */
 function extractResponsesFromAssessmentsJson(
   assessment: any,
   lasbiByItemId: Map<string, any>
 ): Map<string, number> {
   const sources = [assessment?.responses, assessment?.data?.responses, assessment?.payload?.responses];
   const out = new Map<string, number>();
-
   for (const src of sources) {
     if (src && typeof src === 'object' && !Array.isArray(src)) {
       for (const [rawId, obj] of Object.entries<any>(src)) {
@@ -109,14 +117,11 @@ function extractResponsesFromAssessmentsJson(
   return out;
 }
 
-/** If client sends responses directly */
 function responsesFromClientPayload(
   payload: any,
   lasbiByItemId: Map<string, any>
 ): { canonicalToValue: Map<string, number>; arrayOnly?: number[] } {
   if (!payload) return { canonicalToValue: new Map() };
-
-  // Map case: { "1.1.R2": { value: 5 }, "cmf..." : { value: 4 }, ... }
   if (!Array.isArray(payload) && typeof payload === 'object') {
     const m = new Map<string, number>();
     for (const [rawId, obj] of Object.entries<any>(payload)) {
@@ -126,34 +131,38 @@ function responsesFromClientPayload(
     }
     return { canonicalToValue: m };
   }
-
-  // Array case: we can compute OVERALL but not per-schema (no ids)
   if (Array.isArray(payload)) {
     const arr = payload.map(Number);
-    for (let i = 0; i < arr.length; i++) {
-      const v = arr[i];
-      if (!isLikert6(v)) {
-        throw new Error(`Bad value at index ${i}: ${String(v)} (expected 1..6)`);
-      }
-    }
+    arr.forEach((v, i) => {
+      if (!isLikert6(v)) throw new Error(`Bad value at index ${i}: ${String(v)} (expected 1..6)`);
+    });
     return { canonicalToValue: new Map(), arrayOnly: arr };
   }
-
   return { canonicalToValue: new Map() };
 }
 
-/** Overall mean on 1..6 */
 function mean6(nums: number[]): number {
   if (!nums.length) return 0;
   return nums.reduce((a, b) => a + b, 0) / nums.length;
 }
 
-/** HTML with per-schema table (if available) + top/bottom + raw items by canonical_id */
+function pickTop3(bySchemaMean: Record<string, number>) {
+  return Object.entries(bySchemaMean)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([schema, score]) => ({ schema, score }));
+}
+
 function renderHtml(opts: {
-  name?: string;
+  participantName?: string;
+  assessmentId?: string;
+  completedAt?: Date | string | null;
   canonicalToValue?: Map<string, number>;
-  overallArray?: number[]; // when only array provided
+  overallArray?: number[];
   bySchema?: Record<string, number>;
+  top3?: { schema: string; score: number }[];
+  personaText?: string | null;
+  narrativeText?: string | null;
 }) {
   const overall =
     opts.canonicalToValue && opts.canonicalToValue.size
@@ -163,22 +172,7 @@ function renderHtml(opts: {
   const bySchema = opts.bySchema || {};
   const hasCats = Object.keys(bySchema).length > 0;
   const sortedCats = hasCats ? Object.entries(bySchema).sort((a, b) => b[1] - a[1]) : [];
-
-  const catRows = hasCats
-    ? sortedCats
-        .map(
-          ([k, v]) => `<tr>
-        <td style="padding:6px 12px;border:1px solid #ddd">${k}</td>
-        <td style="padding:6px 12px;border:1px solid #ddd;text-align:right">${v.toFixed(2)}</td>
-        <td style="padding:6px 12px;border:1px solid #ddd;text-align:right">${Math.round(((v - 1) / 5) * 100)}%</td>
-      </tr>`
-        )
-        .join('')
-    : '';
-
-  const top3 = hasCats ? sortedCats.slice(0, 3) : [];
-  const bottom3 = hasCats ? sortedCats.slice(-3).reverse() : [];
-
+  const top3 = opts.top3 || [];
   const itemRows =
     opts.canonicalToValue && opts.canonicalToValue.size
       ? [...opts.canonicalToValue.entries()]
@@ -199,119 +193,176 @@ function renderHtml(opts: {
           )
           .join('');
 
+  // Build Tier-1 summaries for top3
+  const topBlocks = top3
+    .map(({ schema, score }, idx) => {
+      const publicSummary = schemaToPublic?.[schema];
+      const healthy = schemaToHealthy?.[schema];
+      const domain = schemaToDomain?.[schema];
+      const growth =
+        Array.isArray(healthy)
+          ? `<ul style="margin:6px 0 0 18px">${healthy.map((g: string) => `<li>${g}</li>`).join('')}</ul>`
+          : healthy
+          ? `<p style="margin:6px 0">${healthy}</p>`
+          : '';
+      return `
+      <div class="schema" style="padding:12px 14px;border:1px solid #eee;border-radius:10px">
+        <h3 style="margin:0 0 6px;">#${idx + 1} ${schema} 
+          <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;">${score.toFixed(2)} / 6</span>
+        </h3>
+        ${domain ? `<div style="font-size:12px;color:#555;margin-bottom:6px;">Domain: ${domain}</div>` : ''}
+        ${publicSummary ? `<p style="margin:6px 0 8px">${publicSummary}</p>` : ''}
+        ${growth ? `<div><strong>Healthy growth:</strong>${growth}</div>` : ''}
+      </div>`;
+    })
+    .join('\n');
+
+  const catRows = hasCats
+    ? sortedCats
+        .map(
+          ([k, v]) => `<tr>
+        <td style="padding:6px 12px;border:1px solid #ddd">${k}</td>
+        <td style="padding:6px 12px;border:1px solid #ddd;text-align:right">${v.toFixed(2)}</td>
+        <td style="padding:6px 12px;border:1px solid #ddd;text-align:right">${Math.round(((v - 1) / 5) * 100)}%</td>
+      </tr>`
+        )
+        .join('')
+    : '';
+
   return `<!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Tier-1 Summary</title>
+  <title>Tier 1 Summary</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; padding: 24px; }
+    h1 { margin: 0 0 8px; }
+    .meta { color:#555;margin-bottom:16px;font-size:13px; }
+    .card { border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin:12px 0; }
+  </style>
 </head>
-<body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px;">
-  <h1 style="margin: 0 0 8px;">Tier-1 Summary</h1>
-  <div style="color:#555;margin-bottom:16px">Participant: ${opts.name || '—'}</div>
+<body>
+  <h1>Tier 1 Summary</h1>
+  <div class="meta">
+    Participant: <strong>${opts.participantName || '—'}</strong><br/>
+    ${opts.assessmentId ? `Assessment ID: ${opts.assessmentId}` : ''} ${opts.completedAt ? `• Completed: ${new Date(opts.completedAt).toLocaleString()}` : ''}
+  </div>
 
-  <h2 style="margin: 16px 0 8px;">Overall</h2>
-  <p style="margin:0 0 16px;">
-    Mean (1..6): <strong>${overall.toFixed(2)}</strong>
-    &nbsp;|&nbsp; Scaled (0–100): <strong>${Math.round(((overall - 1) / 5) * 100)}%</strong>
-  </p>
+  ${opts.personaText ? `<div class="card"><h2 style="margin:0 0 8px;">Overall Persona</h2><p>${opts.personaText}</p></div>` : ''}
+
+  ${opts.narrativeText ? `<div class="card"><h2 style="margin:0 0 8px;">Short Narrative</h2><p>${opts.narrativeText}</p></div>` : ''}
 
   ${
-    hasCats
-      ? `
-  <h2 style="margin: 16px 0 8px;">By Schema</h2>
-  <table style="border-collapse:collapse;width:100%;max-width:760px;margin-bottom:12px">
-    <thead>
-      <tr>
-        <th style="text-align:left;padding:6px 12px;border:1px solid #ddd">Schema</th>
-        <th style="text-align:right;padding:6px 12px;border:1px solid #ddd">Mean (1..6)</th>
-        <th style="text-align:right;padding:6px 12px;border:1px solid #ddd">Scaled (0–100)</th>
-      </tr>
-    </thead>
-    <tbody>${catRows}</tbody>
-  </table>
-  <div style="display:flex;gap:16px;flex-wrap:wrap;margin:12px 0 24px">
-    <div style="flex:1;min-width:240px">
-      <h3 style="margin:0 0 8px;">Top 3</h3>
-      <ol style="margin:0 0 0 18px;padding:0">
-        ${top3.map(([k, v]) => `<li>${k} — ${v.toFixed(2)} (${Math.round(((v - 1) / 5) * 100)}%)</li>`).join('')}
-      </ol>
-    </div>
-    <div style="flex:1;min-width:240px">
-      <h3 style="margin:0 0 8px;">Bottom 3</h3>
-      <ol style="margin:0 0 0 18px;padding:0">
-        ${bottom3.map(([k, v]) => `<li>${k} — ${v.toFixed(2)} (${Math.round(((v - 1) / 5) * 100)}%)</li>`).join('')}
-      </ol>
-    </div>
-  </div>
-  `
+    topBlocks
+      ? `<div class="card"><h2 style="margin:0 0 8px;">Top Patterns</h2><div style="display:grid;gap:12px">${topBlocks}</div>
+         <p style="font-size:12px;color:#555;margin-top:8px">This is a public-facing, strengths-oriented summary.</p></div>`
       : ''
   }
 
-  <h2 style="margin: 16px 0 8px;">Items (raw 1..6)</h2>
-  <table style="border-collapse:collapse;width:100%;max-width:760px">
-    <thead>
-      <tr>
-        <th style="text-align:left;padding:6px 12px;border:1px solid #ddd">Item</th>
-        <th style="text-align:right;padding:6px 12px;border:1px solid #ddd">Score</th>
-      </tr>
-    </thead>
-    <tbody>${itemRows}</tbody>
-  </table>
+  <div class="card">
+    <h2 style="margin:0 0 8px;">Overall</h2>
+    <p style="margin:0 0 12px;">
+      Mean (1..6): <strong>${overall.toFixed(2)}</strong>
+      &nbsp;|&nbsp; Scaled (0–100): <strong>${Math.round(((overall - 1) / 5) * 100)}%</strong>
+    </p>
+
+    ${
+      hasCats
+        ? `
+    <h3 style="margin:8px 0">By Schema</h3>
+    <table style="border-collapse:collapse;width:100%;max-width:760px;margin-bottom:12px">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:6px 12px;border:1px solid #ddd">Schema</th>
+          <th style="text-align:right;padding:6px 12px;border:1px solid #ddd">Mean (1..6)</th>
+          <th style="text-align:right;padding:6px 12px;border:1px solid #ddd">Scaled (0–100)</th>
+        </tr>
+      </thead>
+      <tbody>${catRows}</tbody>
+    </table>`
+        : ''
+    }
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px;">Items (raw 1..6)</h2>
+    <table style="border-collapse:collapse;width:100%;max-width:760px">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:6px 12px;border:1px solid #ddd">Item</th>
+          <th style="text-align:right;padding:6px 12px;border:1px solid #ddd">Score</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+    </table>
+  </div>
 </body>
 </html>`;
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    // 1) Auth + (optional) role gating
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+    // if (session.user.role !== 'ADMIN' && session.user.role !== 'COACH') {
+    //   return new NextResponse('Forbidden', { status: 403 });
+    // }
+
+    // 2) Parse payload
     const payload = await req.json().catch(() => ({}));
     const parsed = PayloadSchema.safeParse(payload);
     if (!parsed.success) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
-
-    const { assessmentId, responses, participantData } = parsed.data;
+    const { userId, assessmentId, responses, participantData } = parsed.data;
 
     const lasbi = await loadLasbiIndex();
-
-    // Name (from client or from DB later)
     let name: string | undefined = participantData?.name;
 
-    // 1) If assessmentId is provided, prefer lasbi_responses
+    // 3) Build canonical->value
     let canonicalToValue = new Map<string, number>();
+    let completedAt: Date | string | null | undefined;
 
     if (assessmentId) {
       const assessment: any = await (db as any).assessment.findUnique({ where: { id: assessmentId } });
       if (!assessment) return NextResponse.json({ error: 'Assessment not found' }, { status: 404 });
 
-      // try users table for name
+      completedAt = assessment?.completedAt;
+
+      // If caller passed userId, sanity check it matches the assessment
+      if (userId && assessment.userId && assessment.userId !== userId) {
+        return NextResponse.json({ error: 'Assessment does not belong to userId' }, { status: 400 });
+      }
+
+      // Try user table for display name (use whichever model name your Prisma has: user vs users)
       try {
-        if (!name && assessment.userId) {
-          const user: any = await (db as any).users.findUnique({
-            where: { id: assessment.userId },
-            select: { firstName: true, lastName: true },
-          });
-          if (user) {
-            const n = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
-            if (n) name = n;
-          }
+        const usr: any = assessment.userId
+          ? await (db as any).user?.findUnique?.({
+              where: { id: assessment.userId },
+              select: { firstName: true, lastName: true, email: true },
+            })
+          : null;
+        if (usr) {
+          const n = `${usr.firstName ?? ''} ${usr.lastName ?? ''}`.trim();
+          if (n) name = n;
+          if (!name && usr.email) name = usr.email;
         }
       } catch {
         // ignore
       }
 
-      // try bioData-like fields
       name = extractParticipantName(assessment, name) || name;
 
-      // prefer lasbi_responses rows
       const fromLasbi = await loadResponsesFromLasbi(assessmentId);
       if (fromLasbi.size) {
         canonicalToValue = fromLasbi;
       } else {
-        // fallback: assessments.responses JSON
         const fromLegacy = extractResponsesFromAssessmentsJson(assessment, lasbi.byItemId);
         if (fromLegacy.size) canonicalToValue = fromLegacy;
       }
 
-      // If client also provided `responses`, merge them in (client takes precedence)
       if (responses) {
         const fromClient = responsesFromClientPayload(responses, lasbi.byItemId);
         if (fromClient.canonicalToValue.size) {
@@ -319,16 +370,18 @@ export async function POST(req: Request) {
         }
       }
     } else {
-      // 2) No ID → rely on client responses
       const fromClient = responsesFromClientPayload(responses, lasbi.byItemId);
       if (fromClient.canonicalToValue.size) {
         canonicalToValue = fromClient.canonicalToValue;
       } else if (fromClient.arrayOnly?.length) {
-        // Array: render overall only
-        const html = renderHtml({ name, overallArray: fromClient.arrayOnly });
+        const html = renderHtml({ participantName: name, overallArray: fromClient.arrayOnly });
         return new NextResponse(html, {
           status: 200,
-          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Content-Disposition': `attachment; filename="tier1_preview.html"`,
+            'Cache-Control': 'no-store',
+          },
         });
       } else {
         return NextResponse.json(
@@ -342,31 +395,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No responses found to generate report' }, { status: 400 });
     }
 
-    // Build per-schema means using lasbi_items
-    const bySchema: Record<string, { sum: number; n: number }> = {};
+    // 4) Aggregate by schema
+    const bySchemaAgg: Record<string, { sum: number; n: number }> = {};
     for (const [canonical, v] of canonicalToValue) {
       const meta = lasbi.byCanonical.get(canonical);
       const schema = meta?.schema_label || 'Unmapped';
-      const entry = bySchema[schema] || { sum: 0, n: 0 };
+      const entry = bySchemaAgg[schema] || { sum: 0, n: 0 };
       entry.sum += v;
       entry.n += 1;
-      bySchema[schema] = entry;
+      bySchemaAgg[schema] = entry;
     }
-
     const bySchemaMean: Record<string, number> = {};
-    for (const [k, agg] of Object.entries(bySchema)) {
+    for (const [k, agg] of Object.entries(bySchemaAgg)) {
       bySchemaMean[k] = agg.n ? agg.sum / agg.n : 0;
     }
 
+    // 5) Tier-1 public layer: top-3 + persona/narrative
+    const top3 = pickTop3(bySchemaMean);
+    const personaText = personaCopy?.forTop?.(top3.map(t => t.schema)) ?? null;
+    const narrativeText = narrativeFor?.(top3.map(t => t.schema)) ?? null;
+
+    // 6) Render & force download
     const html = renderHtml({
-      name,
+      participantName: name,
+      assessmentId,
+      completedAt,
       canonicalToValue,
       bySchema: bySchemaMean,
+      top3,
+      personaText,
+      narrativeText,
     });
 
+    const safeName = (name || 'participant').replace(/[^\w\d_-]+/g, '_');
     return new NextResponse(html, {
       status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="Public_Summary_${safeName}.html"`,
+        'Cache-Control': 'no-store',
+      },
     });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
