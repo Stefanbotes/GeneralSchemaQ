@@ -3,11 +3,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "prisma db push && next build",
     "start": "next start -p 3000",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "vercel:build": "prisma generate && prisma db push && next build"
+    "build": "prisma migrate deploy --schema=prisma/schema.prisma && next build",
+    "vercel:build": "prisma generate --schema=prisma/schema.prisma && prisma db push --schema=prisma/schema.prisma && next build"
+  }
+
+
   },
   "prisma": {
     "seed": "tsx --require dotenv/config scripts/seed.ts"
