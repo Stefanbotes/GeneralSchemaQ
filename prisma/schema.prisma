@@ -2,7 +2,6 @@
 //  PRISMA CLIENT GENERATOR
 // ======================================================
 
-}
 generator client {
   provider = "prisma-client-js"
 }
