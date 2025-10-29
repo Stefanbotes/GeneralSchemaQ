@@ -246,7 +246,7 @@ export default async function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentUsers?.map((user) => (
+                    {recentUsers?.map((user: any) => (
                       <tr key={user.id} className="border-b hover:bg-gray-50">
                         <td className="py-3">
                           {user.firstName} {user.lastName}
