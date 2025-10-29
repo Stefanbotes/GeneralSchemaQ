@@ -3,69 +3,82 @@ import crypto from "crypto";
 import { db } from "@/lib/db";
 
 type EmailParams = {
-  email: string;                 // user email (we'll store in VerificationToken.identifier)
-  baseUrl: string;               // e.g. https://yourapp.com
-  userId?: string;               // optional (used for password reset model if you have it)
-  expiresInMinutes?: number;     // default 60 for verification, 30 for reset (see callers)
+  email: string;                 // user email (stored in VerificationToken.identifier)
+  baseUrl?: string;              // e.g. https://yourapp.com (optional; we’ll fallback to env)
+  userId?: string;               // optional (for password reset linkage)
+  expiresInMinutes?: number;     // default 60 for verification, 30 for reset (set per caller)
 };
 
-/** Generate a random token (hex) and its SHA256 hash */
+/** Generate a random token and its SHA256 hash (store hash, send plaintext) */
 function generateTokenPair() {
   const token = crypto.randomBytes(32).toString("hex");
   const hashed = crypto.createHash("sha256").update(token).digest("hex");
   return { token, hashed };
 }
 
-/** Create a Date object `minutes` minutes in the future */
+/** Date `minutes` from now */
 function minutesFromNow(minutes: number) {
   const d = new Date();
   d.setMinutes(d.getMinutes() + minutes);
   return d;
 }
 
+/** Resolve a safe base URL (caller param > NEXT_PUBLIC_APP_URL > NEXTAUTH_URL) */
+function resolveBaseUrl(input?: string) {
+  const fromEnv =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL ||
+    "";
+
+  const base = (input || fromEnv).trim();
+  if (!base) {
+    // We don’t throw here to keep callers simple; they can still read the URL in logs.
+    // If you prefer strict behavior, throw new Error("No baseUrl configured");
+  }
+  return base.replace(/\/$/, "");
+}
+
 /**
- * Create + store an email verification token (NextAuth default model)
- * VerificationToken fields: identifier (email), token (hashed), expires
- * Returns the *plaintext* token and a ready-to-use verify URL.
+ * Create + store an email verification token (NextAuth-style table)
+ * Model: VerificationToken { identifier, token, expires, ... }
+ * We store the *hash* of the token; return plaintext + URL for email.
  */
 export async function createEmailVerificationToken({
   email,
   baseUrl,
   expiresInMinutes = 60,
 }: EmailParams) {
-  const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email.toLowerCase().trim();
   const { token, hashed } = generateTokenPair();
+  const base = resolveBaseUrl(baseUrl);
 
-  // Clear old tokens for this identifier (email)
+  // Clear old tokens for this identifier
   try {
-    await db.verificationToken.deleteMany({
-      where: { identifier: normalizedEmail },
-    });
+    await db.verificationToken.deleteMany({ where: { identifier: normalizedEmail } });
   } catch {
-    // ignore if the table doesn't exist yet
+    /* ignore if table not yet migrated */
   }
 
-  // Store hashed token using NextAuth's VerificationToken shape
+  // Store hashed token
   await db.verificationToken.create({
     data: {
-      identifier: normalizedEmail,          // <-- NOT "email"
-      token: hashed,                        // store the hash, never plaintext
+      identifier: normalizedEmail,   // <- NOT "email"
+      token: hashed,                 // <- store hash, never plaintext
       expires: minutesFromNow(expiresInMinutes),
     },
   });
 
-  const verifyUrl = `${baseUrl.replace(/\/$/, "")}/api/verify-email?token=${encodeURIComponent(
-    token
-  )}&email=${encodeURIComponent(normalizedEmail)}`;
+  const verifyUrl = `${base}/api/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(
+    normalizedEmail
+  )}`;
 
   return { token, verifyUrl };
 }
 
 /**
  * Create + store a password reset token.
- * Adjust the delegate/fields to match your schema.
- * If you have: model password_reset_tokens { token,email,userId,expires,... }
- * the delegate will likely be: db.passwordResetToken
+ * Your Prisma model maps to table "password_reset_tokens", so the delegate is `db.passwordResetToken`.
+ * We keep a cautious (db as any) in case of naming drift during migrations.
  */
 export async function createPasswordResetToken({
   email,
@@ -73,37 +86,36 @@ export async function createPasswordResetToken({
   userId,
   expiresInMinutes = 30,
 }: EmailParams) {
-  const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email.toLowerCase().trim();
   const { token, hashed } = generateTokenPair();
+  const base = resolveBaseUrl(baseUrl);
 
-  // If your Prisma model is `model password_reset_tokens { ... }` with Prisma default naming,
-  // the client delegate will be camel-cased singular: `db.passwordResetToken`.
-  // Adjust the field names below to your actual schema.
+  // Clean old tokens for this email (optional but helpful)
   try {
-    await (db as any).passwordResetToken?.deleteMany?.({
-      where: { email: normalizedEmail },
-    });
+    await (db as any).passwordResetToken?.deleteMany?.({ where: { email: normalizedEmail } });
   } catch {
     /* ignore */
   }
 
+  // Store hashed token
   await (db as any).passwordResetToken?.create?.({
     data: {
-      token: hashed,
+      token: hashed,                         // store hash
       email: normalizedEmail,
       userId: userId ?? null,
       expires: minutesFromNow(expiresInMinutes),
     },
   });
 
-  const resetUrl = `${baseUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(
-    token
-  )}&email=${encodeURIComponent(normalizedEmail)}`;
+  // IMPORTANT: point to the page route, not bare /reset-password
+  const resetUrl = `${base}/auth/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(
+    normalizedEmail
+  )}`;
 
   return { token, resetUrl };
 }
 
-/** Convenience export (optional) for modules that expect an EmailService object */
+/** Convenience grouped export */
 export const EmailService = {
   createEmailVerificationToken,
   createPasswordResetToken,
