@@ -17,9 +17,12 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "paths": { "@/*": ["./*"] },
+
+    // ✅ Add this line
+    "types": ["next-auth"]
+    // If your editor still doesn’t see augmentations, also add:
+    // "typeRoots": ["./types", "./node_modules/@types"]
   },
   "include": [
     "next-env.d.ts",
@@ -29,9 +32,5 @@
     ".next/types/**/*.ts",
     ".build/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "scripts/**/*"
-  ]
+  "exclude": ["node_modules", "scripts/**/*"]
 }
-
