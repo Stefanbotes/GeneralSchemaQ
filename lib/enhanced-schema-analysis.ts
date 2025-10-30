@@ -1,9 +1,51 @@
-
-
 // Enhanced Schema Analysis System
-// Implements sophisticated clinical and Inner Personaanalysis based on uploaded protocols
+// Implements sophisticated clinical and persona analysis based on uploaded protocols
 
-import { getPersonaDetails, ENHANCED_PERSONA_MAPPING, PersonaDetails } from '../data/enhanced-persona-mapping';
+// ⬇️ REPLACE the legacy import with this adapter:
+import { resolvePersonaNarrative } from "@/lib/narrative-resolver";
+
+type PersonaDetails = {
+  publicName: string;
+  clinicalName?: string;      // optional in counselling mode
+  domain?: string;            // optional in counselling mode
+  strengthFocus?: string;
+  developmentEdge?: string;
+  behaviors?: {
+    behavioral_markers?: string[];
+    cognitive_patterns?: string[];
+    emotional_regulation?: string[];
+  };
+  integration_patterns?: {
+    with_high_scores?: string[];
+  };
+};
+
+// Adapter so all old calls to getPersonaDetails(...) keep working
+function getPersonaDetails(personaName: string): PersonaDetails | null {
+  const node = resolvePersonaNarrative(personaName); // uses current pack/version/context
+  if (!node) return null;
+
+  // Map your counselling narrative fields into the legacy PersonaDetails-ish shape.
+  return {
+    publicName: node.title,
+    strengthFocus: node.subtitle,
+    developmentEdge: node.growthAreas?.[0],
+    // clinicalName / domain are legacy/leadership concepts; keep undefined or provide soft defaults
+    clinicalName: node.meta?.clinicalName ?? undefined,
+    domain: node.meta?.domain ?? undefined,
+    // behaviours are optional; only include if present in your pack
+    behaviors: node.behaviors
+      ? {
+          behavioral_markers: node.behaviors.behavioralMarkers,
+          cognitive_patterns: node.behaviors.cognitivePatterns,
+          emotional_regulation: node.behaviors.emotionalRegulation,
+        }
+      : undefined,
+    integration_patterns: node.integration?.withHighScores
+      ? { with_high_scores: node.integration.withHighScores }
+      : undefined,
+  };
+}
 
 export interface EnhancedSchemaActivation {
   schemaName: string;
