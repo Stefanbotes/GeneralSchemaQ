@@ -47,15 +47,19 @@ export async function POST(req: NextRequest) {
     }
     const { userId, assessmentId, responses, participantData } = parsed.data;
 
-    // 3) Build report (this function should do: fetch -> score -> resolve narratives -> render)
-    const { html, nameSafe, artifact } = await buildTier1Report({
-      db,
-      userId: userId ?? session.user.id, // default to current user if not provided
-      assessmentId,
-      responses,
-      participantData,
-      audience: 'counselling',           // <- tell the renderer which narrative pack to use
-    });
+// BEFORE
+// const { html, nameSafe, artifact } = await buildTier1Report({ ... });
+
+// AFTER
+const { html, nameSafe } = await buildTier1Report({
+  db,
+  userId: userId ?? session.user.id,
+  assessmentId,
+  responses,
+  participantData,
+  audience: 'counselling',
+});
+
 
     // 4) (Optional) Persist an artifact record if you want a trail
     // If buildTier1Report didn't already persist:
