@@ -51,18 +51,21 @@ export async function buildTier1Report(
   } = opts;
 
   // 1) Load responses
-  const loaded = inlineResponses ?? (await loadResponsesFromDB({ db, userId, assessmentId }));
+  const loaded =
+    inlineResponses ?? (await loadResponsesFromDB({ db, userId, assessmentId }));
   if (!loaded) {
     throw new Error("No responses found. Provide responses or a valid assessmentId.");
   }
 
-  // 1.1) Normalize to scorer’s expected shapes
-  const responses = normalizeResponses(loaded);
+  // 1.1) Normalize to scorer’s expected shape: Record<string, number>
+  const responses = normalizeResponsesToRecord(loaded);
 
   // 2) Score → ranked schemas
   // Expected output (shape example):
   // [{ clinicalSchemaId: "emotional_inhibition", score: 0.78 }, ...]
-  const scored = scoreAssessmentResponses(responses);
+  const scored = scoreAssessmentResponses(
+    responses as Record<string, string | number>
+  );
 
   if (!Array.isArray(scored) || scored.length === 0) {
     throw new Error("Scoring returned no results.");
@@ -73,17 +76,26 @@ export async function buildTier1Report(
     .slice(0, 3);
 
   // 3) Resolve narrative pack by audience (extensible later)
-  const pack = audience === "counselling" ? counsellingNarratives : counsellingNarratives;
+  const pack =
+    audience === "counselling" ? counsellingNarratives : counsellingNarratives;
 
   const resolved = top3.map((item: any) => {
-    const id: string = item.clinicalSchemaId ?? String(item.id ?? "unknown_schema");
+    const id: string =
+      item.clinicalSchemaId ?? String(item.id ?? "unknown_schema");
     const narrative: Narrative = pack[id] ?? defaultNarrative(id);
     return { id, ...item, narrative };
   });
 
   // 4) Participant meta + nameSafe
-  const meta = await safeParticipantMeta({ db, userId, assessmentId, participantData });
-  const nameSafe = toNameSafe(meta.name || meta.email || assessmentId || "participant");
+  const meta = await safeParticipantMeta({
+    db,
+    userId,
+    assessmentId,
+    participantData,
+  });
+  const nameSafe = toNameSafe(
+    meta.name || meta.email || assessmentId || "participant"
+  );
 
   // 5) Render HTML (A4 printable, inline CSS, footer with version)
   const html = renderTier1HTML({
@@ -150,26 +162,36 @@ async function loadResponsesFromDB({
 }
 
 /**
- * Normalise different inbound shapes into something the scorer accepts
- * Supported:
- * - number[] (already OK)
+ * Normalise different inbound shapes into a record the scorer accepts:
+ * - number[] (already OK content-wise) → {"0": n0, "1": n1, ...}
+ *   (Change to 1-based if your scorer expects it: use String(i+1))
  * - rows like [{ itemCode, value }] → { [itemCode]: number }
  * - record of numbers { "1.1.1": 4 }
  * - record of objects { "1.1.1": { value: 4, timestamp: "..." } }
  */
-function normalizeResponses(raw: any): Record<string, number> | number[] {
-  if (!raw) return raw;
+function normalizeResponsesToRecord(raw: any): Record<string, number> {
+  if (!raw) return {};
 
-  // Array of numbers / numeric strings
-  if (Array.isArray(raw) && raw.every((x) => typeof x === "number" || typeof x === "string")) {
-    return raw.map((x) => Number(x));
+  // Array of numbers / numeric strings → index-keyed record
+  if (
+    Array.isArray(raw) &&
+    raw.every((x) => typeof x === "number" || typeof x === "string")
+  ) {
+    const rec: Record<string, number> = {};
+    for (let i = 0; i < raw.length; i++) {
+      // If your scorer expects 1-based item indices, swap to String(i + 1)
+      rec[String(i)] = Number(raw[i]);
+    }
+    return rec;
   }
 
   // Array of row-like objects
   if (Array.isArray(raw) && raw.length && typeof raw[0] === "object") {
     const rec: Record<string, number> = {};
     for (const row of raw) {
-      const key = String((row as any).itemCode ?? (row as any).code ?? (row as any).question ?? "");
+      const key = String(
+        (row as any).itemCode ?? (row as any).code ?? (row as any).question ?? ""
+      );
       if (key) rec[key] = Number((row as any).value ?? (row as any).answer ?? (row as any).score ?? 0);
     }
     return rec;
@@ -188,7 +210,7 @@ function normalizeResponses(raw: any): Record<string, number> | number[] {
     return rec;
   }
 
-  return raw;
+  return {};
 }
 
 async function safeParticipantMeta({
@@ -339,4 +361,3 @@ function escapeHtml(s: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
-
