@@ -395,8 +395,8 @@ export function validateSurgicalExport(payload: LasbiExportPayload): ValidationE
 
     payload.responses.forEach((r, idx) => {
       if (!r.itemId) errors.push(`responses[${idx}].itemId is required`);
-      else if (!/^cmf[a-z0-9]{20,}$/i.test(r.itemId))
-        errors.push(`responses[${idx}].itemId must match "cmf..."`);
+      else if (!ITEM_ID_RE.test(r.itemId))     
+         errors.push(`responses[${idx}].itemId must match "cmf..."`);
 
       if (!r.canonicalId) errors.push(`responses[${idx}].canonicalId is required`);
       else if (!/^\d+\.\d+\.\d+$/.test(r.canonicalId))
