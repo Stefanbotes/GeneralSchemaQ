@@ -305,7 +305,7 @@ export function generateAssessmentExport(
       assessmentId: assessId,
       completedAt,
       instrument: {
-        name: normalizedInstrument.name,   // "LASBI"
+        name: "LASBI" as const,
         form: normalizedInstrument.form || "long",
         scale: normalizedInstrument.scale,
         items: normalizedInstrument.items, // 108 canonical, sorted
