@@ -364,16 +364,44 @@ export async function generateAssessmentExportV2(
 
   const mappingVersion = getCurrentMappingVersion();
 
-  // Build v1.3.0 payload (instrument + responses[108])
-  const payload = await buildExporter({
-    // cast to the exporter’s UIAnswer type
-    answers: uiAnswers as unknown as Parameters<typeof buildExporter>[0]["answers"],
-    mappingVersion,
-    schemaVersion: "1.0.0",
-  });
+// Build core payload
+const payload = await buildExporter({
+  answers: uiAnswers as unknown as Parameters<typeof buildExporter>[0]['answers'],
+  mappingVersion,
+  schemaVersion: '1.0.0',
+});
 
-  return payload;
-}
+// Derive safe initials (max 3, uppercase) or null
+const initials =
+  (participantData?.name ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(s => s[0]!.toUpperCase())
+    .slice(0, 3)
+    .join('') || null;
+
+// Use the same pseudonymous strategy as v1.0.0 exports
+const respondentId = generatePseudonymousId(userId); // returns 8-char hash (optionally with prefix if you pass one)
+
+// Add identification & provenance metadata (without PII in payload)
+payload.metadata = {
+  ...payload.metadata,
+  respondent: {
+    id: respondentId,
+    initials, // e.g., "SB" or null
+  },
+  assessment: {
+    id: assessmentId,
+    completedAt: participantData?.assessmentDate || new Date().toISOString(),
+  },
+  provenance: {
+    sourceApp: 'Inner Persona Assessment Portal',
+    sourceAppVersion: '3.2.1',
+  },
+};
+
+return payload;
 
 export function validateSurgicalExport(payload: LasbiExportPayload): ValidationError | null {
   const errors: string[] = [];
