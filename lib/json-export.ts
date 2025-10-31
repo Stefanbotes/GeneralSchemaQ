@@ -354,54 +354,49 @@ export async function generateAssessmentExportV2(
   assessmentId: string,
   userId: string
 ): Promise<LasbiExportPayload> {
-  // Canonical-only path (no legacy conversion). Your DB already stores 1.1.1 keys.
+  // Build 1..108 canonical answer list
   const uiAnswers = answersFromCanonicalRecord(responses);
 
-  // Early, clear guard for 108 items (lets the UI show a crisp error)
   if (uiAnswers.length !== 108) {
     throw new Error(`Expected 108 LASBI answers, got ${uiAnswers.length}`);
   }
 
   const mappingVersion = getCurrentMappingVersion();
 
-// Build core payload
-const payload = await buildExporter({
-  answers: uiAnswers as unknown as Parameters<typeof buildExporter>[0]['answers'],
-  mappingVersion,
-  schemaVersion: '1.0.0',
-});
+  // Core payload (itemId + canonicalId + value + index)
+  const payload = await buildExporter({
+    // cast to the exporter’s UIAnswer type
+    answers: uiAnswers as unknown as Parameters<typeof buildExporter>[0]["answers"],
+    mappingVersion,
+    schemaVersion: "1.0.0",
+  });
 
-// Derive safe initials (max 3, uppercase) or null
-const initials =
-  (participantData?.name ?? '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(s => s[0]!.toUpperCase())
-    .slice(0, 3)
-    .join('') || null;
+  // Identification & provenance metadata (not part of the “responses”)
+  payload.metadata = {
+    ...payload.metadata,
+    respondent: {
+      id: String(userId).slice(-8), // pseudonymous short id
+      initials: (participantData?.name ?? "")
+        .split(" ")
+        .map((n: string) => n?.[0])
+        .filter(Boolean)
+        .join("")
+        .slice(0, 3)
+        .toUpperCase(),
+    },
+    assessment: {
+      id: assessmentId,
+      completedAt: participantData?.assessmentDate ?? new Date().toISOString(),
+    },
+    provenance: {
+      sourceApp: "Inner Persona Assessment Portal",
+      sourceAppVersion: "3.2.1",
+    },
+  };
 
-// Use the same pseudonymous strategy as v1.0.0 exports
-const respondentId = generatePseudonymousId(userId); // returns 8-char hash (optionally with prefix if you pass one)
+  return payload;
+}
 
-// Add identification & provenance metadata (without PII in payload)
-payload.metadata = {
-  ...payload.metadata,
-  respondent: {
-    id: respondentId,
-    initials, // e.g., "SB" or null
-  },
-  assessment: {
-    id: assessmentId,
-    completedAt: participantData?.assessmentDate || new Date().toISOString(),
-  },
-  provenance: {
-    sourceApp: 'Inner Persona Assessment Portal',
-    sourceAppVersion: '3.2.1',
-  },
-};
-
-return payload;
 
 export function validateSurgicalExport(payload: LasbiExportPayload): ValidationError | null {
   const errors: string[] = [];
