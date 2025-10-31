@@ -16,7 +16,7 @@ import { db } from '@/lib/db';
 import {
   generateAssessmentExportV2,
   validateSurgicalExport,
-} from '@/lib/studio-export';
+} from '@/lib/json-export';
 
 export const dynamic = 'force-dynamic';
 
