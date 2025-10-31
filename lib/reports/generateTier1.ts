@@ -1,25 +1,28 @@
 // lib/reports/generateTier1.ts
 
 import type { PrismaClient } from "@prisma/client";
-import { counsellingNarratives, defaultNarrative, type Narrative } from "@/lib/narratives/counselling";
-import { scoreAssessmentResponses } from "@/lib/shared-schema-scoring"; // your existing scorer
-// If you have pickTop3, you can import it; we’ll do a local top-3 to avoid coupling
+import {
+  counsellingNarratives,
+  defaultNarrative,
+  type Narrative,
+} from "@/lib/narratives/counselling";
+import { scoreAssessmentResponses } from "@/lib/shared-schema-scoring";
 
 export const TEMPLATE_VERSION = "tier1/1.0.0";
 
 type Audience = "counselling" | "leadership";
 
 export interface BuildTier1Options {
-  db: PrismaClient | any;          // keep wide to avoid type breakage during integration
+  db: PrismaClient | any;
   userId?: string;
   assessmentId?: string;
-  responses?: any;                 // accepts the shapes your API allows
+  responses?: any; // accepts the shapes your API allows
   participantData?: {
     name?: string | null;
     email?: string | null;
     [k: string]: any;
   };
-  audience: Audience;              // 'counselling' for this app
+  audience: Audience; // 'counselling' for this app
 }
 
 export interface Tier1Result {
@@ -35,7 +38,9 @@ export interface Tier1Result {
  * Build Tier-1 (fetch → score → resolve narratives → render HTML)
  * Returns { html, nameSafe, artifact? }
  */
-export async function buildTier1Report(opts: BuildTier1Options): Promise<Tier1Result> {
+export async function buildTier1Report(
+  opts: BuildTier1Options
+): Promise<Tier1Result> {
   const {
     db,
     userId,
@@ -46,11 +51,13 @@ export async function buildTier1Report(opts: BuildTier1Options): Promise<Tier1Re
   } = opts;
 
   // 1) Load responses
-  const responses = inlineResponses ?? (await loadResponsesFromDB({ db, userId, assessmentId }));
-
-  if (!responses) {
+  const loaded = inlineResponses ?? (await loadResponsesFromDB({ db, userId, assessmentId }));
+  if (!loaded) {
     throw new Error("No responses found. Provide responses or a valid assessmentId.");
   }
+
+  // 1.1) Normalize to scorer’s expected shapes
+  const responses = normalizeResponses(loaded);
 
   // 2) Score → ranked schemas
   // Expected output (shape example):
@@ -86,9 +93,7 @@ export async function buildTier1Report(opts: BuildTier1Options): Promise<Tier1Re
     templateVersion: TEMPLATE_VERSION,
   });
 
-  // 6) (Optional) If you later want to persist an artifact here, do it and return ids.
-  // Keeping off by default so this stays pure and deterministic.
-  // const artifact = await maybePersistArtifact(db, { ... });
+  // 6) (Optional) Persist an artifact here if desired (currently off)
 
   return { html, nameSafe };
 }
@@ -106,36 +111,31 @@ async function loadResponsesFromDB({
 }) {
   if (!assessmentId) return null;
 
-  // Try a few likely shapes to avoid tight coupling to your Prisma schema.
-  // Adjust to your actual tables once confirmed.
-  // 1) assessmentResults (JSON column: responses)
+  // 1) assessmentResult (JSON column: responses)
   try {
-    const r1 =
-      await db.assessmentResult?.findFirst?.({
-        where: { assessmentId, ...(userId ? { userId } : {}) },
-        select: { responses: true },
-      });
+    const r1 = await db.assessmentResult?.findFirst?.({
+      where: { assessmentId, ...(userId ? { userId } : {}) },
+      select: { responses: true },
+    });
     if (r1?.responses) return r1.responses;
   } catch {}
 
   // 2) assessment (JSON column: responses)
   try {
-    const r2 =
-      await db.assessment?.findUnique?.({
-        where: { id: assessmentId },
-        select: { responses: true, userId: true },
-      });
+    const r2 = await db.assessment?.findUnique?.({
+      where: { id: assessmentId },
+      select: { responses: true, userId: true },
+    });
     if (r2?.responses) return r2.responses;
   } catch {}
 
   // 3) assessmentResponses (flat table of answers)
   try {
-    const r3 =
-      await db.assessmentResponses?.findMany?.({
-        where: { assessmentId, ...(userId ? { userId } : {}) },
-        select: { itemCode: true, value: true, timestamp: true },
-        orderBy: { itemCode: "asc" },
-      });
+    const r3 = await db.assessmentResponses?.findMany?.({
+      where: { assessmentId, ...(userId ? { userId } : {}) },
+      select: { itemCode: true, value: true, timestamp: true },
+      orderBy: { itemCode: "asc" },
+    });
     if (Array.isArray(r3) && r3.length) {
       // Convert rows → { "1.1.1": number, ... }
       const asRecord: Record<string, number> = {};
@@ -147,6 +147,48 @@ async function loadResponsesFromDB({
   } catch {}
 
   return null;
+}
+
+/**
+ * Normalise different inbound shapes into something the scorer accepts
+ * Supported:
+ * - number[] (already OK)
+ * - rows like [{ itemCode, value }] → { [itemCode]: number }
+ * - record of numbers { "1.1.1": 4 }
+ * - record of objects { "1.1.1": { value: 4, timestamp: "..." } }
+ */
+function normalizeResponses(raw: any): Record<string, number> | number[] {
+  if (!raw) return raw;
+
+  // Array of numbers / numeric strings
+  if (Array.isArray(raw) && raw.every((x) => typeof x === "number" || typeof x === "string")) {
+    return raw.map((x) => Number(x));
+  }
+
+  // Array of row-like objects
+  if (Array.isArray(raw) && raw.length && typeof raw[0] === "object") {
+    const rec: Record<string, number> = {};
+    for (const row of raw) {
+      const key = String((row as any).itemCode ?? (row as any).code ?? (row as any).question ?? "");
+      if (key) rec[key] = Number((row as any).value ?? (row as any).answer ?? (row as any).score ?? 0);
+    }
+    return rec;
+  }
+
+  // Plain record (numbers or { value })
+  if (raw && typeof raw === "object") {
+    const rec: Record<string, number> = {};
+    for (const [k, v] of Object.entries(raw)) {
+      if (typeof v === "number" || typeof v === "string") {
+        rec[k] = Number(v);
+      } else if (v && typeof v === "object" && "value" in (v as any)) {
+        rec[k] = Number((v as any).value);
+      }
+    }
+    return rec;
+  }
+
+  return raw;
 }
 
 async function safeParticipantMeta({
@@ -164,13 +206,20 @@ async function safeParticipantMeta({
 
   // Priority: provided participantData → user record → assessment owner
   if (participantData?.name || participantData?.email) {
-    return { name: participantData.name ?? undefined, email: participantData.email ?? undefined, dateISO };
+    return {
+      name: participantData.name ?? undefined,
+      email: participantData.email ?? undefined,
+      dateISO,
+    };
   }
 
   // Try user by id
   if (userId) {
     try {
-      const u = await db.user?.findUnique?.({ where: { id: userId }, select: { name: true, email: true } });
+      const u = await db.user?.findUnique?.({
+        where: { id: userId },
+        select: { name: true, email: true },
+      });
       if (u) return { name: u.name, email: u.email, dateISO };
     } catch {}
   }
@@ -190,11 +239,13 @@ async function safeParticipantMeta({
 }
 
 function toNameSafe(s: string) {
-  return s
-    .trim()
-    .replace(/[^\p{L}\p{N}\-_. ]/gu, "")
-    .replace(/\s+/g, "_")
-    .slice(0, 60) || "participant";
+  return (
+    s
+      .trim()
+      .replace(/[^\p{L}\p{N}\-_. ]/gu, "")
+      .replace(/\s+/g, "_")
+      .slice(0, 60) || "participant"
+  );
 }
 
 function renderTier1HTML({
@@ -210,8 +261,7 @@ function renderTier1HTML({
 }) {
   const title = "Tier-1 Counselling Report";
   const sub = audience === "counselling" ? "Client-facing summary" : "Summary";
-  const headerName =
-    participant.name || participant.email || "Participant";
+  const headerName = participant.name || participant.email || "Participant";
 
   const styles = `
   :root { --ink:#0f172a; --muted:#475569; --card:#ffffff; --bg:#f8fafc; --brand:#4f46e5; }
@@ -289,5 +339,4 @@ function escapeHtml(s: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
-
 
