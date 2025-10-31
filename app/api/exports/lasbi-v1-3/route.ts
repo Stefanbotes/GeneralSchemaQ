@@ -2,11 +2,11 @@
 /**
  * API endpoint for LASBI v1.3.0 Surgical JSON Assessment Export
  *
- * Emits Studio-compatible JSON with:
- * - itemId (modern cmf... LASBI id)  — primary join key
- * - canonicalId ("d.s.q" like "2.4.3") — human-readable guard
- * - value (1..6)
- * - index (1..108) — display only
+ * Generates Studio-compatible JSON with:
+ * • itemId (modern cmf... LASBI id)  — primary join key
+ * • canonicalId ("d.s.q" like "2.4.3") — human-readable guard
+ * • value (1..6)
+ * • index (1..108) — display only
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,7 +16,7 @@ import { db } from '@/lib/db';
 import {
   generateAssessmentExportV2,
   validateSurgicalExport,
-} from '@/lib/json-export';
+} from '@/lib/json-export';   // ✅ make sure this file exists (or change to '@/lib/json-export')
 
 export const dynamic = 'force-dynamic';
 
@@ -24,14 +24,14 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔍 LASBI v1.3.0 Surgical Export API Called');
 
+    // ---- Auth check --------------------------------------------------------
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // ---- Parse body --------------------------------------------------------
     const { userId, assessmentId } = await request.json().catch(() => ({}));
-    console.log('🔍 Request data:', { userId, assessmentId });
-
     if (!userId || !assessmentId) {
       return NextResponse.json(
         { error: 'Missing userId or assessmentId' },
@@ -39,15 +39,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Authorization: admins or the owner only
+    // ---- Authorization -----------------------------------------------------
     if (session.user.role !== 'ADMIN' && session.user.id !== userId) {
       return NextResponse.json(
-        { error: 'Unauthorized - Can only export your own assessment data' },
+        { error: 'Unauthorized – only admin or owner may export data' },
         { status: 403 }
       );
     }
 
-    // Fetch user and the specific assessment
+    // ---- Fetch user + assessment -------------------------------------------
     const user = await db.user.findUnique({
       where: { id: userId },
       include: {
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse responses (supports object or stringified JSON)
+    // ---- Parse stored responses -------------------------------------------
     let responses: Record<string, any> = {};
     try {
       if (assessment.responses) {
@@ -86,25 +86,25 @@ export async function POST(request: NextRequest) {
             ? JSON.parse(assessment.responses)
             : (assessment.responses as Record<string, any>);
       }
-    } catch (e) {
-      console.error('❌ Error parsing responses:', e);
+    } catch (err) {
+      console.error('❌ Failed to parse assessment responses:', err);
       return NextResponse.json(
-        { error: 'Invalid assessment data format' },
+        { error: 'Invalid assessment response format' },
         { status: 500 }
       );
     }
 
-    if (!responses || Object.keys(responses).length === 0) {
+    if (!Object.keys(responses).length) {
       return NextResponse.json(
         { error: 'No assessment responses found' },
         { status: 404 }
       );
     }
 
-    // Participant context (no PII is emitted in the payload)
+    // ---- Build participant context ----------------------------------------
     const participantData = {
       name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
-      email: user.email, // not embedded in payload; just here if needed for provenance later
+      email: user.email,
       organization: '',
       assessmentDate: new Date(
         assessment.completedAt || assessment.createdAt
@@ -114,15 +114,15 @@ export async function POST(request: NextRequest) {
 
     console.log('🔄 Generating LASBI v1.3.0 surgical export…');
 
-    // Build payload via the golden lib
+    // ---- Build payload using golden lib -----------------------------------
     const exportData = await generateAssessmentExportV2(
-      responses, // expects canonical 1.1.1 keys (or {value})
+      responses,
       participantData,
       assessment.id,
       user.id
     );
 
-    // Validate payload
+    // ---- Validate payload -------------------------------------------------
     const validation = validateSurgicalExport(exportData);
     if (validation) {
       console.error('❌ Export validation failed:', validation.details);
@@ -132,16 +132,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Download filename
+    // ---- Prepare filename -------------------------------------------------
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const safeFirst = (user.firstName ?? '').replace(/\s+/g, '_');
     const safeLast = (user.lastName ?? '').replace(/\s+/g, '_');
-    const filename = `LASBI_Export_${safeFirst}_${safeLast}_${timestamp}_v1.3.0.json`
-      .replace(/[^A-Za-z0-9_\-\.]/g, '') || `LASBI_Export_${timestamp}_v1.3.0.json`;
+    const filename =
+      `LASBI_Export_${safeFirst}_${safeLast}_${timestamp}_v1.3.0.json`
+        .replace(/[^A-Za-z0-9_\-\.]/g, '') ||
+      `LASBI_Export_${timestamp}_v1.3.0.json`;
 
     console.log('✅ Surgical export generated successfully:', filename);
 
-    // Return as downloadable JSON
+    // ---- Return downloadable JSON -----------------------------------------
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       status: 200,
       headers: {
