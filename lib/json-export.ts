@@ -15,7 +15,6 @@ import {
 } from "./lasbi-exporter";
 import { ITEM_ID_RE } from "./shared-lasbi-mapping";
 
-
 // --------------------------- Types (v1.0.0 raw) ------------------------------
 
 export interface AssessmentExport {
@@ -56,7 +55,6 @@ const SCALE_MAX = 6;
 const ASSESSMENT_SCALE = { min: SCALE_MIN, max: SCALE_MAX };
 
 // Sequential (1..108) → Canonical "d.s.q" (18×6)
-// Kept only to support older in-memory response shapes that used numeric keys.
 const SEQUENTIAL_TO_CANONICAL_MAP: Record<string, string> = {
   // Domain 1 (5×6)
   "1":"1.1.1","2":"1.1.2","3":"1.1.3","4":"1.1.4","5":"1.1.5","6":"1.1.6",
@@ -365,28 +363,36 @@ export async function generateAssessmentExportV2(
 
   // Core payload (itemId + canonicalId + value + index)
   const payload = await buildExporter({
-    // cast to the exporter’s UIAnswer type
     answers: uiAnswers as unknown as Parameters<typeof buildExporter>[0]["answers"],
     mappingVersion,
     schemaVersion: "1.0.0",
   });
 
-  // Identification & provenance metadata (not part of the “responses”)
+  // Ensure required metadata keys exist, then add identification/provenance
+  const exportedAt = payload.metadata?.exportedAt ?? new Date().toISOString();
+  const locale = payload.metadata?.locale ?? "en-US";
+  const initials = (participantData?.name ?? "")
+    .split(" ")
+    .map((n: string) => n?.[0])
+    .filter(Boolean)
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+
   payload.metadata = {
-  
+    ...payload.metadata,
+    exportedAt, // must be string
+    locale,     // optional but we set default
     respondent: {
       id: String(userId).slice(-8), // pseudonymous short id
-      initials: (participantData?.name ?? "")
-        .split(" ")
-        .map((n: string) => n?.[0])
-        .filter(Boolean)
-        .join("")
-        .slice(0, 3)
-        .toUpperCase(),
+      initials,
     },
     assessment: {
       id: assessmentId,
-      completedAt: participantData?.assessmentDate ?? new Date().toISOString(),
+      completedAt:
+        typeof participantData?.assessmentDate === "string"
+          ? participantData.assessmentDate
+          : new Date().toISOString(),
     },
     provenance: {
       sourceApp: "Inner Persona Assessment Portal",
@@ -396,7 +402,6 @@ export async function generateAssessmentExportV2(
 
   return payload;
 }
-
 
 export function validateSurgicalExport(payload: LasbiExportPayload): ValidationError | null {
   const errors: string[] = [];
@@ -418,8 +423,8 @@ export function validateSurgicalExport(payload: LasbiExportPayload): ValidationE
 
     payload.responses.forEach((r, idx) => {
       if (!r.itemId) errors.push(`responses[${idx}].itemId is required`);
-      else if (!ITEM_ID_RE.test(r.itemId))     
-         errors.push(`responses[${idx}].itemId must match "cmf..."`);
+      else if (!ITEM_ID_RE.test(r.itemId))
+        errors.push(`responses[${idx}].itemId must match "cmf..."`);
 
       if (!r.canonicalId) errors.push(`responses[${idx}].canonicalId is required`);
       else if (!/^\d+\.\d+\.\d+$/.test(r.canonicalId))
