@@ -13,6 +13,8 @@ import {
   getCurrentMappingVersion,
   type ExportPayload as LasbiExportPayload,
 } from "./lasbi-exporter";
+import { ITEM_ID_RE } from "./shared-lasbi-mapping";
+
 
 // --------------------------- Types (v1.0.0 raw) ------------------------------
 
