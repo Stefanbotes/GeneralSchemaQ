@@ -373,7 +373,7 @@ export async function generateAssessmentExportV2(
 
   // Identification & provenance metadata (not part of the “responses”)
   payload.metadata = {
-    ...payload.metadata,
+  
     respondent: {
       id: String(userId).slice(-8), // pseudonymous short id
       initials: (participantData?.name ?? "")
