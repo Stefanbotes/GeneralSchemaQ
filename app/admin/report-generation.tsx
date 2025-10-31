@@ -1,6 +1,7 @@
 // app/admin/report-generation.tsx
 'use client';
 
+import * as React from 'react';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { FileText, Download, Bug, Loader2 } from 'lucide-react';
+import { FileText, Download, Loader2 } from 'lucide-react';
 
 type CompletedAssessment = {
   id: string;
@@ -35,7 +36,11 @@ export interface ReportGenerationProps {
 export function ReportGenerationInterface({ users }: ReportGenerationProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [generating, setGenerating] = useState<null | { tier: 1 | 2 | 3 | 'json'; userId: string }>(null);
-  const selectedUser = useMemo(() => users.find(u => u.id === selectedUserId), [users, selectedUserId]);
+
+  const selectedUser = useMemo(
+    () => users.find((u) => u.id === selectedUserId),
+    [users, selectedUserId]
+  );
 
   const latestAssessment = useMemo<CompletedAssessment | null>(() => {
     if (!selectedUser?.assessments?.length) return null;
@@ -55,24 +60,52 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
       return;
     }
     setGenerating({ tier, userId: selectedUser.id });
+
     try {
+      // Studio JSON (108) export (LASBI v1.3.0)
       if (tier === 'json') {
-        const res = await fetch('/api/admin/diagnose-assessment', {
+        const res = await fetch('/api/exports/lasbi-v1-3', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ userId: selectedUser.id, assessmentId: latestAssessment.id }),
+          body: JSON.stringify({
+            userId: selectedUser.id,
+            assessmentId: latestAssessment.id,
+          }),
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data?.error || 'Diagnosis failed');
-        toast.success('Assessment diagnostics ready – opening JSON in a new tab');
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+        if (!res.ok) {
+          let msg = res.statusText;
+          try {
+            const j = await res.json();
+            msg = j?.error || j?.details?.[0] || msg;
+          } catch {}
+          throw new Error(msg || 'Studio export failed');
+        }
+
+        const blob = await res.blob();
+        const cd = res.headers.get('content-disposition');
+        const m = cd?.match(/filename="([^"]+)"/);
+        const fallback = `LASBI_Export_${(selectedUser.firstName ?? '').replace(/\s+/g, '_')}_${(selectedUser.lastName ?? '').replace(/\s+/g, '_')}_${new Date()
+          .toISOString()
+          .replace(/[:.]/g, '-')
+          .slice(0, 19)}_v1.3.0.json`;
+        const filename = m?.[1] ?? fallback;
+
         const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
         URL.revokeObjectURL(url);
+
+        toast.success('Studio JSON (108) downloaded');
         return;
       }
 
+      // Tier 1 / 2 / 3 report generation (unchanged)
       const endpoint =
         tier === 1
           ? '/api/reports/generate-tier1'
@@ -109,6 +142,7 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+
       toast.success(`Tier ${tier} report downloaded`);
     } catch (err: any) {
       toast.error(err?.message || 'Report generation failed');
@@ -128,7 +162,7 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
                 <SelectValue placeholder="Choose a user" />
               </SelectTrigger>
               <SelectContent>
-                {users?.map(u => (
+                {users?.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {u.firstName} {u.lastName} — {u.email}
                   </SelectItem>
@@ -142,9 +176,13 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
               {selectedUser?.role ?? 'CLIENT'}
             </Badge>
             {selectedUser?.emailVerified ? (
-              <Badge variant="secondary" className="mt-6">Verified</Badge>
+              <Badge variant="secondary" className="mt-6">
+                Verified
+              </Badge>
             ) : (
-              <Badge variant="destructive" className="mt-6">Unverified</Badge>
+              <Badge variant="destructive" className="mt-6">
+                Unverified
+              </Badge>
             )}
           </div>
         </div>
@@ -174,8 +212,13 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
             disabled={!canGenerate || !!generating}
             variant="secondary"
             className="flex items-center gap-2"
+            title="Printable Tier 1 HTML (counselling narrative)"
           >
-            {generating?.tier === 1 ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+            {generating?.tier === 1 ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
             Generate Tier 1 (Public)
           </Button>
 
@@ -183,8 +226,13 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
             onClick={() => doGenerate(2)}
             disabled={!canGenerate || !!generating}
             className="flex items-center gap-2"
+            title="Leadership report PDF"
           >
-            {generating?.tier === 2 ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+            {generating?.tier === 2 ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
             Generate Tier 2 (Leadership)
           </Button>
 
@@ -193,8 +241,13 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
             disabled={!canGenerate || !!generating}
             variant="outline"
             className="flex items-center gap-2"
+            title="Clinical report PDF"
           >
-            {generating?.tier === 3 ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {generating?.tier === 3 ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
             Generate Tier 3 (Clinical)
           </Button>
 
@@ -203,9 +256,14 @@ export function ReportGenerationInterface({ users }: ReportGenerationProps) {
             disabled={!canGenerate || !!generating}
             variant="ghost"
             className="flex items-center gap-2"
+            title="Exports LASBI v1.3.0 (108 items) using the Studio JSON lib"
           >
-            {generating?.tier === 'json' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bug className="h-4 w-4" />}
-            Diagnostics JSON
+            {generating?.tier === 'json' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            Download Studio JSON (108)
           </Button>
         </div>
       </CardContent>
