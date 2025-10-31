@@ -82,9 +82,7 @@ const SCHEMAS: Record<VariableId, { clinicalSchemaId: string; schemaLabel: strin
 // --------------------------------------------------------------------
 type MappingRow = { itemId: string; variableId: VariableId; questionNumber: 1|2|3|4|5|6 };
 
-// ⚠️ Keep your existing array content — only regex & validation changed
-import LASBI_ITEM_MAPPINGS from './lasbi-item-mappings.json' assert { type: 'json' };
-// (Or inline the array directly as before if you prefer.)
+
 
 // --------------------------------------------------------------------
 // Memoized builders
