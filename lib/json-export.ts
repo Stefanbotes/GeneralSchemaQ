@@ -10,7 +10,6 @@
 import crypto from "crypto";
 import {
   buildExporter,
-  convertLegacyResponses,
   getCurrentMappingVersion,
   type ExportPayload as LasbiExportPayload,
 } from "./lasbi-exporter";
@@ -87,11 +86,6 @@ const SEQUENTIAL_TO_CANONICAL_MAP: Record<string, string> = {
 function convertToCanonicalId(questionId: string): string {
   if (/^\d+\.\d+\.\d+$/.test(questionId)) return questionId;
   return SEQUENTIAL_TO_CANONICAL_MAP[questionId] || questionId;
-}
-
-function areAllKeysCanonical(rec: Record<string, any>): boolean {
-  const keys = Object.keys(rec);
-  return keys.length > 0 && keys.every((k) => /^\d+\.\d+\.\d+$/.test(k));
 }
 
 function normalizeValue(v: any): number {
@@ -327,16 +321,39 @@ export function generateAssessmentExport(
   return finalExport;
 }
 
+// -------------------- canonical → UIAnswer for v1.3.0 ------------------------
+
+type UIAnswerCanon = { index: number; canonicalId: string; value: number };
+
+/** Build a stable 1..108 list from a canonical record {"1.1.1": 3, ...} */
+function answersFromCanonicalRecord(rec: Record<string, any>): UIAnswerCanon[] {
+  const CANON = /^\d+\.\d+\.\d+$/;
+  const toNum = (v: any) =>
+    Number.isFinite(Number(v?.value)) ? Number(v.value) : Number(v);
+
+  const ids = Object.keys(rec)
+    .filter((k) => CANON.test(k))
+    .sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+    );
+
+  return ids.map((id, i) => ({
+    index: i + 1, // 1..108
+    canonicalId: id,
+    value: toNum(rec[id]),
+  }));
+}
+
 // -------------------------- v1.3.0 (surgical) --------------------------------
 
 export async function generateAssessmentExportV2(
-  responses: Record<string, any>,
+  responses: Record<string, any>, // expects canonical 1.1.1 keys (or {value})
   participantData: any,
   assessmentId: string,
   userId: string
 ): Promise<LasbiExportPayload> {
-  // Convert any legacy shapes → UI answers
-  const uiAnswers = convertLegacyResponses(responses);
+  // Canonical-only path (no legacy conversion). Your DB already stores 1.1.1 keys.
+  const uiAnswers = answersFromCanonicalRecord(responses);
 
   // Early, clear guard for 108 items (lets the UI show a crisp error)
   if (uiAnswers.length !== 108) {
@@ -347,7 +364,8 @@ export async function generateAssessmentExportV2(
 
   // Build v1.3.0 payload (instrument + responses[108])
   const payload = await buildExporter({
-    answers: uiAnswers,
+    // cast to the exporter’s UIAnswer type
+    answers: uiAnswers as unknown as Parameters<typeof buildExporter>[0]["answers"],
     mappingVersion,
     schemaVersion: "1.0.0",
   });
