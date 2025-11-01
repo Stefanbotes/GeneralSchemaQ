@@ -123,14 +123,16 @@ export async function POST(request: NextRequest) {
     );
 
     // ---- Validate payload -------------------------------------------------
-    const validation = validateSurgicalExport(exportData);
-    if (validation) {
-      console.error('❌ Export validation failed:', validation.details);
-      return NextResponse.json(
-        { error: validation.error, details: validation.details },
-        { status: 400 }
-      );
-    }
+// ---- Validate payload -------------------------------------------------
+const validation = validateSurgicalExport(exportData);
+if (!validation.ok) {
+  console.error('❌ Export validation failed:', validation.details);
+  return NextResponse.json(
+    { error: validation.error, details: validation.details },
+    { status: 400 }
+  );
+}
+
 
     // ---- Prepare filename -------------------------------------------------
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
