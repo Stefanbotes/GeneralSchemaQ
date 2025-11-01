@@ -1,439 +1,159 @@
-// lib/studio-export.ts
-// -----------------------------------------------------------------------------
-// Studio JSON Export — Golden Standard
-// - Supports 18×6 = 108 items only
-// - v1.0.0 (raw instrument): LASBI-Long, no derived data
-// - v1.3.0 "surgical": itemId + canonicalId + value + index (108 items)
-// -----------------------------------------------------------------------------
+// GeneralSchemaQ/lib/json-export.ts
+// Builds a "Studio"-compatible JSON payload and returns it as a string.
+// If you already have a caller that expects an object, you can switch
+// `exportStudioJson` to return the object instead of a string.
 
-import crypto from "crypto";
-import {
-  buildExporter,
-  getCurrentMappingVersion,
-  type ExportPayload as LasbiExportPayloadBase,
-} from "./lasbi-exporter";
-import { ITEM_ID_RE } from "./shared-lasbi-mapping";
+/* -------------------------------- Types -------------------------------- */
 
-// --------------------------- Types (v1.0.0 raw) ------------------------------
+export type StudioItem = { id: string; value: number };
 
-export interface AssessmentExport {
-  schemaVersion: string;          // "1.0.0"
-  analysisVersion: string;        // "YYYY.MM"
-  respondent: {
-    id: string;                   // pseudonymous id
-    initials: string | null;      // optional
-    dobYear: number | null;       // optional
-  };
-  assessment: {
-    assessmentId: string;         // pseudonymous id
-    completedAt: string;          // ISO Z, no millis
-    instrument: {
-      name: "LASBI";
-      form: "short" | "long";     // we emit "long"
-      scale: { min: number; max: number }; // 1..6
-      items: Array<{ id: string; value: number }>; // 108 canonical (d.s.q)
-    };
-  };
-  provenance: {
-    sourceApp: string;
-    sourceAppVersion: string;
-    exportedAt: string;           // ISO Z, no millis
-    checksumSha256: string;       // stable JSON checksum
-  };
+export interface StudioExportInput {
+  // Respondent & assessment context
+  respondentId: string;
+  respondentInitials?: string | null;
+  assessmentId: string;
+  completedAtISO: string; // e.g., new Date().toISOString()
+
+  // Instrument
+  instrumentName: string; // e.g., "LASBI"
+  instrumentForm: string; // e.g., "short"
+  scaleMin: number;       // e.g., 1
+  scaleMax: number;       // e.g., 6
+  items: StudioItem[];    // [{ id: "1.1.1", value: 4 }, ...]
+
+  // Provenance
+  sourceApp: string;         // e.g., "Leadership Assessment Portal"
+  sourceAppVersion: string;  // e.g., "3.2.1"
+  exportedAtISO?: string;    // defaults to now (UTC ISO string)
+  checksumSha256?: string;   // optional — computed if omitted
+
+  // Versions (defaults provided)
+  schemaVersion?: string;    // default "1.0.0"
+  analysisVersion?: string;  // default "2025.11"
 }
 
-export interface ValidationError {
-  error: "ValidationFailed";
-  details: string[];
-}
+/* --------------------------- Helper: validation ------------------------- */
 
-// ------------------------------ Constants ------------------------------------
-
-const SCALE_MIN = 1;
-const SCALE_MAX = 6;
-const ASSESSMENT_SCALE = { min: SCALE_MIN, max: SCALE_MAX };
-
-// Sequential (1..108) → Canonical "d.s.q"
-const SEQUENTIAL_TO_CANONICAL_MAP: Record<string, string> = {
-  "1":"1.1.1","2":"1.1.2","3":"1.1.3","4":"1.1.4","5":"1.1.5","6":"1.1.6",
-  "7":"1.2.1","8":"1.2.2","9":"1.2.3","10":"1.2.4","11":"1.2.5","12":"1.2.6",
-  "13":"1.3.1","14":"1.3.2","15":"1.3.3","16":"1.3.4","17":"1.3.5","18":"1.3.6",
-  "19":"1.4.1","20":"1.4.2","21":"1.4.3","22":"1.4.4","23":"1.4.5","24":"1.4.6",
-  "25":"1.5.1","26":"1.5.2","27":"1.5.3","28":"1.5.4","29":"1.5.5","30":"1.5.6",
-  "31":"2.1.1","32":"2.1.2","33":"2.1.3","34":"2.1.4","35":"2.1.5","36":"2.1.6",
-  "37":"2.2.1","38":"2.2.2","39":"2.2.3","40":"2.2.4","41":"2.2.5","42":"2.2.6",
-  "43":"2.3.1","44":"2.3.2","45":"2.3.3","46":"2.3.4","47":"2.3.5","48":"2.3.6",
-  "49":"2.4.1","50":"2.4.2","51":"2.4.3","52":"2.4.4","53":"2.4.5","54":"2.4.6",
-  "55":"3.1.1","56":"3.1.2","57":"3.1.3","58":"3.1.4","59":"3.1.5","60":"3.1.6",
-  "61":"3.2.1","62":"3.2.2","63":"3.2.3","64":"3.2.4","65":"3.2.5","66":"3.2.6",
-  "67":"4.1.1","68":"4.1.2","69":"4.1.3","70":"4.1.4","71":"4.1.5","72":"4.1.6",
-  "73":"4.2.1","74":"4.2.2","75":"4.2.3","76":"4.2.4","77":"4.2.5","78":"4.2.6",
-  "79":"4.3.1","80":"4.3.2","81":"4.3.3","82":"4.3.4","83":"4.3.5","84":"4.3.6",
-  "85":"5.1.1","86":"5.1.2","87":"5.1.3","88":"5.1.4","89":"5.1.5","90":"5.1.6",
-  "91":"5.2.1","92":"5.2.2","93":"5.2.3","94":"5.2.4","95":"5.2.5","96":"5.2.6",
-  "97":"5.3.1","98":"5.3.2","99":"5.3.3","100":"5.3.4","101":"5.3.5","102":"5.3.6",
-  "103":"5.4.1","104":"5.4.2","105":"5.4.3","106":"5.4.4","107":"5.4.5","108":"5.4.6",
-};
-
-// ------------------------------ Utilities ------------------------------------
-
-function convertToCanonicalId(questionId: string): string {
-  if (/^\d+\.\d+\.\d+$/.test(questionId)) return questionId;
-  return SEQUENTIAL_TO_CANONICAL_MAP[questionId] || questionId;
-}
-
-function normalizeValue(v: any): number {
-  const n =
-    typeof v === "object" && v !== null && "value" in v
-      ? Number((v as any).value)
-      : Number(v);
-  return Number.isFinite(n) ? n : NaN;
-}
-
-function toCanonicalItems(rec: Record<string, any>): Array<{ id: string; value: number }> {
-  const items = Object.entries(rec).map(([qid, raw]) => ({
-    id: convertToCanonicalId(qid),
-    value: normalizeValue(raw),
-  }));
-  items.sort((a, b) =>
-    a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: "base" })
-  );
-  return items;
-}
-
-/** Enforce exactly 108 items and 1..6 values */
-function assertComplete108(items: Array<{ id: string; value: number }>) {
-  const ids = new Set(items.map((i) => i.id));
-  const missing: string[] = [];
-  for (let i = 1; i <= 108; i++) {
-    const cid = SEQUENTIAL_TO_CANONICAL_MAP[String(i)];
-    if (!ids.has(cid)) missing.push(cid);
-  }
-  const invalid = items
-    .filter((i) => !Number.isFinite(i.value) || i.value < SCALE_MIN || i.value > SCALE_MAX)
-    .map((i) => i.id);
-
-  if (missing.length || invalid.length) {
-    throw new Error(
-      `Instrument not complete: missing=${missing.length}; invalid=${invalid.length}`
-    );
-  }
-}
-
-// Stable stringify for checksum
-function stableStringify(obj: any): string {
-  if (Array.isArray(obj)) return `[${obj.map(stableStringify).join(",")}]`;
-  if (obj && typeof obj === "object") {
-    return `{${Object.keys(obj)
-      .sort()
-      .map((k) => JSON.stringify(k) + ":" + stableStringify(obj[k]))
-      .join(",")}}`;
-  }
-  return JSON.stringify(obj);
-}
-
-export function computeChecksumSha256(payload: unknown): string {
-  const canon = stableStringify(payload);
-  return crypto.createHash("sha256").update(canon, "utf8").digest("hex");
-}
-
-function generatePseudonymousId(input: string, prefix = ""): string {
-  const hash = crypto.createHash("md5").update(input).digest("hex");
-  return `${prefix}${hash.substring(0, 8)}`;
-}
-
-function sanitizeFilename(input: string): string {
-  return input.replace(/[^A-Za-z0-9_\-\.]/g, "");
-}
-
-export function generateExportFilename(
-  userId: string,
-  assessmentId: string,
-  completedAt: string
-): string {
-  const clientId = generatePseudonymousId(userId, "client-");
-  const assessId = generatePseudonymousId(assessmentId, "assessment-");
-  const timestamp = completedAt.replace(/:/g, "-").replace(/\..+Z$/, "Z");
-  const raw = `${clientId}_${assessId}_${timestamp}_v1.0.0.json`;
-  const safe = sanitizeFilename(raw);
-  return safe.length > 120 ? safe.substring(0, 116) + ".json" : safe;
-}
-
-// ---------------------------- v1.0.0 (raw) -----------------------------------
-
-type Instrument = {
-  name: string;
-  form?: "short" | "long";
-  scale: { min: number; max: number };
-  items: Array<{ id: string; value: number }>;
-};
-
-export function normaliseInstrument(i: Instrument): Instrument {
-  const m = /^LASBI-(Short|Long)$/i.exec(i.name);
-  if (m) return { ...i, name: "LASBI", form: m[1].toLowerCase() as "short" | "long" };
-  return i;
-}
-
-export function validateAssessmentExport(exportData: AssessmentExport): ValidationError | null {
-  const errors: string[] = [];
-
-  if (exportData.schemaVersion !== "1.0.0")
-    errors.push(`schemaVersion must be "1.0.0", received "${exportData.schemaVersion}"`);
-
-  if (!exportData.analysisVersion?.match(/^\d{4}\.\d{2}$/))
-    errors.push(`analysisVersion must match YYYY.MM`);
-
-  if (!exportData.respondent?.id) errors.push("respondent.id is required");
-  if (!("initials" in exportData.respondent)) errors.push("respondent.initials is required");
-  if (!("dobYear" in exportData.respondent)) errors.push("respondent.dobYear is required");
-
-  const allowedResp = ["id", "initials", "dobYear"];
-  for (const k of Object.keys(exportData.respondent))
-    if (!allowedResp.includes(k)) errors.push(`respondent.${k} is not allowed`);
-
-  if (!exportData.assessment?.assessmentId) errors.push("assessment.assessmentId is required");
-  if (!exportData.assessment?.completedAt) errors.push("assessment.completedAt is required");
-
-  const inst = exportData.assessment?.instrument as AssessmentExport["assessment"]["instrument"];
-  if (!inst) errors.push("assessment.instrument is required");
-  else {
-    if (inst.name !== "LASBI") errors.push(`instrument.name must be "LASBI"`);
-    if (!inst.form || !["short", "long"].includes(inst.form)) errors.push(`instrument.form must be "short" or "long"`);
-    if (!inst.scale) errors.push("instrument.scale is required");
-    else {
-      if (inst.scale.min !== SCALE_MIN) errors.push(`scale.min must be ${SCALE_MIN}`);
-      if (inst.scale.max !== SCALE_MAX) errors.push(`scale.max must be ${SCALE_MAX}`);
+function assertValidItems(
+  items: StudioItem[],
+  min: number,
+  max: number
+) {
+  for (const it of items) {
+    if (!/^\d\.\d\.\d$/.test(it.id)) {
+      throw new Error(`Invalid item id "${it.id}" (expected X.Y.Z like "1.2.3").`);
     }
-    if (!inst.items?.length) errors.push("instrument.items must contain items");
-    inst.items?.forEach((it, idx) => {
-      if (!it.id) errors.push(`items[${idx}].id is required`);
-      if (typeof it.value !== "number") errors.push(`items[${idx}].value must be number`);
-      if (it.value < SCALE_MIN || it.value > SCALE_MAX) errors.push(`items[${idx}].value out of range`);
-      const allowed = ["id", "value"];
-      for (const k of Object.keys(it)) if (!allowed.includes(k)) errors.push(`items[${idx}].${k} not allowed`);
-    });
-  }
-
-  if (exportData.assessment?.completedAt?.includes(".")) errors.push("completedAt must not include milliseconds");
-  if (exportData.provenance?.exportedAt?.includes(".")) errors.push("exportedAt must not include milliseconds");
-
-  if (exportData.assessment?.completedAt && exportData.provenance?.exportedAt) {
-    if (new Date(exportData.assessment.completedAt) > new Date(exportData.provenance.exportedAt)) {
-      errors.push("completedAt must be <= exportedAt");
+    if (!Number.isInteger(it.value) || it.value < min || it.value > max) {
+      throw new Error(
+        `Value out of range for ${it.id}: ${it.value} (expected integer ${min}…${max}).`
+      );
     }
   }
-
-  if (!exportData.provenance?.sourceApp) errors.push("provenance.sourceApp is required");
-  if (!exportData.provenance?.sourceAppVersion) errors.push("provenance.sourceAppVersion is required");
-  if (!exportData.provenance?.exportedAt) errors.push("provenance.exportedAt is required");
-  if (!exportData.provenance?.checksumSha256) errors.push("provenance.checksumSha256 is required");
-  if (exportData.provenance?.checksumSha256 && !/^[a-f0-9]{64}$/.test(exportData.provenance.checksumSha256))
-    errors.push("checksumSha256 must be 64 hex chars");
-
-  const exportStr = JSON.stringify(exportData);
-  if (exportStr.includes("@") && exportStr.includes(".")) errors.push("Export may contain email addresses (PII)");
-
-  return errors.length ? { error: "ValidationFailed", details: errors.slice(0, 10) } : null;
 }
 
-export function generateAssessmentExport(
-  responses: Record<string, any>,
-  participantData: any,
-  assessmentId: string,
-  userId: string
-): AssessmentExport {
-  const items = toCanonicalItems(responses);
-  assertComplete108(items);
+function assertISO(iso: string, fieldName: string) {
+  // very light check; Studio expects Zulu (UTC) ISO strings
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(iso)) {
+    throw new Error(`Invalid ${fieldName} "${iso}" (expected ISO 8601 UTC, e.g. 2025-01-02T03:04:05Z).`);
+  }
+}
 
-  const respondentId = generatePseudonymousId(userId);
-  const assessId = generatePseudonymousId(assessmentId);
+/* --------------------------- Helper: checksum --------------------------- */
 
-  const now = new Date();
-  const analysisVersion = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`;
+// Computes SHA-256 in both browser (Web Crypto) and Node environments.
+async function sha256Hex(input: string): Promise<string> {
+  // Browser / Edge Runtime
+  if (typeof globalThis.crypto?.subtle !== "undefined") {
+    const enc = new TextEncoder();
+    const buf = await globalThis.crypto.subtle.digest("SHA-256", enc.encode(input));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+  // Node
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createHash } = require("crypto");
+  return createHash("sha256").update(input).digest("hex");
+}
 
-  const completedAt = (participantData?.assessmentDate
-    ? new Date(participantData.assessmentDate)
-    : new Date()
-  )
-    .toISOString()
-    .replace(/\.\d{3}Z$/, "Z");
+/* ------------------------------ Core builder ---------------------------- */
 
-  const exportedAt = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-
-  const instrument: Instrument = {
-    name: "LASBI-Long",
-    scale: ASSESSMENT_SCALE,
+export async function buildStudioPayload(input: StudioExportInput) {
+  const {
+    respondentId,
+    respondentInitials = null,
+    assessmentId,
+    completedAtISO,
+    instrumentName,
+    instrumentForm,
+    scaleMin,
+    scaleMax,
     items,
-  };
-  const normalizedInstrument = normaliseInstrument(instrument);
+    sourceApp,
+    sourceAppVersion,
+    exportedAtISO = new Date().toISOString(),
+    checksumSha256,
+    schemaVersion = "1.0.0",
+    analysisVersion = "2025.11",
+  } = input;
 
-  const exportObj: Omit<AssessmentExport, "provenance"> & {
-    provenance: Omit<AssessmentExport["provenance"], "checksumSha256">;
-  } = {
-    schemaVersion: "1.0.0",
+  // Basic guards
+  assertISO(completedAtISO, "completedAtISO");
+  assertISO(exportedAtISO, "exportedAtISO");
+  if (scaleMin >= scaleMax) {
+    throw new Error(`Invalid scale: min (${scaleMin}) must be < max (${scaleMax}).`);
+  }
+  assertValidItems(items, scaleMin, scaleMax);
+
+  // Assemble payload without checksum first (so we can checksum deterministically)
+  const payloadWithoutChecksum = {
+    schemaVersion,
     analysisVersion,
     respondent: {
       id: respondentId,
-      initials: participantData?.name
-        ? String(participantData.name)
-            .split(" ")
-            .map((n: string) => n[0])
-            .join("")
-            .substring(0, 3)
-        : null,
+      initials: respondentInitials,
       dobYear: null,
     },
     assessment: {
-      assessmentId: assessId,
-      completedAt,
+      assessmentId,
+      completedAt: completedAtISO,
       instrument: {
-        name: "LASBI" as const,
-        form: normalizedInstrument.form || "long",
-        scale: normalizedInstrument.scale,
-        items: normalizedInstrument.items,
+        name: instrumentName,
+        form: instrumentForm,
+        scale: { min: scaleMin, max: scaleMax },
+        items,
       },
     },
     provenance: {
-      sourceApp: "Inner Persona Assessment Portal",
-      sourceAppVersion: "3.2.1",
-      exportedAt,
+      sourceApp,
+      sourceAppVersion,
+      exportedAt: exportedAtISO,
+      // checksumSha256 to be added below
     },
   };
 
-  const checksum = computeChecksumSha256(exportObj);
-  const finalExport: AssessmentExport = {
-    ...exportObj,
-    provenance: { ...exportObj.provenance, checksumSha256: checksum },
-  };
-
-  return finalExport;
-}
-
-// -------------------- canonical → UIAnswer for v1.3.0 ------------------------
-
-type UIAnswerCanon = { index: number; canonicalId: string; value: number };
-
-function answersFromCanonicalRecord(rec: Record<string, any>): UIAnswerCanon[] {
-  const CANON = /^\d+\.\d+\.\d+$/;
-  const toNum = (v: any) =>
-    Number.isFinite(Number(v?.value)) ? Number(v.value) : Number(v);
-
-  const ids = Object.keys(rec)
-    .filter((k) => CANON.test(k))
-    .sort((a, b) =>
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
-    );
-
-  return ids.map((id, i) => ({
-    index: i + 1,
-    canonicalId: id,
-    value: toNum(rec[id]),
-  }));
-}
-
-// -------------------------- v1.3.0 (surgical) --------------------------------
-//
-// Extend the base payload with the top-level IDs Studio requires.
-export type LasbiExportPayload = LasbiExportPayloadBase & {
-  respondent: { id: string };
-  assessment: { assessmentId: string; completedAt: string };
-};
-
-export async function generateAssessmentExportV2(
-  responses: Record<string, any>,
-  participantData: any,
-  assessmentId: string,
-  userId: string
-): Promise<LasbiExportPayload> {
-  const uiAnswers = answersFromCanonicalRecord(responses);
-  if (uiAnswers.length !== 108) {
-    throw new Error(`Expected 108 LASBI answers, got ${uiAnswers.length}`);
+  let finalChecksum = checksumSha256;
+  if (!finalChecksum) {
+    // Compute checksum over the canonical JSON without the checksum field.
+    const canonical = JSON.stringify(payloadWithoutChecksum);
+    finalChecksum = await sha256Hex(canonical);
   }
 
-  const mappingVersion = getCurrentMappingVersion();
-
-  // Core payload (itemId + canonicalId + value + index)
-  const base = await buildExporter({
-    answers: uiAnswers as unknown as Parameters<typeof buildExporter>[0]["answers"],
-    mappingVersion,
-    schemaVersion: "1.0.0",
-  });
-
-  // Ensure metadata.exportedAt is present (and keep any existing fields)
-  const exportedAt =
-    base.metadata?.exportedAt ??
-    new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-
-  // Build the final payload Studio expects
-  const finalPayload: LasbiExportPayload = {
-    ...base,
-    respondent: {
-      id: String(userId).slice(-8), // short pseudo-id
-    },
-    assessment: {
-      assessmentId,
-      completedAt:
-        participantData?.assessmentDate ??
-        new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
-    },
-    metadata: {
-      ...base.metadata,
-      exportedAt,
-      provenance: {
-        sourceApp: "Inner Persona Assessment Portal",
-        sourceAppVersion: "3.2.1",
-      },
+  // Final payload with checksum
+  const payload = {
+    ...payloadWithoutChecksum,
+    provenance: {
+      ...payloadWithoutChecksum.provenance,
+      checksumSha256: finalChecksum,
     },
   };
 
-  return finalPayload;
+  return payload;
 }
 
-export function validateSurgicalExport(payload: LasbiExportPayload): ValidationError | null {
-  const errors: string[] = [];
+/* -------------------------- Public export helper ------------------------ */
 
-  // Top-level required IDs for Studio
-  if (!payload.respondent?.id) errors.push("respondent.id is required");
-  if (!payload.assessment?.assessmentId) errors.push("assessment.assessmentId is required");
-  if (!payload.assessment?.completedAt) errors.push("assessment.completedAt is required");
-
-  if (!payload.instrument) errors.push("instrument is required");
-  else {
-    if (payload.instrument.name !== "LASBI") errors.push(`instrument.name must be "LASBI"`);
-    if (!payload.instrument.schemaVersion) errors.push("instrument.schemaVersion is required");
-  }
-
-  if (!payload.mappingVersion) errors.push("mappingVersion is required");
-  else if (!/^lasbi-v\d+\.\d+\.\d+$/.test(payload.mappingVersion))
-    errors.push(`mappingVersion must look like "lasbi-v1.3.0"`);
-
-  if (!Array.isArray(payload.responses)) errors.push("responses must be an array");
-  else {
-    if (payload.responses.length !== 108)
-      errors.push(`responses must contain exactly 108 items, received ${payload.responses.length}`);
-
-    payload.responses.forEach((r, idx) => {
-      if (!r.itemId) errors.push(`responses[${idx}].itemId is required`);
-      else if (!ITEM_ID_RE.test(r.itemId))
-        errors.push(`responses[${idx}].itemId must match "cmf..."`);
-
-      if (!r.canonicalId) errors.push(`responses[${idx}].canonicalId is required`);
-      else if (!/^\d+\.\d+\.\d+$/.test(r.canonicalId))
-        errors.push(`responses[${idx}].canonicalId must be "d.s.q"`);
-
-      if (typeof r.value !== "number") errors.push(`responses[${idx}].value must be number`);
-      else if (r.value < SCALE_MIN || r.value > SCALE_MAX)
-        errors.push(`responses[${idx}].value must be between ${SCALE_MIN} and ${SCALE_MAX}`);
-
-      if (typeof r.index !== "number") errors.push(`responses[${idx}].index must be number`);
-    });
-
-    const ids = new Set(payload.responses.map((r) => r.itemId));
-    if (ids.size !== payload.responses.length) errors.push("Duplicate itemIds found");
-
-    const cids = new Set(payload.responses.map((r) => r.canonicalId));
-    if (cids.size !== payload.responses.length) errors.push("Duplicate canonicalIds found");
-  }
-
-  return errors.length ? { error: "ValidationFailed", details: errors.slice(0, 10) } : null;
+// Returns a pretty JSON string ready to upload/send to Studio.
+export async function exportStudioJson(input: StudioExportInput): Promise<string> {
+  const payload = await buildStudioPayload(input);
+  return JSON.stringify(payload, null, 2);
 }
+
