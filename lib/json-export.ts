@@ -9,26 +9,19 @@
 export type StudioItem = { id: string; value: number };
 
 export interface StudioExportInput {
-  // Respondent & assessment context
   respondentId: string;
   respondentInitials?: string | null;
   assessmentId: string;
   completedAtISO: string; // e.g., new Date().toISOString()
-
-  // Instrument
   instrumentName: string; // e.g., "LASBI"
   instrumentForm: string; // e.g., "short"
   scaleMin: number;       // e.g., 1
   scaleMax: number;       // e.g., 6
   items: StudioItem[];    // numeric ids in, e.g. [{ id: "1.1.1", value: 4 }]
-
-  // Provenance
   sourceApp: string;         // e.g., "Leadership Assessment Portal"
   sourceAppVersion: string;  // e.g., "3.2.1"
   exportedAtISO?: string;    // defaults to now (UTC ISO string)
   checksumSha256?: string;   // optional — computed if omitted
-
-  // Versions (defaults provided)
   schemaVersion?: string;    // default "1.0.0"
   analysisVersion?: string;  // default "2025.11"
 }
@@ -36,20 +29,22 @@ export interface StudioExportInput {
 /* ----------------------- Numeric ID to CUID Mapping --------------------- */
 /**
  * Replace the placeholder below with your full 108-entry mapping (unchanged).
+ * IMPORTANT: Do not leave "..." placeholders; they count as missing entries.
  */
 const NUMERIC_TO_CUID_MAP: Record<string, string> = Object.freeze({
-  // === PASTE YOUR EXISTING 108-ENTRY MAP HERE ===
+  // === PASTE YOUR FULL 108-ENTRY MAP HERE ===
   "1.1.1": "cmff2ushm0000sbb3xz75fwkz",
   // ...
   "5.4.6": "cmh38aen001ixsbb3t2e4n6r6",
 });
 
-/* ----------------------- Mapping completeness checks -------------------- */
+/* -------------------- Mapping integrity (lazy validation) ---------------- */
 
-/* ----------------------- Mapping completeness checks -------------------- */
+// set STUDIO_STRICT_MAP="true" to throw on errors at request-time; default warn-only
+const STRICT = String(process.env.STUDIO_STRICT_MAP ?? "").toLowerCase() === "true";
+let __mappingChecked = false;
 
 function* numericIdIterator(): Generator<string> {
-  // 1.1–1.5, 2.1–2.4, 3.1–3.2, 4.1–4.3, 5.1–5.4 ; each x.y.1–6
   const ranges = [
     [1, 1, 5],
     [2, 1, 4],
@@ -64,14 +59,13 @@ function* numericIdIterator(): Generator<string> {
   }
 }
 
-// If STUDIO_STRICT_MAP !== 'false', we throw on errors (default).
-// Set Vercel env var STUDIO_STRICT_MAP="false" to only warn during deploy.
-const STRICT = process.env.STUDIO_STRICT_MAP !== "false";
+function checkMappingOnce() {
+  if (__mappingChecked) return;
+  __mappingChecked = true;
 
-(function validateMappingExhaustive() {
   const problems: string[] = [];
 
-  // 1) All 108 numeric keys exist
+  // Missing keys
   const missing: string[] = [];
   for (const id of numericIdIterator()) {
     if (!(id in NUMERIC_TO_CUID_MAP)) missing.push(id);
@@ -82,7 +76,7 @@ const STRICT = process.env.STUDIO_STRICT_MAP !== "false";
     );
   }
 
-  // 2) No duplicate CUID values
+  // Duplicate CUID values
   const seen = new Map<string, string>(); // cuid -> numeric id
   for (const [num, cuid] of Object.entries(NUMERIC_TO_CUID_MAP)) {
     const prev = seen.get(cuid);
@@ -90,19 +84,20 @@ const STRICT = process.env.STUDIO_STRICT_MAP !== "false";
     seen.set(cuid, num);
   }
 
-  // 3) Exactly 108 entries
+  // Count check
   const total = Object.keys(NUMERIC_TO_CUID_MAP).length;
   if (total !== 108) problems.push(`Expected 108 entries, found ${total}`);
 
   if (problems.length) {
-    const msg = `CUID mapping validation: \n- ${problems.join("\n- ")}`;
+    const msg = `CUID mapping validation:\n- ${problems.join("\n- ")}`;
     if (STRICT) {
+      // Throw at request-time (never at import-time)
       throw new Error(msg);
     } else {
       console.warn(msg);
     }
   }
-})();
+}
 
 /* --------------------------- Helper: validation ------------------------- */
 
@@ -120,7 +115,6 @@ function assertValidItems(items: StudioItem[], min: number, max: number) {
 }
 
 function assertISO(iso: string, fieldName: string) {
-  // Studio expects Zulu (UTC) ISO strings
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(iso)) {
     throw new Error(
       `Invalid ${fieldName} "${iso}" (expected ISO 8601 UTC, e.g. 2025-01-02T03:04:05Z).`
@@ -130,15 +124,12 @@ function assertISO(iso: string, fieldName: string) {
 
 /* --------------------------- Helper: checksum --------------------------- */
 
-// ESM-safe SHA-256 that works in Node and browser runtimes.
 async function sha256Hex(input: string): Promise<string> {
-  // Prefer Web Crypto if available (Edge/modern Node)
   if (typeof globalThis.crypto?.subtle !== "undefined") {
     const enc = new TextEncoder();
     const buf = await globalThis.crypto.subtle.digest("SHA-256", enc.encode(input));
     return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
   }
-  // Node fallback (ESM-safe)
   const crypto = await import("crypto");
   return crypto.createHash("sha256").update(input).digest("hex");
 }
@@ -146,12 +137,15 @@ async function sha256Hex(input: string): Promise<string> {
 /* -------------------- Helper: Map numeric IDs to CUIDs ------------------ */
 
 function mapItemsToCUID(items: StudioItem[]): StudioItem[] {
+  checkMappingOnce(); // validate mapping on first use (warn or throw per env)
   return items.map((item) => {
     const cuid = NUMERIC_TO_CUID_MAP[item.id];
     if (!cuid) {
-      throw new Error(
-        `No CUID mapping found for item "${item.id}". Valid numeric IDs are 1.1.1 through 5.4.6 (108 items total).`
-      );
+      const msg = `No CUID mapping found for item "${item.id}". Valid numeric IDs are 1.1.1..5.4.6 (108 items).`;
+      if (STRICT) throw new Error(msg);
+      console.warn(msg);
+      // In non-strict mode, still fail fast to avoid sending bad payloads to Studio:
+      throw new Error(msg);
     }
     return { id: cuid, value: item.value };
   });
@@ -178,7 +172,6 @@ export async function buildStudioPayload(input: StudioExportInput) {
     analysisVersion = "2025.11",
   } = input;
 
-  // Basic guards
   assertISO(completedAtISO, "completedAtISO");
   assertISO(exportedAtISO, "exportedAtISO");
   if (scaleMin >= scaleMax) {
@@ -186,7 +179,6 @@ export async function buildStudioPayload(input: StudioExportInput) {
   }
   assertValidItems(items, scaleMin, scaleMax);
 
-  // Map numeric IDs -> CUIDs
   const mappedItems = mapItemsToCUID(items);
 
   // Ensure no duplicate mapped CUIDs in this payload
@@ -200,7 +192,6 @@ export async function buildStudioPayload(input: StudioExportInput) {
     }
   }
 
-  // Assemble payload without checksum first (deterministic hashing)
   const payloadWithoutChecksum = {
     schemaVersion,
     analysisVersion,
@@ -223,7 +214,6 @@ export async function buildStudioPayload(input: StudioExportInput) {
       sourceApp,
       sourceAppVersion,
       exportedAt: exportedAtISO,
-      // checksumSha256 to be added below
     },
   };
 
@@ -233,29 +223,17 @@ export async function buildStudioPayload(input: StudioExportInput) {
     finalChecksum = await sha256Hex(canonical);
   }
 
-  // Final payload with checksum
-  const payload = {
+  return {
     ...payloadWithoutChecksum,
     provenance: {
       ...payloadWithoutChecksum.provenance,
       checksumSha256: finalChecksum,
     },
   };
-
-  return payload;
 }
 
-/* -------------------------- Public export helper ------------------------ */
-
 /* --------------------- Compatibility exports for route.ts --------------- */
-/**
- * Overloads so your route can keep calling:
- *   generateAssessmentExportV2(responses, participantData, assessment.id, user.id)
- * OR switch to:
- *   generateAssessmentExportV2(input: StudioExportInput)
- *
- * Important: `responses` may be an array OR a Record<string, any>.
- */
+
 export async function generateAssessmentExportV2(input: StudioExportInput): Promise<any>;
 export async function generateAssessmentExportV2(
   responses: any[] | Record<string, any>,
@@ -264,7 +242,6 @@ export async function generateAssessmentExportV2(
   userId?: string | number
 ): Promise<any>;
 
-// Single implementation
 export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
   // New style: single object already in StudioExportInput shape
   if (args.length === 1) {
@@ -275,7 +252,6 @@ export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
   // Legacy style: (responses, participantData, assessmentId, userId)
   const [responsesRaw, participantData, assessmentId, userId] = args;
 
-  // Normalize responses into an array of { id, value }
   const items = normalizeResponsesToItems(responsesRaw);
 
   const completedAtISO =
@@ -291,13 +267,11 @@ export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
     respondentInitials: participantData?.initials ?? participantData?.respondentInitials ?? null,
     assessmentId: String(assessmentId ?? participantData?.assessmentId ?? "unknown"),
     completedAtISO,
-
     instrumentName: participantData?.instrumentName ?? "LASBI",
     instrumentForm: participantData?.instrumentForm ?? "short",
     scaleMin: Number(participantData?.scaleMin ?? 1),
     scaleMax: Number(participantData?.scaleMax ?? 6),
     items,
-
     sourceApp: participantData?.sourceApp ?? "GeneralSchemaQ",
     sourceAppVersion: participantData?.sourceAppVersion ?? "2.0.0",
     exportedAtISO: new Date().toISOString(),
@@ -309,13 +283,7 @@ export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
 }
 
 /* ----------------------- Response normalization helper ------------------ */
-/**
- * Accepts common shapes for `responses` and returns [{ id, value }, ...] with numeric IDs as strings.
- * Supported shapes:
- *  - Array of objects: [{ id|itemId|code|questionId, value|score|answer|response|val }, ...]
- *  - { items: [...] } where items is that same array
- *  - Record<string, any>: { "1.1.1": 4, "1.1.2": 6, ... } or values as { value: 4 }
- */
+
 function normalizeResponsesToItems(responses: unknown): StudioItem[] {
   // Case A: array already
   if (Array.isArray(responses)) {
@@ -338,7 +306,6 @@ function normalizeResponsesToItems(responses: unknown): StudioItem[] {
   if (responses && typeof responses === "object") {
     const out: StudioItem[] = [];
     for (const [key, raw] of Object.entries(responses as Record<string, any>)) {
-      // key is the numeric id (e.g., "1.1.1"); value may be number or an object with value-ish fields
       const value = Number(
         (raw != null && typeof raw === "object")
           ? (raw.value ?? raw.score ?? raw.answer ?? raw.response ?? raw.val ?? 0)
@@ -349,14 +316,14 @@ function normalizeResponsesToItems(responses: unknown): StudioItem[] {
     return out;
   }
 
-  // Unknown shape → return empty; builder will range-check later
   return [];
 }
+
+/* ---------------------------- Validation helper ------------------------- */
 
 export function validateSurgicalExport(payload: unknown): {
   ok: boolean;
   errors: string[];
-  // legacy/route-expected fields:
   error: string | null;
   details: string[];
 } {
@@ -364,14 +331,18 @@ export function validateSurgicalExport(payload: unknown): {
   const p = payload as any;
 
   if (!p || typeof p !== "object") {
-    return { ok: false, errors: ["Payload is not an object"], error: "Payload is not an object", details: ["Payload is not an object"] };
+    return {
+      ok: false,
+      errors: ["Payload is not an object"],
+      error: "Payload is not an object",
+      details: ["Payload is not an object"],
+    };
   }
 
   for (const key of ["schemaVersion", "analysisVersion", "respondent", "assessment", "provenance"]) {
     if (!(key in p)) errors.push(`Missing top-level key: ${key}`);
   }
 
-  // items array
   const items = p?.assessment?.instrument?.items as Array<{ id: string; value: number }>;
   if (!Array.isArray(items)) {
     errors.push("assessment.instrument.items must be an array");
@@ -396,7 +367,6 @@ export function validateSurgicalExport(payload: unknown): {
     });
   }
 
-  // ISO checks (best effort)
   const iso = (s: any) =>
     typeof s === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(s);
   if (!iso(p?.assessment?.completedAt)) errors.push("assessment.completedAt must be ISO 8601 UTC");
@@ -407,7 +377,7 @@ export function validateSurgicalExport(payload: unknown): {
     ok,
     errors,
     error: ok ? null : (errors[0] ?? "Validation failed"),
-    details: errors, // for your route's `validation.details`
+    details: errors,
   };
 }
 
@@ -422,3 +392,4 @@ export function hasCUIDMapping(numericId: string): boolean {
 export function getCUIDForNumericId(numericId: string): string | null {
   return NUMERIC_TO_CUID_MAP[numericId] || null;
 }
+
