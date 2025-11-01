@@ -46,6 +46,8 @@ const NUMERIC_TO_CUID_MAP: Record<string, string> = Object.freeze({
 
 /* ----------------------- Mapping completeness checks -------------------- */
 
+/* ----------------------- Mapping completeness checks -------------------- */
+
 function* numericIdIterator(): Generator<string> {
   // 1.1–1.5, 2.1–2.4, 3.1–3.2, 4.1–4.3, 5.1–5.4 ; each x.y.1–6
   const ranges = [
@@ -62,15 +64,21 @@ function* numericIdIterator(): Generator<string> {
   }
 }
 
+// If STUDIO_STRICT_MAP !== 'false', we throw on errors (default).
+// Set Vercel env var STUDIO_STRICT_MAP="false" to only warn during deploy.
+const STRICT = process.env.STUDIO_STRICT_MAP !== "false";
+
 (function validateMappingExhaustive() {
+  const problems: string[] = [];
+
   // 1) All 108 numeric keys exist
   const missing: string[] = [];
   for (const id of numericIdIterator()) {
     if (!(id in NUMERIC_TO_CUID_MAP)) missing.push(id);
   }
   if (missing.length) {
-    throw new Error(
-      `CUID mapping incomplete. Missing ${missing.length} ids: ${missing.slice(0, 10).join(", ")}${missing.length > 10 ? " …" : ""}`
+    problems.push(
+      `Missing ${missing.length} ids: ${missing.slice(0, 20).join(", ")}${missing.length > 20 ? " …" : ""}`
     );
   }
 
@@ -78,16 +86,21 @@ function* numericIdIterator(): Generator<string> {
   const seen = new Map<string, string>(); // cuid -> numeric id
   for (const [num, cuid] of Object.entries(NUMERIC_TO_CUID_MAP)) {
     const prev = seen.get(cuid);
-    if (prev) {
-      throw new Error(`Duplicate CUID "${cuid}" for numeric ids "${prev}" and "${num}".`);
-    }
+    if (prev) problems.push(`Duplicate CUID "${cuid}" for numeric ids "${prev}" and "${num}"`);
     seen.set(cuid, num);
   }
 
   // 3) Exactly 108 entries
   const total = Object.keys(NUMERIC_TO_CUID_MAP).length;
-  if (total !== 108) {
-    throw new Error(`Mapping should contain 108 entries, found ${total}.`);
+  if (total !== 108) problems.push(`Expected 108 entries, found ${total}`);
+
+  if (problems.length) {
+    const msg = `CUID mapping validation: \n- ${problems.join("\n- ")}`;
+    if (STRICT) {
+      throw new Error(msg);
+    } else {
+      console.warn(msg);
+    }
   }
 })();
 
