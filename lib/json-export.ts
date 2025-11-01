@@ -340,14 +340,19 @@ function normalizeResponsesToItems(responses: unknown): StudioItem[] {
   return [];
 }
 
-
-/* ---------------------------- Validation helper ------------------------- */
-
-export function validateSurgicalExport(payload: unknown): { ok: boolean; errors: string[] } {
+export function validateSurgicalExport(payload: unknown): {
+  ok: boolean;
+  errors: string[];
+  // legacy/route-expected fields:
+  error: string | null;
+  details: string[];
+} {
   const errors: string[] = [];
   const p = payload as any;
 
-  if (!p || typeof p !== "object") return { ok: false, errors: ["Payload is not an object"] };
+  if (!p || typeof p !== "object") {
+    return { ok: false, errors: ["Payload is not an object"], error: "Payload is not an object", details: ["Payload is not an object"] };
+  }
 
   for (const key of ["schemaVersion", "analysisVersion", "respondent", "assessment", "provenance"]) {
     if (!(key in p)) errors.push(`Missing top-level key: ${key}`);
@@ -384,7 +389,13 @@ export function validateSurgicalExport(payload: unknown): { ok: boolean; errors:
   if (!iso(p?.assessment?.completedAt)) errors.push("assessment.completedAt must be ISO 8601 UTC");
   if (!iso(p?.provenance?.exportedAt)) errors.push("provenance.exportedAt must be ISO 8601 UTC");
 
-  return { ok: errors.length === 0, errors };
+  const ok = errors.length === 0;
+  return {
+    ok,
+    errors,
+    error: ok ? null : (errors[0] ?? "Validation failed"),
+    details: errors, // for your route's `validation.details`
+  };
 }
 
 /* -------------------------- Utility: Mapping Info ----------------------- */
