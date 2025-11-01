@@ -32,10 +32,158 @@ export interface StudioExportInput {
  * IMPORTANT: Do not leave "..." placeholders; they count as missing entries.
  */
 const NUMERIC_TO_CUID_MAP: Record<string, string> = Object.freeze({
-  // === PASTE YOUR FULL 108-ENTRY MAP HERE ===
-  "1.1.1": "cmff2ushm0000sbb3xz75fwkz",
-  // ...
-  "5.4.6": "cmh38aen001ixsbb3t2e4n6r6",
+  // 1.1 Abandonment/Instability
+ "1.1.1": "cmff2ushm0000sbb3xz75fwkz",
+ "1.1.2": "cmff2ushp0001sbb3pndmp2so",
+ "1.1.3": "cmff2ushq0002sbb32tnxfwlh",
+ "1.1.4": "cmh38aen0001xsbb3k9m2n4p5",
+ "1.1.5": "cmh38aen0002xsbb3t7w8q1r6",
+ "1.1.6": "cmh38aen0003xsbb3u3j5h9s7",
+ 
+ // 1.2 Defectiveness/Shame
+ "1.2.1": "cmff2ushr0003sbb3flyzk52v",
+ "1.2.2": "cmff2usht0004sbb3ffbtcrz1",
+ "1.2.3": "cmff2ushu0005sbb3sg7x6xou",
+ "1.2.4": "cmh38aen0004xsbb3v2k6m8t9",
+ "1.2.5": "cmh38aen0005xsbb3w5n7p9u1",
+ "1.2.6": "cmh38aen0006xsbb3x8q1r2v3",
+ 
+ // 1.3 Emotional Deprivation
+ "1.3.1": "cmff2ushv0006sbb3o6qo5u3p",
+ "1.3.2": "cmff2ushx0007sbb343uaq7c3",
+ "1.3.3": "cmff2ushy0008sbb3o690p5jb",
+ "1.3.4": "cmh38aen0007xsbb3y1t3s5w4",
+ "1.3.5": "cmh38aen0008xsbb3z4w6t8x5",
+ "1.3.6": "cmh38aen0009xsbb3a7z9u1y6",
+ 
+ // 1.4 Mistrust/Abuse
+ "1.4.1": "cmff2ushz0009sbb3kpmyd2vv",
+ "1.4.2": "cmff2usi1000asbb3g2b2rrbg",
+ "1.4.3": "cmff2usi2000bsbb38ksh1592",
+ "1.4.4": "cmh38aen000axsbb3b0c2v4z7",
+ "1.4.5": "cmh38aen000bxsbb3c3f5w7a8",
+ "1.4.6": "cmh38aen000cxsbb3d6i8x0b9",
+ 
+ // 1.5 Social Isolation
+ "1.5.1": "cmff2usi3000csbb3kvmjjlqx",
+ "1.5.2": "cmff2usi4000dsbb3cd5wlepc",
+ "1.5.3": "cmff2usi5000esbb3ylvjxwkg",
+ "1.5.4": "cmh38aen000dxsbb3e9l1y3c1",
+ "1.5.5": "cmh38aen000exsbb3f2o4z6d2",
+ "1.5.6": "cmh38aen000fxsbb3g5r7a9e3",
+ 
+ // Section 2: Impaired Autonomy & Performance (2.1 - 2.4)
+ 
+ // 2.1 Dependence/Incompetence
+ "2.1.1": "cmff2usi7000fsbb3ywkt6zp7",
+ "2.1.2": "cmff2usi8000gsbb3a09v5bws",
+ "2.1.3": "cmff2usi9000hsbb3azlj0bkv",
+ "2.1.4": "cmh38aen000gxsbb3h8u0b2f4",
+ "2.1.5": "cmh38aen000hxsbb3i1x3c5g5",
+ "2.1.6": "cmh38aen000ixsbb3j4a6d8h6",
+ 
+ // 2.2 Vulnerability to Harm
+ "2.2.1": "cmff2usib000isbb3c7s52ubh",
+ "2.2.2": "cmff2usic000jsbb3rs3bs16v",
+ "2.2.3": "cmff2usid000ksbb3i2jyy5oj",
+ "2.2.4": "cmh38aen000jxsbb3k7d9e1i7",
+ "2.2.5": "cmh38aen000kxsbb3l0g2f4j8",
+ "2.2.6": "cmh38aen000lxsbb3m3j5g7k9",
+ 
+ // 2.3 Enmeshment/Undeveloped Self
+ "2.3.1": "cmff2usie000lsbb3euvd2b7y",
+ "2.3.2": "cmff2usif000msbb3v6yu4bd0",
+ "2.3.3": "cmff2usih000nsbb3c5rnpxfd",
+ "2.3.4": "cmh38aen000mxsbb3n6m8h0l1",
+ "2.3.5": "cmh38aen000nxsbb3o9p1i3m2",
+ "2.3.6": "cmh38aen000oxsbb3p2s4j6n3",
+ 
+ // 2.4 Failure
+ "2.4.1": "cmff2usii000osbb3lmntidwh",
+ "2.4.2": "cmff2usij000psbb3ny55yrs2",
+ "2.4.3": "cmff2usik000qsbb3iuypzlgo",
+ "2.4.4": "cmh38aen000pxsbb3q5v7k9o4",
+ "2.4.5": "cmh38aen000qxsbb3r8y0l2p5",
+ "2.4.6": "cmh38aen000rxsbb3s1b3m5q6",
+ 
+ // Section 3: Impaired Limits (3.1 - 3.2)
+ 
+ // 3.1 Entitlement/Grandiosity
+ "3.1.1": "cmff2usil000rsbb3dr1qqw4h",
+ "3.1.2": "cmff2usin000ssbb3ahr8x8p1",
+ "3.1.3": "cmff2usio000tsbb3tbvbwh4s",
+ "3.1.4": "cmh38aen000sxsbb3t4e6n8r7",
+ "3.1.5": "cmh38aen000txsbb3u7h9o1s8",
+ "3.1.6": "cmh38aen000uxsbb3v0k2p4t9",
+ 
+ // 3.2 Insufficient Self-Control
+ "3.2.1": "cmff2usip000usbb39ky60h0y",
+ "3.2.2": "cmff2usiq000vsbb3c8yb73sj",
+ "3.2.3": "cmff2usir000wsbb3qg5zscpd",
+ "3.2.4": "cmh38aen000vxsbb3w3n5q7u1",
+ "3.2.5": "cmh38aen000wxsbb3x6q8r0v2",
+ "3.2.6": "cmh38aen000xxsbb3y9t1s3w3",
+ 
+ // Section 4: Other-Directedness (4.1 - 4.3)
+ 
+ // 4.1 Subjugation
+ "4.1.1": "cmff2usit000xsbb3swkgowx8",
+ "4.1.2": "cmff2usiu000ysbb3v302gutd",
+ "4.1.3": "cmff2usiv000zsbb3a6l4t6i2",
+ "4.1.4": "cmh38aen000yxsbb3z2w4t6x4",
+ "4.1.5": "cmh38aen000zxsbb3a5z7u9y5",
+ "4.1.6": "cmh38aen0010xsbb3b8c0v2z6",
+ 
+ // 4.2 Self-Sacrifice
+ "4.2.1": "cmff2usix0010sbb3tmc3fibw",
+ "4.2.2": "cmff2usiy0011sbb3i0rwfy7i",
+ "4.2.3": "cmff2usiz0012sbb36w0dxezg",
+ "4.2.4": "cmh38aen0011xsbb3c1f3w5a7",
+ "4.2.5": "cmh38aen0012xsbb3d4i6x8b8",
+ "4.2.6": "cmh38aen0013xsbb3e7l9y1c9",
+ 
+ // 4.3 Approval-Seeking
+ "4.3.1": "cmff2usj00013sbb3f2qfypqi",
+ "4.3.2": "cmff2usj20014sbb3x0nvy9n4",
+ "4.3.3": "cmff2usj30015sbb3132vwvuq",
+ "4.3.4": "cmh38aen0014xsbb3f0o2z4d1",
+ "4.3.5": "cmh38aen0015xsbb3g3r5a7e2",
+ "4.3.6": "cmh38aen0016xsbb3h6u8b0f3",
+ 
+ // Section 5: Overvigilance & Inhibition (5.1 - 5.4)
+ 
+ // 5.1 Negativity/Pessimism
+ "5.1.1": "cmff2usj40016sbb39ekru832",
+ "5.1.2": "cmff2usj50017sbb3dwf4gj9i",
+ "5.1.3": "cmff2usj60018sbb34db4vsk6",
+ "5.1.4": "cmh38aen0017xsbb3i9x1c3g4",
+ "5.1.5": "cmh38aen0018xsbb3j2a4d6h5",
+ "5.1.6": "cmh38aen0019xsbb3k5d7e9i6",
+ 
+ // 5.2 Emotional Inhibition
+ "5.2.1": "cmff2usj80019sbb3hoe1jieo",
+ "5.2.2": "cmff2usj9001asbb3vccgx7en",
+ "5.2.3": "cmff2usja001bsbb3j97bp80c",
+ "5.2.4": "cmh38aen001axsbb3l8g0f2j7",
+ "5.2.5": "cmh38aen001bxsbb3m1j3g5k8",
+ "5.2.6": "cmh38aen001cxsbb3n4m6h8l9",
+ 
+ // 5.3 Unrelenting Standards
+ "5.3.1": "cmff2usjb001csbb31c8pl4lv",
+ "5.3.2": "cmff2usjd001dsbb3se57nmbu",
+ "5.3.3": "cmff2usje001esbb3xtcdk120",
+ "5.3.4": "cmh38aen001dxsbb3o7p9i1m1",
+ "5.3.5": "cmh38aen001exsbb3p0s2j4n2",
+ "5.3.6": "cmh38aen001fxsbb3q3v5k7o3",
+ 
+ // 5.4 Punitiveness
+ "5.4.1": "cmff2usjf001fsbb3ncx82jxt",
+ "5.4.2": "cmff2usjg001gsbb3uiepg7e7",
+ "5.4.3": "cmff2usji001hsbb3gcrd9655",
+ "5.4.4": "cmh38aen001gxsbb3r6y8l0p4",
+ "5.4.5": "cmh38aen001hxsbb3s9b1m3q5",
+ "5.4.6": "cmh38aen001ixsbb3t2e4n6r6",
+;
 });
 
 /* -------------------- Mapping integrity (lazy validation) ---------------- */
