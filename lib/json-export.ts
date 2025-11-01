@@ -1,7 +1,7 @@
 // GeneralSchemaQ/lib/json-export.ts
-// Builds a "Studio"-compatible JSON payload with CUID item ID mapping
-// Exports compatibility functions used by the API route:
-//   - generateAssessmentExportV2
+// Studio-compatible JSON payload with CUID item ID mapping
+// Exports (used by route):
+//   - generateAssessmentExportV2  (overloaded: legacy 4-arg OR new 1-arg)
 //   - validateSurgicalExport
 
 /* -------------------------------- Types -------------------------------- */
@@ -35,19 +35,12 @@ export interface StudioExportInput {
 
 /* ----------------------- Numeric ID to CUID Mapping --------------------- */
 /**
- * Keep your full 108-entry mapping here, unchanged.
- * Example (truncated):
- *
- * const NUMERIC_TO_CUID_MAP: Record<string, string> = {
- *   "1.1.1": "cmff2ushm0000sbb3xz75fwkz",
- *   ...
- *   "5.4.6": "cmh38aen001ixsbb3t2e4n6r6",
- * };
+ * Replace the placeholder below with your full 108-entry mapping (unchanged).
  */
 const NUMERIC_TO_CUID_MAP: Record<string, string> = Object.freeze({
-  // === PASTE YOUR EXISTING 108-ENTRY MAP HERE (unchanged) ===
+  // === PASTE YOUR EXISTING 108-ENTRY MAP HERE ===
   "1.1.1": "cmff2ushm0000sbb3xz75fwkz",
-  // ... all the way through ...
+  // ...
   "5.4.6": "cmh38aen001ixsbb3t2e4n6r6",
 });
 
@@ -241,19 +234,72 @@ export async function buildStudioPayload(input: StudioExportInput) {
 
 /* -------------------------- Public export helper ------------------------ */
 
-// Pretty JSON string ready for Studio upload/transport
 export async function exportStudioJson(input: StudioExportInput): Promise<string> {
   const payload = await buildStudioPayload(input);
   return JSON.stringify(payload, null, 2);
 }
 
 /* --------------------- Compatibility exports for route.ts --------------- */
+/**
+ * Overloads so your route can keep calling:
+ *   generateAssessmentExportV2(responses, participantData, assessment.id, user.id)
+ * or switch to:
+ *   generateAssessmentExportV2(input: StudioExportInput)
+ */
+export async function generateAssessmentExportV2(input: StudioExportInput): Promise<any>;
+export async function generateAssessmentExportV2(
+  responses: any[],
+  participantData?: any,
+  assessmentId?: string | number,
+  userId?: string | number
+): Promise<any>;
 
-// Your route imports these names:
-export async function generateAssessmentExportV2(input: StudioExportInput) {
-  // Return the object; the route can JSON.stringify/send it.
+// Single implementation
+export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
+  // New style: single object already in StudioExportInput shape
+  if (args.length === 1) {
+    const input = args[0] as StudioExportInput;
+    return buildStudioPayload(input);
+  }
+
+  // Legacy style: (responses, participantData, assessmentId, userId)
+  const [responses, participantData, assessmentId, userId] = args;
+
+  const completedAtISO =
+    participantData?.completedAtISO ??
+    participantData?.assessmentCompletedAt ??
+    participantData?.completedAt ??
+    new Date().toISOString();
+
+  // Map responses -> items with numeric ids (e.g., "1.1.1") and integer values
+  const items = (responses ?? []).map((r: any) => ({
+    id: String(r?.id ?? r?.itemId ?? r?.code ?? r?.questionId), // numeric id expected
+    value: Number(r?.value ?? r?.score ?? r?.answer ?? r?.response ?? r?.val ?? 0),
+  }));
+
+  const input: StudioExportInput = {
+    respondentId: String(participantData?.id ?? participantData?.respondentId ?? userId ?? "unknown"),
+    respondentInitials: participantData?.initials ?? participantData?.respondentInitials ?? null,
+    assessmentId: String(assessmentId ?? participantData?.assessmentId ?? "unknown"),
+    completedAtISO,
+
+    instrumentName: participantData?.instrumentName ?? "LASBI",
+    instrumentForm: participantData?.instrumentForm ?? "short",
+    scaleMin: Number(participantData?.scaleMin ?? 1),
+    scaleMax: Number(participantData?.scaleMax ?? 6),
+    items,
+
+    sourceApp: participantData?.sourceApp ?? "GeneralSchemaQ",
+    sourceAppVersion: participantData?.sourceAppVersion ?? "2.0.0",
+    exportedAtISO: new Date().toISOString(),
+    schemaVersion: participantData?.schemaVersion ?? "1.0.0",
+    analysisVersion: participantData?.analysisVersion ?? "2025.11",
+  };
+
   return buildStudioPayload(input);
 }
+
+/* ---------------------------- Validation helper ------------------------- */
 
 export function validateSurgicalExport(payload: unknown): { ok: boolean; errors: string[] } {
   const errors: string[] = [];
@@ -310,64 +356,3 @@ export function hasCUIDMapping(numericId: string): boolean {
 export function getCUIDForNumericId(numericId: string): string | null {
   return NUMERIC_TO_CUID_MAP[numericId] || null;
 }
-// ---- Compatibility exports for route.ts (supports legacy 4-arg call OR new 1-arg object) ----
-
-// Overload signatures so TypeScript is happy
-export async function generateAssessmentExportV2(input: StudioExportInput): Promise<any>;
-export async function generateAssessmentExportV2(
-  responses: any[],
-  participantData?: any,
-  assessmentId?: string | number,
-  userId?: string | number
-): Promise<any>;
-
-// Implementation
-export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
-  // New style: single object already in StudioExportInput shape
-  if (args.length === 1) {
-    const input = args[0] as StudioExportInput;
-    return buildStudioPayload(input);
-  }
-
-  // Legacy style: (responses, participantData, assessmentId, userId)
-  const [responses, participantData, assessmentId, userId] = args;
-
-  // Try to infer fields safely from legacy shapes
-  const completedAtISO =
-    participantData?.completedAtISO ??
-    participantData?.assessmentCompletedAt ??
-    participantData?.completedAt ??
-    new Date().toISOString();
-
-  // Map responses -> items with numeric ids (e.g., "1.1.1") and integer values
-  const items = (responses ?? []).map((r: any) => ({
-    id: String(r?.id ?? r?.itemId ?? r?.code ?? r?.questionId), // numeric id expected
-    value: Number(
-      r?.value ?? r?.score ?? r?.answer ?? r?.response ?? r?.val ?? 0
-    ),
-  }));
-
-  // Build the v2 input with sensible defaults; tweak these if your data carries them elsewhere
-  const input: StudioExportInput = {
-    respondentId: String(participantData?.id ?? participantData?.respondentId ?? userId ?? "unknown"),
-    respondentInitials: participantData?.initials ?? participantData?.respondentInitials ?? null,
-    assessmentId: String(assessmentId ?? participantData?.assessmentId ?? "unknown"),
-    completedAtISO,
-
-    instrumentName: participantData?.instrumentName ?? "LASBI",
-    instrumentForm: participantData?.instrumentForm ?? "short",
-    scaleMin: Number(participantData?.scaleMin ?? 1),
-    scaleMax: Number(participantData?.scaleMax ?? 6),
-    items,
-
-    sourceApp: participantData?.sourceApp ?? "GeneralSchemaQ",
-    sourceAppVersion: participantData?.sourceAppVersion ?? "2.0.0",
-    exportedAtISO: new Date().toISOString(),
-    // checksumSha256 omitted here (auto-computed by builder)
-    schemaVersion: participantData?.schemaVersion ?? "1.0.0",
-    analysisVersion: participantData?.analysisVersion ?? "2025.11",
-  };
-
-  return buildStudioPayload(input);
-}
-
