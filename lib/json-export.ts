@@ -183,7 +183,6 @@ const NUMERIC_TO_CUID_MAP: Record<string, string> = Object.freeze({
  "5.4.4": "cmh38aen001gxsbb3r6y8l0p4",
  "5.4.5": "cmh38aen001hxsbb3s9b1m3q5",
  "5.4.6": "cmh38aen001ixsbb3t2e4n6r6",
-;
 });
 
 /* -------------------- Mapping integrity (lazy validation) ---------------- */
