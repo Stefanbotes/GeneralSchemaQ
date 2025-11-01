@@ -4,14 +4,13 @@
 // - Supports 18×6 = 108 items only
 // - v1.0.0 (raw instrument): LASBI-Long, no derived data
 // - v1.3.0 "surgical": itemId + canonicalId + value + index (108 items)
-// - No references to deprecated 54-item flows
 // -----------------------------------------------------------------------------
 
 import crypto from "crypto";
 import {
   buildExporter,
   getCurrentMappingVersion,
-  type ExportPayload as LasbiExportPayload,
+  type ExportPayload as LasbiExportPayloadBase,
 } from "./lasbi-exporter";
 import { ITEM_ID_RE } from "./shared-lasbi-mapping";
 
@@ -54,27 +53,22 @@ const SCALE_MIN = 1;
 const SCALE_MAX = 6;
 const ASSESSMENT_SCALE = { min: SCALE_MIN, max: SCALE_MAX };
 
-// Sequential (1..108) → Canonical "d.s.q" (18×6)
+// Sequential (1..108) → Canonical "d.s.q"
 const SEQUENTIAL_TO_CANONICAL_MAP: Record<string, string> = {
-  // Domain 1 (5×6)
   "1":"1.1.1","2":"1.1.2","3":"1.1.3","4":"1.1.4","5":"1.1.5","6":"1.1.6",
   "7":"1.2.1","8":"1.2.2","9":"1.2.3","10":"1.2.4","11":"1.2.5","12":"1.2.6",
   "13":"1.3.1","14":"1.3.2","15":"1.3.3","16":"1.3.4","17":"1.3.5","18":"1.3.6",
   "19":"1.4.1","20":"1.4.2","21":"1.4.3","22":"1.4.4","23":"1.4.5","24":"1.4.6",
   "25":"1.5.1","26":"1.5.2","27":"1.5.3","28":"1.5.4","29":"1.5.5","30":"1.5.6",
-  // Domain 2 (4×6)
   "31":"2.1.1","32":"2.1.2","33":"2.1.3","34":"2.1.4","35":"2.1.5","36":"2.1.6",
   "37":"2.2.1","38":"2.2.2","39":"2.2.3","40":"2.2.4","41":"2.2.5","42":"2.2.6",
   "43":"2.3.1","44":"2.3.2","45":"2.3.3","46":"2.3.4","47":"2.3.5","48":"2.3.6",
   "49":"2.4.1","50":"2.4.2","51":"2.4.3","52":"2.4.4","53":"2.4.5","54":"2.4.6",
-  // Domain 3 (2×6)
   "55":"3.1.1","56":"3.1.2","57":"3.1.3","58":"3.1.4","59":"3.1.5","60":"3.1.6",
   "61":"3.2.1","62":"3.2.2","63":"3.2.3","64":"3.2.4","65":"3.2.5","66":"3.2.6",
-  // Domain 4 (3×6)
   "67":"4.1.1","68":"4.1.2","69":"4.1.3","70":"4.1.4","71":"4.1.5","72":"4.1.6",
   "73":"4.2.1","74":"4.2.2","75":"4.2.3","76":"4.2.4","77":"4.2.5","78":"4.2.6",
   "79":"4.3.1","80":"4.3.2","81":"4.3.3","82":"4.3.4","83":"4.3.5","84":"4.3.6",
-  // Domain 5 (4×6)
   "85":"5.1.1","86":"5.1.2","87":"5.1.3","88":"5.1.4","89":"5.1.5","90":"5.1.6",
   "91":"5.2.1","92":"5.2.2","93":"5.2.3","94":"5.2.4","95":"5.2.5","96":"5.2.6",
   "97":"5.3.1","98":"5.3.2","99":"5.3.3","100":"5.3.4","101":"5.3.5","102":"5.3.6",
@@ -101,7 +95,6 @@ function toCanonicalItems(rec: Record<string, any>): Array<{ id: string; value: 
     id: convertToCanonicalId(qid),
     value: normalizeValue(raw),
   }));
-  // Deterministic sort: 1.1.1 … 5.4.6
   items.sort((a, b) =>
     a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: "base" })
   );
@@ -169,7 +162,7 @@ export function generateExportFilename(
 // ---------------------------- v1.0.0 (raw) -----------------------------------
 
 type Instrument = {
-  name: string;                           // "LASBI-Long" (normalized → name:"LASBI", form:"long")
+  name: string;
   form?: "short" | "long";
   scale: { min: number; max: number };
   items: Array<{ id: string; value: number }>;
@@ -221,18 +214,15 @@ export function validateAssessmentExport(exportData: AssessmentExport): Validati
     });
   }
 
-  // timestamps (no millis)
   if (exportData.assessment?.completedAt?.includes(".")) errors.push("completedAt must not include milliseconds");
   if (exportData.provenance?.exportedAt?.includes(".")) errors.push("exportedAt must not include milliseconds");
 
-  // time order
   if (exportData.assessment?.completedAt && exportData.provenance?.exportedAt) {
     if (new Date(exportData.assessment.completedAt) > new Date(exportData.provenance.exportedAt)) {
       errors.push("completedAt must be <= exportedAt");
     }
   }
 
-  // provenance
   if (!exportData.provenance?.sourceApp) errors.push("provenance.sourceApp is required");
   if (!exportData.provenance?.sourceAppVersion) errors.push("provenance.sourceAppVersion is required");
   if (!exportData.provenance?.exportedAt) errors.push("provenance.exportedAt is required");
@@ -240,7 +230,6 @@ export function validateAssessmentExport(exportData: AssessmentExport): Validati
   if (exportData.provenance?.checksumSha256 && !/^[a-f0-9]{64}$/.test(exportData.provenance.checksumSha256))
     errors.push("checksumSha256 must be 64 hex chars");
 
-  // PII guard
   const exportStr = JSON.stringify(exportData);
   if (exportStr.includes("@") && exportStr.includes(".")) errors.push("Export may contain email addresses (PII)");
 
@@ -253,7 +242,6 @@ export function generateAssessmentExport(
   assessmentId: string,
   userId: string
 ): AssessmentExport {
-  // Normalize → canonical items, enforce 108 + range
   const items = toCanonicalItems(responses);
   assertComplete108(items);
 
@@ -273,7 +261,7 @@ export function generateAssessmentExport(
   const exportedAt = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
 
   const instrument: Instrument = {
-    name: "LASBI-Long",                 // normalized → name:"LASBI", form:"long"
+    name: "LASBI-Long",
     scale: ASSESSMENT_SCALE,
     items,
   };
@@ -302,7 +290,7 @@ export function generateAssessmentExport(
         name: "LASBI" as const,
         form: normalizedInstrument.form || "long",
         scale: normalizedInstrument.scale,
-        items: normalizedInstrument.items, // 108 canonical, sorted
+        items: normalizedInstrument.items,
       },
     },
     provenance: {
@@ -325,7 +313,6 @@ export function generateAssessmentExport(
 
 type UIAnswerCanon = { index: number; canonicalId: string; value: number };
 
-/** Build a stable 1..108 list from a canonical record {"1.1.1": 3, ...} */
 function answersFromCanonicalRecord(rec: Record<string, any>): UIAnswerCanon[] {
   const CANON = /^\d+\.\d+\.\d+$/;
   const toNum = (v: any) =>
@@ -338,23 +325,27 @@ function answersFromCanonicalRecord(rec: Record<string, any>): UIAnswerCanon[] {
     );
 
   return ids.map((id, i) => ({
-    index: i + 1, // 1..108
+    index: i + 1,
     canonicalId: id,
     value: toNum(rec[id]),
   }));
 }
 
 // -------------------------- v1.3.0 (surgical) --------------------------------
+//
+// Extend the base payload with the top-level IDs Studio requires.
+export type LasbiExportPayload = LasbiExportPayloadBase & {
+  respondent: { id: string };
+  assessment: { assessmentId: string; completedAt: string };
+};
 
 export async function generateAssessmentExportV2(
-  responses: Record<string, any>, // expects canonical 1.1.1 keys (or {value})
+  responses: Record<string, any>,
   participantData: any,
   assessmentId: string,
   userId: string
 ): Promise<LasbiExportPayload> {
-  // Build 1..108 canonical answer list
   const uiAnswers = answersFromCanonicalRecord(responses);
-
   if (uiAnswers.length !== 108) {
     throw new Error(`Expected 108 LASBI answers, got ${uiAnswers.length}`);
   }
@@ -362,49 +353,49 @@ export async function generateAssessmentExportV2(
   const mappingVersion = getCurrentMappingVersion();
 
   // Core payload (itemId + canonicalId + value + index)
-  const payload = await buildExporter({
+  const base = await buildExporter({
     answers: uiAnswers as unknown as Parameters<typeof buildExporter>[0]["answers"],
     mappingVersion,
     schemaVersion: "1.0.0",
   });
 
-  // Ensure required metadata keys exist, then add identification/provenance
-  const exportedAt = payload.metadata?.exportedAt ?? new Date().toISOString();
-  const locale = payload.metadata?.locale ?? "en-US";
-  const initials = (participantData?.name ?? "")
-    .split(" ")
-    .map((n: string) => n?.[0])
-    .filter(Boolean)
-    .join("")
-    .slice(0, 3)
-    .toUpperCase();
+  // Ensure metadata.exportedAt is present (and keep any existing fields)
+  const exportedAt =
+    base.metadata?.exportedAt ??
+    new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
 
-  payload.metadata = {
-    ...payload.metadata,
-    exportedAt, // must be string
-    locale,     // optional but we set default
+  // Build the final payload Studio expects
+  const finalPayload: LasbiExportPayload = {
+    ...base,
     respondent: {
-      id: String(userId).slice(-8), // pseudonymous short id
-      initials,
+      id: String(userId).slice(-8), // short pseudo-id
     },
     assessment: {
-      id: assessmentId,
+      assessmentId,
       completedAt:
-        typeof participantData?.assessmentDate === "string"
-          ? participantData.assessmentDate
-          : new Date().toISOString(),
+        participantData?.assessmentDate ??
+        new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
     },
-    provenance: {
-      sourceApp: "Inner Persona Assessment Portal",
-      sourceAppVersion: "3.2.1",
+    metadata: {
+      ...base.metadata,
+      exportedAt,
+      provenance: {
+        sourceApp: "Inner Persona Assessment Portal",
+        sourceAppVersion: "3.2.1",
+      },
     },
   };
 
-  return payload;
+  return finalPayload;
 }
 
 export function validateSurgicalExport(payload: LasbiExportPayload): ValidationError | null {
   const errors: string[] = [];
+
+  // Top-level required IDs for Studio
+  if (!payload.respondent?.id) errors.push("respondent.id is required");
+  if (!payload.assessment?.assessmentId) errors.push("assessment.assessmentId is required");
+  if (!payload.assessment?.completedAt) errors.push("assessment.completedAt is required");
 
   if (!payload.instrument) errors.push("instrument is required");
   else {
@@ -446,4 +437,3 @@ export function validateSurgicalExport(payload: LasbiExportPayload): ValidationE
 
   return errors.length ? { error: "ValidationFailed", details: errors.slice(0, 10) } : null;
 }
-
