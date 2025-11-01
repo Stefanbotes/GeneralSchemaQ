@@ -234,21 +234,18 @@ export async function buildStudioPayload(input: StudioExportInput) {
 
 /* -------------------------- Public export helper ------------------------ */
 
-export async function exportStudioJson(input: StudioExportInput): Promise<string> {
-  const payload = await buildStudioPayload(input);
-  return JSON.stringify(payload, null, 2);
-}
-
 /* --------------------- Compatibility exports for route.ts --------------- */
 /**
  * Overloads so your route can keep calling:
  *   generateAssessmentExportV2(responses, participantData, assessment.id, user.id)
- * or switch to:
+ * OR switch to:
  *   generateAssessmentExportV2(input: StudioExportInput)
+ *
+ * Important: `responses` may be an array OR a Record<string, any>.
  */
 export async function generateAssessmentExportV2(input: StudioExportInput): Promise<any>;
 export async function generateAssessmentExportV2(
-  responses: any[],
+  responses: any[] | Record<string, any>,
   participantData?: any,
   assessmentId?: string | number,
   userId?: string | number
@@ -263,7 +260,10 @@ export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
   }
 
   // Legacy style: (responses, participantData, assessmentId, userId)
-  const [responses, participantData, assessmentId, userId] = args;
+  const [responsesRaw, participantData, assessmentId, userId] = args;
+
+  // Normalize responses into an array of { id, value }
+  const items = normalizeResponsesToItems(responsesRaw);
 
   const completedAtISO =
     participantData?.completedAtISO ??
@@ -271,14 +271,10 @@ export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
     participantData?.completedAt ??
     new Date().toISOString();
 
-  // Map responses -> items with numeric ids (e.g., "1.1.1") and integer values
-  const items = (responses ?? []).map((r: any) => ({
-    id: String(r?.id ?? r?.itemId ?? r?.code ?? r?.questionId), // numeric id expected
-    value: Number(r?.value ?? r?.score ?? r?.answer ?? r?.response ?? r?.val ?? 0),
-  }));
-
   const input: StudioExportInput = {
-    respondentId: String(participantData?.id ?? participantData?.respondentId ?? userId ?? "unknown"),
+    respondentId: String(
+      participantData?.id ?? participantData?.respondentId ?? userId ?? "unknown"
+    ),
     respondentInitials: participantData?.initials ?? participantData?.respondentInitials ?? null,
     assessmentId: String(assessmentId ?? participantData?.assessmentId ?? "unknown"),
     completedAtISO,
@@ -298,6 +294,52 @@ export async function generateAssessmentExportV2(...args: any[]): Promise<any> {
 
   return buildStudioPayload(input);
 }
+
+/* ----------------------- Response normalization helper ------------------ */
+/**
+ * Accepts common shapes for `responses` and returns [{ id, value }, ...] with numeric IDs as strings.
+ * Supported shapes:
+ *  - Array of objects: [{ id|itemId|code|questionId, value|score|answer|response|val }, ...]
+ *  - { items: [...] } where items is that same array
+ *  - Record<string, any>: { "1.1.1": 4, "1.1.2": 6, ... } or values as { value: 4 }
+ */
+function normalizeResponsesToItems(responses: unknown): StudioItem[] {
+  // Case A: array already
+  if (Array.isArray(responses)) {
+    return responses.map((r: any) => ({
+      id: String(r?.id ?? r?.itemId ?? r?.code ?? r?.questionId),
+      value: Number(r?.value ?? r?.score ?? r?.answer ?? r?.response ?? r?.val ?? 0),
+    }));
+  }
+
+  // Case B: object with items array
+  if (responses && typeof responses === "object" && Array.isArray((responses as any).items)) {
+    const arr = (responses as any).items as any[];
+    return arr.map((r: any) => ({
+      id: String(r?.id ?? r?.itemId ?? r?.code ?? r?.questionId),
+      value: Number(r?.value ?? r?.score ?? r?.answer ?? r?.response ?? r?.val ?? 0),
+    }));
+  }
+
+  // Case C: plain record of key -> primitive or object
+  if (responses && typeof responses === "object") {
+    const out: StudioItem[] = [];
+    for (const [key, raw] of Object.entries(responses as Record<string, any>)) {
+      // key is the numeric id (e.g., "1.1.1"); value may be number or an object with value-ish fields
+      const value = Number(
+        (raw != null && typeof raw === "object")
+          ? (raw.value ?? raw.score ?? raw.answer ?? raw.response ?? raw.val ?? 0)
+          : raw
+      );
+      out.push({ id: String(key), value });
+    }
+    return out;
+  }
+
+  // Unknown shape → return empty; builder will range-check later
+  return [];
+}
+
 
 /* ---------------------------- Validation helper ------------------------- */
 
