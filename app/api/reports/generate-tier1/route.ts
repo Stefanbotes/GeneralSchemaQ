@@ -4,113 +4,24 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 
-import {
-  loadItemToSchema,
-  CANONICAL_ID_RE,
-  ITEM_ID_RE,
-  type VariableId,
-} from '@/lib/shared-lasbi-mapping';
-
-// Optional imports if you already have them. If these don’t exist,
-// the code falls back to generic narrative strings.
-let narrativeFor: ((schemaId: string, score: number) => string) | null = null;
-try {
-  // Adjust the path if your counseling helpers live elsewhere:
-  // e.g. '@/lib/tier1-persona-copy'
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mod = require('@/lib/tier1-persona-copy');
-  if (typeof mod.narrativeFor === 'function') narrativeFor = mod.narrativeFor;
-} catch { /* soft optional */ }
+import { scoreAssessmentResponses, pickTop3 } from '@/app/lib/shared-schema-scoring';
+import { counsellingNarratives, defaultNarrative } from '@/lib/narratives/counselling';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// --- Types used in this route ---
-type CanonicalKey = `${1|2|3|4|5}.${1|2|3|4|5}.${1|2|3|4|5|6}`;
-
-function toNumber(v: unknown): number {
-  const n = typeof v === 'object' && v !== null && 'value' in (v as any)
-    ? Number((v as any).value)
-    : Number(v);
-  return Number.isFinite(n) ? n : NaN;
-}
-
-function extractCanonicalRecord(responses: Record<string, any>): Record<CanonicalKey, number> {
-  const out: Record<string, number> = {};
-  for (const [k, raw] of Object.entries(responses)) {
-    const val = toNumber(raw);
-    if (!Number.isFinite(val)) continue;
-    // accept "1.1.1" straight; also accept numeric "1".."108" if present (rare)
-    if (CANONICAL_ID_RE.test(k)) {
-      out[k] = val;
-    }
-  }
-  return out as Record<CanonicalKey, number>;
-}
-
-type SchemaScore = {
-  variableId: VariableId;
-  label: string;
-  mean: number;        // 1..6
-  n: number;           // count of items contributing
-};
-
-function computeSchemaScores(canon: Record<CanonicalKey, number>): SchemaScore[] {
-  const itemMeta = loadItemToSchema(); // keyed by itemId AND canonicalId
-  // buckets: variableId -> {sum, n, label}
-  const buckets = new Map<VariableId, { sum: number; n: number; label: string }>();
-
-  for (const [cid, value] of Object.entries(canon)) {
-    const meta = itemMeta.get(cid);  // lookup by canonicalId
-    if (!meta) continue;
-    const key = meta.variableId as VariableId;
-    const prev = buckets.get(key) ?? { sum: 0, n: 0, label: meta.schemaLabel };
-    buckets.set(key, { sum: prev.sum + value, n: prev.n + 1, label: prev.label });
-  }
-
-  const out: SchemaScore[] = [];
-  for (const [vid, agg] of buckets) {
-    if (agg.n > 0) {
-      out.push({
-        variableId: vid,
-        label: agg.label,
-        mean: Number((agg.sum / agg.n).toFixed(2)),
-        n: agg.n,
-      });
-    }
-  }
-
-  // Ensure we don’t return empty (this is what previously triggered your error)
-  return out.sort((a,b) =>
-    a.variableId.localeCompare(b.variableId, 'en', { numeric: true })
-  );
-}
-
+/** Small presentational helper to render the full HTML shell */
 function renderHtml({
   person,
   completedAt,
-  scores,
+  rowsHtml,
 }: {
-  person: { firstName?: string|null; lastName?: string|null };
+  person: { firstName?: string | null; lastName?: string | null };
   completedAt: Date;
-  scores: SchemaScore[];
+  rowsHtml: string;
 }) {
   const fullName = `${person.firstName ?? ''} ${person.lastName ?? ''}`.trim() || 'Participant';
   const dt = completedAt.toISOString().split('T')[0];
-
-  // Build rows with optional narratives
-  const rows = scores.map(s => {
-    const story = narrativeFor
-      ? narrativeFor(s.variableId, s.mean)
-      : `Your score on ${s.label} is ${s.mean}.`;
-    return `
-      <tr>
-        <td style="padding:8px;border-bottom:1px solid #eee;"><strong>${s.variableId}</strong></td>
-        <td style="padding:8px;border-bottom:1px solid #eee;">${s.label}</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${s.mean}</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;">${story}</td>
-      </tr>`;
-  }).join('');
 
   return `<!doctype html>
 <html lang="en">
@@ -125,7 +36,10 @@ function renderHtml({
     .muted { color:#6b7280; margin:0 0 16px; }
     table { width:100%; border-collapse: collapse; margin-top: 16px; }
     th { text-align:left; padding:8px; border-bottom:2px solid #e5e7eb; font-weight:600; }
+    td { vertical-align: top; }
     .footer { margin-top:24px; font-size:12px; color:#6b7280; }
+    .badge-emerging { color:#b45309; background:#fef3c7; border:1px solid #fcd34d; border-radius:6px; padding:2px 6px; margin-left:8px; font-size:12px; }
+    .dim { color:#374151; font-size:13px; }
   </style>
 </head>
 <body>
@@ -135,19 +49,53 @@ function renderHtml({
     <table>
       <thead>
         <tr>
-          <th>Code</th><th>Schema</th><th style="text-align:center">Score</th><th>Counselling Narrative</th>
+          <th style="width:70px;">Code</th>
+          <th style="width:280px;">Schema</th>
+          <th style="text-align:center;width:90px;">Index</th>
+          <th>Counselling Narrative</th>
         </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>${rowsHtml}</tbody>
     </table>
-    <div class="footer">Generated Tier 1 summary. Scores are on a 1–6 scale.</div>
+    <div class="footer">Top three schemas shown. Index is a 0–100 linear transform of the 1–6 mean.</div>
   </div>
 </body>
 </html>`;
 }
 
+/** Renders one table row for a scored schema using the counselling narrative pack */
+function narrativeRow(s: {
+  variableId: string;          // "d.s"
+  schemaLabel: string;         // display label
+  clinicalSchemaId: string;    // e.g. "emotional_inhibition"
+  index0to100: number;         // 0..100 (unrounded)
+}) {
+  const clinicalId = s.clinicalSchemaId;
+  const n = counsellingNarratives[clinicalId] ?? defaultNarrative(clinicalId);
+  const displayIndex = Math.round(s.index0to100);
+  const cautionBadge =
+    displayIndex < 60
+      ? `<span class="badge-emerging">emerging</span>`
+      : '';
+
+  return `
+    <tr>
+      <td style="padding:8px;border-bottom:1px solid #eee;"><strong>${s.variableId}</strong></td>
+      <td style="padding:8px;border-bottom:1px solid #eee;">${s.schemaLabel}${cautionBadge}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${displayIndex}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;">
+        <div style="font-weight:600;margin-bottom:4px;">${n.displayName}</div>
+        <div style="margin-bottom:6px;">${n.summary}</div>
+        <div class="dim"><em>Strengths:</em> ${n.strengths.join(', ')}</div>
+        <div class="dim"><em>Growth:</em> ${n.growth.join('; ')}</div>
+      </td>
+    </tr>
+  `;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    // ---- Auth ----
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -163,11 +111,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // ---- Load user + assessment ----
     const user = await db.user.findUnique({
       where: { id: userId },
       include: {
-        assessments: { where: { id: assessmentId }, take: 1 }
-      }
+        assessments: { where: { id: assessmentId }, take: 1 },
+      },
     });
 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -178,29 +127,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Assessment must be completed' }, { status: 400 });
     }
 
-    // Parse responses
+    // ---- Parse responses (accept stringified or object) ----
     const raw = assessment.responses;
-    const responses = typeof raw === 'string' ? JSON.parse(raw) : raw || {};
-    const canon = extractCanonicalRecord(responses);
+    const responses: Record<string, number | string> =
+      typeof raw === 'string' ? JSON.parse(raw) : (raw || {});
 
-    // Compute schema scores (defensive; never return empty)
-    const scores = computeSchemaScores(canon);
-    if (!scores.length) {
-      // Give a *clear* message + small debug to logs to help you if data is malformed
-      console.error('[tier1] No computable scores. Keys sample:', Object.keys(responses).slice(0, 10));
+    // ---- Score using the golden pipeline ----
+    const { rankedScores } = await scoreAssessmentResponses(responses);
+    if (!rankedScores.length) {
+      console.error('[tier1] No scores computed. Keys sample:', Object.keys(responses).slice(0, 10));
       return NextResponse.json({ error: 'Scoring returned no results.' }, { status: 400 });
     }
 
-    // Render HTML
+    // ---- Top-3 only (with threshold for “emerging” badge) ----
+    const { primary, secondary, tertiary } = pickTop3(rankedScores, 60);
+    const top3 = [primary, secondary, tertiary].filter(Boolean) as typeof rankedScores;
+
+    // ---- Build narrative rows from counselling pack ----
+    const rowsHtml = top3.map(s => narrativeRow(s)).join('');
+
+    // ---- Render HTML ----
     const html = renderHtml({
       person: { firstName: user.firstName, lastName: user.lastName },
       completedAt: new Date(assessment.completedAt || assessment.createdAt),
-      scores
+      rowsHtml,
     });
 
     const safeName =
       `${user.firstName ?? ''}_${user.lastName ?? ''}`.trim().replace(/\s+/g, '_') || user.email;
-    const filename = `Public_Summary_${safeName}.html`.replace(/[^A-Za-z0-9_\-\.]/g, '');
+    const filename = `Public_Summary_${safeName}.html`.replace(/[^A-Za-z0-9_\\-\\.]/g, '');
 
     return new NextResponse(html, {
       status: 200,
@@ -217,4 +172,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
