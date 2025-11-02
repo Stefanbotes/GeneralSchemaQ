@@ -4,13 +4,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 
-import { scoreAssessmentResponses, pickTop3 } from '@/lib/shared-schema-scoring';
+import { scoreAssessmentResponses, pickTop3 } from '@/lib/shared-schema-scoring'; // <-- if yours is under app/lib, change to '@/app/lib/shared-schema-scoring'
 import { counsellingNarratives, defaultNarrative } from '@/lib/narratives/counselling';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-/** Small presentational helper to render the full HTML shell */
+/** Render full HTML shell */
 function renderHtml({
   person,
   completedAt,
@@ -63,7 +63,7 @@ function renderHtml({
 </html>`;
 }
 
-/** Renders one table row for a scored schema using the counselling narrative pack */
+/** One table row using the counselling narrative pack */
 function narrativeRow(s: {
   variableId: string;          // "d.s"
   schemaLabel: string;         // display label
@@ -73,10 +73,7 @@ function narrativeRow(s: {
   const clinicalId = s.clinicalSchemaId;
   const n = counsellingNarratives[clinicalId] ?? defaultNarrative(clinicalId);
   const displayIndex = Math.round(s.index0to100);
-  const cautionBadge =
-    displayIndex < 60
-      ? `<span class="badge-emerging">emerging</span>`
-      : '';
+  const cautionBadge = displayIndex < 60 ? `<span class="badge-emerging">emerging</span>` : '';
 
   return `
     <tr>
@@ -127,26 +124,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Assessment must be completed' }, { status: 400 });
     }
 
-    // ---- Parse responses (accept stringified or object) ----
+    // ---- Parse + normalize responses (from { "d.s.q": { value, timestamp } }) ----
     const raw = assessment.responses;
-    const responses: Record<string, number | string> =
-      typeof raw === 'string' ? JSON.parse(raw) : (raw || {});
-
-    // ---- Score using the golden pipeline ----
-    const { rankedScores } = await scoreAssessmentResponses(responses);
-    if (!rankedScores.length) {
-      console.error('[tier1] No scores computed. Keys sample:', Object.keys(responses).slice(0, 10));
-      return NextResponse.json({ error: 'Scoring returned no results.' }, { status: 400 });
+    let parsed: any;
+    try {
+      parsed = typeof raw === 'string' ? JSON.parse(raw) : raw || {};
+    } catch {
+      return NextResponse.json({ error: 'Responses JSON malformed' }, { status: 400 });
     }
 
-    // ---- Top-3 only (with threshold for “emerging” badge) ----
+    // Flatten to { "d.s.q": number }
+    const flat: Record<string, number> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      if (typeof k === 'string' && /^[1-5]\.[1-5]\.[1-6]$/.test(k)) {
+        const n = typeof v === 'object' && v && 'value' in (v as any)
+          ? Number((v as any).value)
+          : Number(v);
+        if (Number.isFinite(n)) flat[k] = n;
+      }
+    }
+
+    if (!Object.keys(flat).length) {
+      console.error('[tier1] No numeric answers found in canonical keys. Sample keys:', Object.keys(parsed).slice(0, 10));
+      return NextResponse.json({ error: 'No responses to score (empty or wrong shape).'}, { status: 400 });
+    }
+
+    // ---- Score using golden pipeline ----
+    const { rankedScores } = await scoreAssessmentResponses(flat);
+    if (!rankedScores.length) {
+      return NextResponse.json({ error: 'Scoring returned no results (keys unmapped).'}, { status: 400 });
+    }
+
+    // ---- Top-3 with “emerging” badge for < 60 ----
     const { primary, secondary, tertiary } = pickTop3(rankedScores, 60);
     const top3 = [primary, secondary, tertiary].filter(Boolean) as typeof rankedScores;
 
-    // ---- Build narrative rows from counselling pack ----
+    // ---- Build rows & render ----
     const rowsHtml = top3.map(s => narrativeRow(s)).join('');
-
-    // ---- Render HTML ----
     const html = renderHtml({
       person: { firstName: user.firstName, lastName: user.lastName },
       completedAt: new Date(assessment.completedAt || assessment.createdAt),
@@ -155,7 +169,7 @@ export async function POST(req: NextRequest) {
 
     const safeName =
       `${user.firstName ?? ''}_${user.lastName ?? ''}`.trim().replace(/\s+/g, '_') || user.email;
-    const filename = `Public_Summary_${safeName}.html`.replace(/[^A-Za-z0-9_\\-\\.]/g, '');
+    const filename = `Public_Summary_${safeName}.html`.replace(/[^A-Za-z0-9_\-.]/g, '');
 
     return new NextResponse(html, {
       status: 200,
@@ -172,3 +186,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
