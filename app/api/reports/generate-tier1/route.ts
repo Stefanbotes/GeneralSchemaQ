@@ -4,13 +4,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 
-import { scoreAssessmentResponses, pickTop3 } from '@/lib/shared-schema-scoring'; // <-- if yours is under app/lib, change to '@/app/lib/shared-schema-scoring'
+import { scoreAssessmentResponses, pickTop3 } from '@/lib/shared-schema-scoring';
 import { counsellingNarratives, defaultNarrative } from '@/lib/narratives/counselling';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-/** Render full HTML shell */
+/** Render full HTML shell (styled for counselling report) */
 function renderHtml({
   person,
   completedAt,
@@ -30,21 +30,103 @@ function renderHtml({
   <title>Public Summary — ${fullName}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <style>
-    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; background:#fff; color:#111; margin:0; padding:24px; }
-    .card { max-width: 1000px; margin: 0 auto; border:1px solid #e5e7eb; border-radius:16px; padding:24px; box-shadow: 0 10px 20px rgba(0,0,0,0.04); }
-    h1 { font-size: 22px; margin: 0 0 4px; }
-    .muted { color:#6b7280; margin:0 0 16px; }
-    table { width:100%; border-collapse: collapse; margin-top: 16px; }
-    th { text-align:left; padding:8px; border-bottom:2px solid #e5e7eb; font-weight:600; }
-    td { vertical-align: top; }
-    .footer { margin-top:24px; font-size:12px; color:#6b7280; }
-    .badge-emerging { color:#b45309; background:#fef3c7; border:1px solid #fcd34d; border-radius:6px; padding:2px 6px; margin-left:8px; font-size:12px; }
-    .dim { color:#374151; font-size:13px; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: #FFF9F5;
+      color: #0A3D42;
+      margin: 0;
+      padding: 40px 24px;
+      line-height: 1.6;
+    }
+    .card {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border: 1px solid #E8F0F1;
+      border-radius: 12px;
+      padding: 48px;
+      box-shadow: 0 2px 8px rgba(9, 90, 98, 0.06);
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0 0 8px;
+      color: #095A62;
+      letter-spacing: -0.02em;
+    }
+    .muted {
+      color: #5A7C80;
+      margin: 0 0 32px;
+      font-size: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+    }
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 2px solid #E8F0F1;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #095A62;
+    }
+    td {
+      vertical-align: top;
+      padding: 20px 16px;
+      border-bottom: 1px solid #F5F8F9;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .footer {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #E8F0F1;
+      font-size: 13px;
+      color: #5A7C80;
+      font-style: italic;
+    }
+    .badge-emerging {
+      color: #095A62;
+      background: #E8F0F1;
+      border: 1px solid #C5DFE2;
+      border-radius: 6px;
+      padding: 3px 8px;
+      margin-left: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .dim {
+      color: #5A7C80;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .narrative-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #095A62;
+      font-size: 15px;
+    }
+    .narrative-summary {
+      margin-bottom: 12px;
+      color: #0A3D42;
+      font-size: 14px;
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .card { box-shadow: none; border: none; }
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>LASBI — Public Summary</h1>
+    <h1>LASBI — Counselling Summary</h1>
     <p class="muted">${fullName} · Completed on ${dt}</p>
     <table>
       <thead>
@@ -63,7 +145,7 @@ function renderHtml({
 </html>`;
 }
 
-/** One table row using the counselling narrative pack */
+/** Render one narrative row */
 function narrativeRow(s: {
   variableId: string;          // "d.s"
   schemaLabel: string;         // display label
@@ -77,12 +159,12 @@ function narrativeRow(s: {
 
   return `
     <tr>
-      <td style="padding:8px;border-bottom:1px solid #eee;"><strong>${s.variableId}</strong></td>
-      <td style="padding:8px;border-bottom:1px solid #eee;">${s.schemaLabel}${cautionBadge}</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${displayIndex}</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;">
-        <div style="font-weight:600;margin-bottom:4px;">${n.displayName}</div>
-        <div style="margin-bottom:6px;">${n.summary}</div>
+      <td><strong>${s.variableId}</strong></td>
+      <td>${s.schemaLabel}${cautionBadge}</td>
+      <td style="text-align:center;">${displayIndex}</td>
+      <td>
+        <div class="narrative-title">${n.displayName}</div>
+        <div class="narrative-summary">${n.summary}</div>
         <div class="dim"><em>Strengths:</em> ${n.strengths.join(', ')}</div>
         <div class="dim"><em>Growth:</em> ${n.growth.join('; ')}</div>
       </td>
