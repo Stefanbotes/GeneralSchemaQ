@@ -139,7 +139,7 @@ function RegisterForm() {
               Create Account
             </CardTitle>
             <CardDescription>
-              Join Inner Personas Assessment to discover your Inner Persona potential
+              Join Inner PersonaAssessment to discover your Inner Persona potential
             </CardDescription>
           </CardHeader>
 

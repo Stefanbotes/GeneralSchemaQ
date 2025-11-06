@@ -92,7 +92,7 @@ function LoginForm() {
               Sign In
             </CardTitle>
             <CardDescription>
-              Access your Inner Personas Assessment account
+              Access your Inner PersonaAssessment account
             </CardDescription>
           </CardHeader>
 

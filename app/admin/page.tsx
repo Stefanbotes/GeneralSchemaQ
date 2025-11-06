@@ -207,7 +207,7 @@ export default async function AdminPage() {
                     <div className="p-3 bg-[#fcd0b1]-100 rounded">
                       <strong>Tier 2: Leadership</strong>
                       <p className="text-[#fcd0b1]-700 text-xs mt-1">
-                        Professional development focus. Inner Personas (8-12 pages)
+                        Professional development focus. Inner Persona(8-12 pages)
                       </p>
                     </div>
                     <div className="p-3 bg-red-100 rounded">

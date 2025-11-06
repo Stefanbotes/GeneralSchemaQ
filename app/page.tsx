@@ -41,7 +41,7 @@ export default function HomePage() {
               <AnimatedLogo />
             </div>
             <CardTitle className="text-3xl font-bold mb-4 bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
-              Inner Personas Assessment
+              Inner PersonaAssessment
             </CardTitle>
             <CardDescription className="text-gray-600 text-lg mb-6">
               Discover your Inner Persona through Reflection statements. This assessment 
