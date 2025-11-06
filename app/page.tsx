@@ -44,8 +44,8 @@ export default function HomePage() {
               Inner Personas Assessment
             </CardTitle>
             <CardDescription className="text-gray-600 text-lg mb-6">
-              Discover your Inner Persona through behavioral reflection statements. This assessment 
-              helps identify your natural Inner Personapatterns and growth opportunities.
+              Discover your Inner Persona through Reflection statements. This assessment 
+              helps identify your natural Inner Persona patterns and growth opportunities.
             </CardDescription>
           </CardHeader>
           
@@ -55,7 +55,7 @@ export default function HomePage() {
               <p className="mb-4">By proceeding with this assessment, you agree that:</p>
               <ul className="list-disc pl-5 mb-6 space-y-2">
                 <li>Your responses will be kept confidential and secure.</li>
-                <li>The data will be used solely for Inner Personadevelopment and analysis.</li>
+                <li>The data will be used solely for Inner Personal Development  and analysis.</li>
                 <li>Individual responses will not be shared without explicit consent.</li>
                 <li>Results will help identify your Inner Persona patterns.</li>
               </ul>
@@ -109,7 +109,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                Answer thoughtful questions about your Inner Personaapproach and decision-making patterns.
+                Answer thoughtfully questions about your thoughts, feelings and beliefs in various situations
               </p>
             </CardContent>
           </Card>
@@ -125,7 +125,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                Receive insights into your unique Inner Persona and natural strengths.
+                Receive insights into your unique Inner Persona patterns and natural strengths.
               </p>
             </CardContent>
           </Card>

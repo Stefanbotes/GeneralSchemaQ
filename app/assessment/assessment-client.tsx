@@ -334,7 +334,7 @@ export function AssessmentClient() {
                   <Input id="email" name="email" type="email" value={bioData.email} onChange={handleBioChange} required />
                 </div>
                 <div>
-                  <Label htmlFor="team">Team/Organization *</Label>
+                  <Label htmlFor="team">Your Counsellor or Coach  *</Label>
                   <Input id="team" name="team" value={bioData.team} onChange={handleBioChange} required />
                 </div>
                 <Button type="submit" className="w-full bg-gradient-to-r from-[#fcd0b1]-600 to-bg-background-600 hover:from-[#fcd0b1]-700 hover:to-bg-background-700" size="lg">
