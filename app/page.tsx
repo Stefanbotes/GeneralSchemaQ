@@ -44,7 +44,7 @@ export default function HomePage() {
               Inner PersonaAssessment
             </CardTitle>
             <CardDescription className="text-gray-600 text-lg mb-6">
-              Discover your Inner Persona through Reflection statements. This assessment 
+              Discover your Inner Persona through reflection statements. This assessment 
               helps identify your natural Inner Persona patterns and growth opportunities.
             </CardDescription>
           </CardHeader>
@@ -55,7 +55,7 @@ export default function HomePage() {
               <p className="mb-4">By proceeding with this assessment, you agree that:</p>
               <ul className="list-disc pl-5 mb-6 space-y-2">
                 <li>Your responses will be kept confidential and secure.</li>
-                <li>The data will be used solely for Inner Personal Development  and analysis.</li>
+                <li>The data will be used solely for your Personal Growth and Insight.</li>
                 <li>Individual responses will not be shared without explicit consent.</li>
                 <li>Results will help identify your Inner Persona patterns.</li>
               </ul>
