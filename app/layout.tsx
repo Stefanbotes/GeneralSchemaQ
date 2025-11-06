@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SessionProviderWrapper } from "@/components/providers/session-provider";
 
 export const metadata: Metadata = {
-  title: "Inner Personas",
+  title: "Inner Persona",
   description: "Assessments and insights",
 };
 

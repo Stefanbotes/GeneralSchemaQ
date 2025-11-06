@@ -12,7 +12,7 @@ export function Footer() {
                 Inner
               </span>
               <span className="text-2xl font-light ml-2 text-primary-foreground/80">
-                Personas
+                Persona
               </span>
             </div>
           </div>
