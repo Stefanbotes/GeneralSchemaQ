@@ -20,7 +20,7 @@ export function Footer() {
 
         {/* Copyright */}
         <p className="text-center text-sm text-primary-foreground/80">
-          © {new Date().getFullYear()} © 2025 Inner Persona Assessment. All rights reserved. 
+          © {new Date().getFullYear()}Inner Persona Assessment. All rights reserved. 
         </p>
       </div>
     </footer>
