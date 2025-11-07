@@ -1,363 +1,456 @@
-// lib/reports/generateTier1.ts
+// lib/tier1/generate-html.ts
+// Small, safe HTML renderer for Tier 1 using precomputed persona results.
+// This file MUST export `renderTier1HTML` so other modules can import it.
 
-import type { PrismaClient } from "@prisma/client";
-import {
-  counsellingNarratives,
-  defaultNarrative,
-  type Narrative,
-} from "@/lib/narratives/counselling";
-import { scoreAssessmentResponses } from "@/lib/shared-schema-scoring";
+export type PersonaCard = {
+  schema: string;        // internal id (e.g. "The Clinger")
+  publicName: string;    // human title
+  healthy?: string;      // optional "healthy expression" line
+  score: number;         // 0..100
+  emerging?: boolean;    // flag for "emerging pattern"
+};
 
-export const TEMPLATE_VERSION = "tier1/1.0.0";
+export type RenderArgs = {
+  participantName: string;
+  completedAt: string | Date;
+  totalQuestions: number;
+  primary: PersonaCard | null | undefined;
+  secondary: PersonaCard | null | undefined;
+  tertiary: PersonaCard | null | undefined;
+  topDisplay?: Array<{ schemaLabel: string; displayIndex: number }>;
+};
 
-type Audience = "counselling" | "leadership";
+const escapeHtml = (s: string) =>
+  String(s ?? "").replace(/[<>&"]/g, c => ({ "<":"&lt;", ">":"&gt;", "&":"&amp;", '"':"&quot;" }[c] as string));
 
-export interface BuildTier1Options {
-  db: PrismaClient | any;
-  userId?: string;
-  assessmentId?: string;
-  responses?: any; // accepts the shapes your API allows
-  participantData?: {
-    name?: string | null;
-    email?: string | null;
-    [k: string]: any;
-  };
-  audience: Audience; // 'counselling' for this app
-}
-
-export interface Tier1Result {
-  html: string;
-  nameSafe: string;
-  artifact?: {
-    id: string;
-    templateVersion: string;
-  };
-}
+const fmtDate = (d: string | Date) => {
+  try { return new Date(d).toLocaleDateString(); }
+  catch { return new Date().toLocaleDateString(); }
+};
 
 /**
- * Build Tier-1 (fetch → score → resolve narratives → render HTML)
- * Returns { html, nameSafe, artifact? }
+ * Persona block with neutral classes so CSS controls all visuals.
+ * (No inline colors; content + order unchanged.)
  */
-export async function buildTier1Report(
-  opts: BuildTier1Options
-): Promise<Tier1Result> {
-  const {
-    db,
-    userId,
-    assessmentId,
-    responses: inlineResponses,
-    participantData,
-    audience,
-  } = opts;
+function renderPersonaBlock(title: string, c: PersonaCard, variant: "primary" | "secondary") {
+  const healthyLine = c.healthy
+    ? `<div class="meta-line">Healthy expression: ${escapeHtml(c.healthy)}</div>`
+    : "";
 
-  // 1) Load responses
-  const loaded =
-    inlineResponses ?? (await loadResponsesFromDB({ db, userId, assessmentId }));
-  if (!loaded) {
-    throw new Error("No responses found. Provide responses or a valid assessmentId.");
+  const schemaLine = `<div class="schema-line">(${escapeHtml(c.schema)})</div>`;
+
+  const emergingLine = c.emerging
+    ? `<div class="emerging">⚠️ Emerging pattern${variant === "primary" ? " - may benefit from development focus" : ""}</div>`
+    : "";
+
+  if (variant === "primary") {
+    return (
+      `<div class="primary">` +
+        `<div class="label">${escapeHtml(title)}</div>` +
+        `<div class="score">${escapeHtml(c.publicName)}</div>` +
+        healthyLine +
+        schemaLine +
+        `<div class="meta-line">Activation Index: ${Math.round(c.score)}/100</div>` +
+        emergingLine +
+      `</div>`
+    );
   }
 
-  // 1.1) Normalize to scorer’s expected shape: Record<string, number>
-  const responses = normalizeResponsesToRecord(loaded);
-
-  // 2) Score → ranked schemas
-  // Expected output (shape example):
-  // [{ clinicalSchemaId: "emotional_inhibition", score: 0.78 }, ...]
-  const scored = scoreAssessmentResponses(
-    responses as Record<string, string | number>
-  );
-
-  if (!Array.isArray(scored) || scored.length === 0) {
-    throw new Error("Scoring returned no results.");
-  }
-
-  const top3 = [...scored]
-    .sort((a: any, b: any) => (b.score ?? 0) - (a.score ?? 0))
-    .slice(0, 3);
-
-  // 3) Resolve narrative pack by audience (extensible later)
-  const pack =
-    audience === "counselling" ? counsellingNarratives : counsellingNarratives;
-
-  const resolved = top3.map((item: any) => {
-    const id: string =
-      item.clinicalSchemaId ?? String(item.id ?? "unknown_schema");
-    const narrative: Narrative = pack[id] ?? defaultNarrative(id);
-    return { id, ...item, narrative };
-  });
-
-  // 4) Participant meta + nameSafe
-  const meta = await safeParticipantMeta({
-    db,
-    userId,
-    assessmentId,
-    participantData,
-  });
-  const nameSafe = toNameSafe(
-    meta.name || meta.email || assessmentId || "participant"
-  );
-
-  // 5) Render HTML (A4 printable, inline CSS, footer with version)
-  const html = renderTier1HTML({
-    participant: meta,
-    topSchemas: resolved,
-    audience,
-    templateVersion: TEMPLATE_VERSION,
-  });
-
-  // 6) (Optional) Persist an artifact here if desired (currently off)
-
-  return { html, nameSafe };
-}
-
-/* ----------------------------- helpers ----------------------------- */
-
-async function loadResponsesFromDB({
-  db,
-  userId,
-  assessmentId,
-}: {
-  db: any;
-  userId?: string;
-  assessmentId?: string;
-}) {
-  if (!assessmentId) return null;
-
-  // 1) assessmentResult (JSON column: responses)
-  try {
-    const r1 = await db.assessmentResult?.findFirst?.({
-      where: { assessmentId, ...(userId ? { userId } : {}) },
-      select: { responses: true },
-    });
-    if (r1?.responses) return r1.responses;
-  } catch {}
-
-  // 2) assessment (JSON column: responses)
-  try {
-    const r2 = await db.assessment?.findUnique?.({
-      where: { id: assessmentId },
-      select: { responses: true, userId: true },
-    });
-    if (r2?.responses) return r2.responses;
-  } catch {}
-
-  // 3) assessmentResponses (flat table of answers)
-  try {
-    const r3 = await db.assessmentResponses?.findMany?.({
-      where: { assessmentId, ...(userId ? { userId } : {}) },
-      select: { itemCode: true, value: true, timestamp: true },
-      orderBy: { itemCode: "asc" },
-    });
-    if (Array.isArray(r3) && r3.length) {
-      // Convert rows → { "1.1.1": number, ... }
-      const asRecord: Record<string, number> = {};
-      for (const row of r3) {
-        asRecord[row.itemCode] = Number(row.value);
-      }
-      return asRecord;
-    }
-  } catch {}
-
-  return null;
-}
-
-/**
- * Normalise different inbound shapes into a record the scorer accepts:
- * - number[] (already OK content-wise) → {"0": n0, "1": n1, ...}
- *   (Change to 1-based if your scorer expects it: use String(i+1))
- * - rows like [{ itemCode, value }] → { [itemCode]: number }
- * - record of numbers { "1.1.1": 4 }
- * - record of objects { "1.1.1": { value: 4, timestamp: "..." } }
- */
-function normalizeResponsesToRecord(raw: any): Record<string, number> {
-  if (!raw) return {};
-
-  // Array of numbers / numeric strings → index-keyed record
-  if (
-    Array.isArray(raw) &&
-    raw.every((x) => typeof x === "number" || typeof x === "string")
-  ) {
-    const rec: Record<string, number> = {};
-    for (let i = 0; i < raw.length; i++) {
-      // If your scorer expects 1-based item indices, swap to String(i + 1)
-      rec[String(i)] = Number(raw[i]);
-    }
-    return rec;
-  }
-
-  // Array of row-like objects
-  if (Array.isArray(raw) && raw.length && typeof raw[0] === "object") {
-    const rec: Record<string, number> = {};
-    for (const row of raw) {
-      const key = String(
-        (row as any).itemCode ?? (row as any).code ?? (row as any).question ?? ""
-      );
-      if (key) rec[key] = Number((row as any).value ?? (row as any).answer ?? (row as any).score ?? 0);
-    }
-    return rec;
-  }
-
-  // Plain record (numbers or { value })
-  if (raw && typeof raw === "object") {
-    const rec: Record<string, number> = {};
-    for (const [k, v] of Object.entries(raw)) {
-      if (typeof v === "number" || typeof v === "string") {
-        rec[k] = Number(v);
-      } else if (v && typeof v === "object" && "value" in (v as any)) {
-        rec[k] = Number((v as any).value);
-      }
-    }
-    return rec;
-  }
-
-  return {};
-}
-
-async function safeParticipantMeta({
-  db,
-  userId,
-  assessmentId,
-  participantData,
-}: {
-  db: any;
-  userId?: string;
-  assessmentId?: string;
-  participantData?: { name?: string | null; email?: string | null; [k: string]: any };
-}): Promise<{ name?: string | null; email?: string | null; dateISO: string }> {
-  const dateISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-  // Priority: provided participantData → user record → assessment owner
-  if (participantData?.name || participantData?.email) {
-    return {
-      name: participantData.name ?? undefined,
-      email: participantData.email ?? undefined,
-      dateISO,
-    };
-  }
-
-  // Try user by id
-  if (userId) {
-    try {
-      const u = await db.user?.findUnique?.({
-        where: { id: userId },
-        select: { name: true, email: true },
-      });
-      if (u) return { name: u.name, email: u.email, dateISO };
-    } catch {}
-  }
-
-  // Try owner via assessment
-  if (assessmentId) {
-    try {
-      const a = await db.assessment?.findUnique?.({
-        where: { id: assessmentId },
-        select: { user: { select: { name: true, email: true } } },
-      });
-      if (a?.user) return { name: a.user.name, email: a.user.email, dateISO };
-    } catch {}
-  }
-
-  return { dateISO };
-}
-
-function toNameSafe(s: string) {
   return (
-    s
-      .trim()
-      .replace(/[^\p{L}\p{N}\-_. ]/gu, "")
-      .replace(/\s+/g, "_")
-      .slice(0, 60) || "participant"
+    `<div class="secondary">` +
+      `<div class="label">${escapeHtml(title)}</div>` +
+      `<div class="score">${escapeHtml(c.publicName)}</div>` +
+      healthyLine +
+      schemaLine +
+      `<div class="meta-line">Activation Index: ${Math.round(c.score)}/100</div>` +
+      emergingLine +
+    `</div>`
   );
 }
 
-function renderTier1HTML({
-  participant,
-  topSchemas,
-  audience,
-  templateVersion,
-}: {
-  participant: { name?: string | null; email?: string | null; dateISO: string };
-  topSchemas: Array<{ id: string; score: number; narrative: Narrative }>;
-  audience: Audience;
-  templateVersion: string;
-}) {
-  const title = "Tier-1 Counselling Report";
-  const sub = audience === "counselling" ? "Client-facing summary" : "Summary";
-  const headerName = participant.name || participant.email || "Participant";
+export function renderTier1HTML(args: RenderArgs): string {
+  const {
+    participantName,
+    completedAt,
+    totalQuestions,
+    primary,
+    secondary,
+    tertiary,
+    topDisplay = []
+  } = args;
 
-  const styles = `
-  :root { --ink:#0f172a; --muted:#475569; --card:#ffffff; --bg:#f8fafc; --brand:#4f46e5; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:var(--ink); background:var(--bg); }
-  .page { max-width: 840px; margin: 24px auto; background: var(--card); padding: 32px 36px; border-radius: 16px; box-shadow: 0 10px 24px rgba(2,8,23,0.08); }
-  h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.01em; }
-  .sub { color: var(--muted); margin-bottom: 20px; }
-  .meta { display:flex; gap:24px; flex-wrap: wrap; margin:16px 0 28px; color: var(--muted); }
-  .chip { background:#eef2ff; color:#3730a3; padding:4px 10px; border-radius: 999px; font-size:12px; }
-  .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
-  @media print { .page { box-shadow:none; border:1px solid #e5e7eb } .no-print { display:none } }
-  @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
-  .card { border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
-  .schemaName { font-weight:600; margin: 0 0 6px; }
-  .score { font-size:12px; color: var(--muted); margin-bottom:10px; }
-  ul { margin:8px 0 0 18px; }
-  footer { margin-top: 28px; color: var(--muted); font-size:12px; display:flex; justify-content:space-between; align-items:center; }
-  .brand { color: var(--brand); font-weight: 600; }
-  `;
+  const primaryBlock = primary ? renderPersonaBlock("Primary Leadership Persona", primary, "primary") : "";
+  const secondaryBlock = secondary ? renderPersonaBlock("Secondary Leadership Persona", secondary, "secondary") : "";
+  const tertiaryBlock = tertiary ? renderPersonaBlock("Tertiary Leadership Persona", tertiary, "secondary") : "";
 
-  const schemaCards = topSchemas
-    .map((s, idx) => {
-      const pct = Math.round((s.score ?? 0) * 100);
-      return `
-      <section class="card">
-        <div class="chip">Top ${idx + 1}</div>
-        <h3 class="schemaName">${escapeHtml(s.narrative.displayName)}</h3>
-        <div class="score">Relative score: ${isFinite(pct) ? pct : 0}%</div>
-        <p>${escapeHtml(s.narrative.summary)}</p>
-        <div class="grid">
-          <div>
-            <h4>Strengths</h4>
-            <ul>${s.narrative.strengths.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
-          </div>
-          <div>
-            <h4>Growth Ideas</h4>
-            <ul>${s.narrative.growth.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
-          </div>
-        </div>
-      </section>`;
-    })
-    .join("\n");
+  const topList = topDisplay.slice(0, 5).map(item => {
+    const name = escapeHtml(item.schemaLabel);
+    return (
+      `<li>` +
+        `<strong>${name}</strong>` +
+        `<span class="muted"> (${name})</span>: ` +
+        `${item.displayIndex}/100` +
+      `</li>`
+    );
+  }).join("");
 
-  return `<!doctype html>
-<html lang="en">
+  const dateStr = fmtDate(completedAt);
+
+  return `<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>${escapeHtml(title)} – ${escapeHtml(headerName)}</title>
-  <style>${styles}</style>
+  <meta charset="UTF-8">
+  <title>Leadership Summary - ${escapeHtml(participantName)}</title>
+  <style>
+    /* ===============================
+       Brand tokens (your palette)
+       Light base: #FFF9F5
+       Primary / Deep teal: #095A62 (HSL 188 83% 21%)
+    =============================== */
+    :root{
+      --bg: hsl(24 60% 98%);             /* warm white */
+      --ink: hsl(195 80% 10%);           /* deep teal text */
+      --muted: hsl(195 20% 40%);         /* subdued teal */
+      --muted-2: hsl(195 20% 45%);       /* slightly stronger muted */
+      --card: hsl(24 60% 98%);           /* same as bg for airy cards */
+      --line: hsl(188 30% 88%);          /* soft teal-tinted border */
+      --brand: hsl(188 83% 21%);         /* deep teal */
+      --brand-ink: hsl(188 83% 18%);     /* deeper teal for headings */
+      --accent: hsl(24 65% 90%);         /* warm peach */
+    }
+    /* Optional monochrome mode: add class="mono" on <body> for grayscale print */
+    .mono{
+      --ink: hsl(220 30% 12%);
+      --muted: hsl(220 10% 45%);
+      --muted-2: hsl(220 10% 50%);
+      --line: hsl(220 10% 86%);
+      --brand: hsl(220 20% 20%);
+      --brand-ink: hsl(220 20% 18%);
+      --accent: hsl(0 0% 90%);
+    }
+
+    /* ===============================
+       Base
+    =============================== */
+    *{ box-sizing: border-box; }
+    html,body{ margin:0; padding:0; }
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: var(--ink);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .muted{ color: var(--muted-2); }
+
+    /* ===============================
+       Page shell
+    =============================== */
+    .container{
+      max-width: 860px;
+      margin: 24px auto;
+      background: var(--card);
+      padding: 36px 40px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 24px rgba(9,90,98,0.08); /* subtle teal-tinted shadow */
+    }
+
+    /* ===============================
+       Header
+    =============================== */
+    .header{
+      text-align:center;
+      padding-bottom: 18px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .header h1{
+      margin:0 0 4px;
+      font-size: 26px;
+      letter-spacing: -0.01em;
+      color: var(--brand-ink);
+    }
+    .header h2{
+      margin:0 0 10px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .header p{
+      margin:4px 0;
+      color: var(--muted);
+    }
+
+    /* ===============================
+       Sections & text
+    =============================== */
+    .section{ margin: 28px 0; }
+    .section h3{
+      margin:0 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brand-ink);
+    }
+    .section p{ color: var(--muted); margin: 6px 0 0; }
+    ul{ padding-left: 20px; margin: 8px 0 0; }
+    li{ margin: 6px 0; line-height: 1.6; color: var(--ink); }
+
+    /* ===============================
+       Persona cards
+    =============================== */
+    .primary, .secondary{
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      background: var(--card);
+    }
+    /* Primary: very subtle teal wash using HSLA of brand */
+    .primary{
+      background: linear-gradient(180deg, hsla(188,83%,21%,0.07), hsla(188,83%,21%,0.04));
+      border-color: hsla(188,83%,21%,0.25);
+    }
+    /* Secondary: light neutral */
+    .secondary{
+      background: hsl(24 60% 98% / 0.9);
+      border-color: var(--line);
+    }
+
+    /* Typography inside persona blocks */
+    .label{
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .score{ /* persona public name */
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .primary .score{ color: var(--brand-ink); }
+    .primary .label{ color: hsla(188,83%,21%,0.85); }
+
+    .meta-line{
+      margin: 8px 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .schema-line{
+      margin: 5px 0;
+      font-size: 13px;
+      color: var(--muted-2);
+    }
+    .emerging{
+      margin-top: 10px;
+      font-size: 13px;
+      color: hsl(24 80% 35%); /* warm amber-ish note against your palette */
+    }
+
+    /* ===============================
+       Footer
+    =============================== */
+    .footer{
+      margin-top: 30px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      text-align:center;
+    }
+
+    /* ===============================
+       Print polish
+    =============================== */
+    @media print{
+      body{ background:#fff; }
+      .container{ box-shadow:none; border-color: hsl(188 20% 85%); }
+      .primary{ background: hsl(188 60% 96%); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      a{ text-decoration: none; color: inherit; }
+    }
+  </style>
 </head>
 <body>
-  <main class="page">
-    <h1>${escapeHtml(title)}</h1>
-    <div class="sub">${escapeHtml(sub)}</div>
-    <div class="meta">
-      <div><strong>Participant:</strong> ${escapeHtml(headerName)}</div>
-      <div><strong>Date:</strong> ${escapeHtml(participant.dateISO)}</div>
+  <div class="container">
+    <div class="header">
+      <h1>Leadership Personas Assessment</h1>
+      <h2>Summary Report</h2>
+      <p><strong>${escapeHtml(participantName)}</strong></p>
+      <p>Generated: ${escapeHtml(dateStr)}</p>
     </div>
-    ${schemaCards}
-    <footer>
-      <div>Template <span class="brand">${escapeHtml(templateVersion)}</span></div>
-      <div>Printable • A4 • Counselling</div>
-    </footer>
-  </main>
+
+    <div class="section">
+      <h3>Assessment Results</h3>
+      <p>Your leadership assessment reveals distinct patterns that define your natural approach to leadership and team dynamics.</p>
+    </div>
+
+    ${primaryBlock}
+    ${secondaryBlock}
+    ${tertiaryBlock}
+
+    <div class="section">
+      <h3>Complete Ranking</h3>
+      <div class="muted" style="font-size: 14px; margin-bottom: 15px;">All leadership personas (Top 5):</div>
+      <ol>${topList}</ol>
+    </div>
+
+    <div class="section">
+      <div class="muted" style="font-size: 14px; margin-bottom: 15px;">
+        Questions answered: <strong>${totalQuestions}</strong>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>This summary report uses the same canonical scoring methodology as Tier 2 and Tier 3 clinical reports.</p>
+      <p>© ${new Date().getFullYear()} Leadership Personas Assessment. Confidential.</p>
+    </div>
+  </div>
 </body>
 </html>`;
 }
 
-function escapeHtml(s: string) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+/* ------------------------------------------------------------------ */
+/* Optional: Keep Tier 2 visuals in sync (same brand tokens)          */
+/* ------------------------------------------------------------------ */
+
+export function renderTier2HTML(args: RenderArgs): string {
+  const {
+    participantName,
+    completedAt,
+    totalQuestions,
+    primary,
+    secondary,
+    tertiary,
+    topDisplay = []
+  } = args;
+
+  const primaryBlock = primary ? renderPersonaBlock("Primary Leadership Persona", primary, "primary") : "";
+  const secondaryBlock = secondary ? renderPersonaBlock("Secondary Leadership Persona", secondary, "secondary") : "";
+  const tertiaryBlock = tertiary ? renderPersonaBlock("Tertiary Leadership Persona", tertiary, "secondary") : "";
+
+  const topList = topDisplay.slice(0, 5).map(item => {
+    const name = escapeHtml(item.schemaLabel);
+    return (
+      `<li>` +
+        `<strong>${name}</strong>` +
+        `<span class="muted"> (${name})</span>: ` +
+        `${item.displayIndex}/100` +
+      `</li>`
+    );
+  }).join("");
+
+  const dateStr = fmtDate(completedAt);
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Leadership Summary - ${escapeHtml(participantName)}</title>
+  <style>
+    :root{
+      --bg: hsl(24 60% 98%);
+      --ink: hsl(195 80% 10%);
+      --muted: hsl(195 20% 40%);
+      --muted-2: hsl(195 20% 45%);
+      --card: hsl(24 60% 98%);
+      --line: hsl(188 30% 88%);
+      --brand: hsl(188 83% 21%);
+      --brand-ink: hsl(188 83% 18%);
+      --accent: hsl(24 65% 90%);
+    }
+    .mono{
+      --ink: hsl(220 30% 12%);
+      --muted: hsl(220 10% 45%);
+      --muted-2: hsl(220 10% 50%);
+      --line: hsl(220 10% 86%);
+      --brand: hsl(220 20% 20%);
+      --brand-ink: hsl(220 20% 18%);
+      --accent: hsl(0 0% 90%);
+    }
+
+    *{ box-sizing: border-box; }
+    html,body{ margin:0; padding:0; }
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: var(--ink); background: var(--bg);
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+    .muted{ color: var(--muted-2); }
+
+    .container{ max-width: 860px; margin: 24px auto; background: var(--card); padding: 36px 40px;
+      border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(9,90,98,0.08); }
+
+    .header{ text-align:center; padding-bottom: 18px; margin-bottom: 28px; border-bottom: 1px solid var(--line); }
+    .header h1{ margin:0 0 4px; font-size: 26px; letter-spacing: -0.01em; color: var(--brand-ink); }
+    .header h2{ margin:0 0 10px; font-size: 16px; font-weight: 600; color: var(--muted); }
+    .header p{ margin:4px 0; color: var(--muted); }
+
+    .section{ margin: 28px 0; }
+    .section h3{ margin:0 0 8px; font-size: 16px; font-weight: 700; color: var(--brand-ink); }
+    .section p{ color: var(--muted); margin: 6px 0 0; }
+    ul{ padding-left: 20px; margin: 8px 0 0; }
+    li{ margin: 6px 0; line-height: 1.6; color: var(--ink); }
+
+    .primary, .secondary{ border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 16px 0; background: var(--card); }
+    .primary{ background: linear-gradient(180deg, hsla(188,83%,21%,0.07), hsla(188,83%,21%,0.04)); border-color: hsla(188,83%,21%,0.25); }
+    .secondary{ background: hsl(24 60% 98% / 0.9); border-color: var(--line); }
+
+    .label{ font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+    .score{ font-size: 20px; font-weight: 700; color: var(--ink); }
+    .primary .score{ color: var(--brand-ink); }
+    .primary .label{ color: hsla(188,83%,21%,0.85); }
+
+    .meta-line{ margin: 8px 0; font-size: 14px; color: var(--muted); }
+    .schema-line{ margin: 5px 0; font-size: 13px; color: var(--muted-2); }
+    .emerging{ margin-top: 10px; font-size: 13px; color: hsl(24 80% 35%); }
+
+    .footer{ margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; text-align:center; }
+
+    @media print{
+      body{ background:#fff; }
+      .container{ box-shadow:none; border-color: hsl(188 20% 85%); }
+      .primary{ background: hsl(188 60% 96%); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      a{ text-decoration: none; color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Leadership Personas Assessment</h1>
+      <h2>Summary Report</h2>
+      <p><strong>${escapeHtml(participantName)}</strong></p>
+      <p>Generated: ${escapeHtml(dateStr)}</p>
+    </div>
+
+    <div class="section">
+      <h3>Assessment Results</h3>
+      <p>Your leadership assessment reveals distinct patterns that define your natural approach to leadership and team dynamics.</p>
+    </div>
+
+    ${primaryBlock}
+    ${secondaryBlock}
+    ${tertiaryBlock}
+
+    <div class="section">
+      <h3>Complete Ranking</h3>
+      <div class="muted" style="font-size: 14px; margin-bottom: 15px;">All leadership personas (Top 5):</div>
+      <ol>${topList}</ol>
+    </div>
+
+    <div class="section">
+      <div class="muted" style="font-size: 14px; margin-bottom: 15px;">
+        Questions answered: <strong>${totalQuestions}</strong>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>This summary report uses the same canonical scoring methodology as Tier 2 and Tier 3 clinical reports.</p>
+      <p>© ${new Date().getFullYear()} Leadership Personas Assessment. Confidential.</p>
+    </div>
+  </div>
+</body>
+</html>`;
 }
