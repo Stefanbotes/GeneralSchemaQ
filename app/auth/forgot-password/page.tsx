@@ -1,8 +1,8 @@
 // app/auth/forgot-password/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,10 +33,9 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [callbackUrl, setCallbackUrl] = useState('/dashboard');
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams?.get('callbackUrl') ?? '/dashboard';
 
   const {
     register,
@@ -46,6 +45,16 @@ export default function ForgotPasswordPage() {
   } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
   });
+
+  // ✅ Read callbackUrl on the client only (no useSearchParams, no SSR issues)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const cb = params.get('callbackUrl');
+    if (cb) {
+      setCallbackUrl(cb);
+    }
+  }, []);
 
   const loginUrl = `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
