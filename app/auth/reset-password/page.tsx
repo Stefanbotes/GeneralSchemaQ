@@ -11,10 +11,25 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AnimatedLogo } from '@/components/ui/animated-logo';
-import { ArrowLeft, Lock, Eye, EyeOff, AlertCircle, Check, CheckCircle, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Check,
+  CheckCircle,
+  Loader2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 const resetPasswordSchema = z
@@ -30,7 +45,11 @@ const resetPasswordSchema = z
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
-  <div className={`flex items-center text-sm ${met ? 'text-green-600' : 'text-gray-500'}`}>
+  <div
+    className={`flex items-center text-sm ${
+      met ? 'text-green-600' : 'text-gray-500'
+    }`}
+  >
     <Check className={`h-3 w-3 mr-2 ${met ? 'opacity-100' : 'opacity-30'}`} />
     {text}
   </div>
@@ -47,6 +66,7 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams?.get('token') ?? '';
   const email = searchParams?.get('email') ?? '';
+  const callbackUrl = searchParams?.get('callbackUrl') ?? '/dashboard';
 
   const {
     register,
@@ -62,11 +82,16 @@ function ResetPasswordForm() {
   useEffect(() => {
     if (!token) {
       toast.error('Invalid reset link');
-      router.push('/auth/forgot-password');
+      const forgotUrl = `/auth/forgot-password?callbackUrl=${encodeURIComponent(
+        callbackUrl
+      )}`;
+      router.push(forgotUrl);
     }
-  }, [token, router]);
+  }, [token, router, callbackUrl]);
 
-  const passwordRequirements = [{ met: password?.length >= 8, text: 'At least 8 characters' }];
+  const passwordRequirements = [
+    { met: password?.length >= 8, text: 'At least 8 characters' },
+  ];
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token) return;
@@ -83,7 +108,8 @@ function ResetPasswordForm() {
       const result = await response.json();
 
       if (!response.ok || result?.success === false) {
-        const msg = result?.message || result?.error || 'Failed to reset password';
+        const msg =
+          result?.message || result?.error || 'Failed to reset password';
         setError(msg);
         toast.error(msg);
         return;
@@ -99,6 +125,8 @@ function ResetPasswordForm() {
     }
   };
 
+  const loginUrl = `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-[#fcd0b1] flex items-center justify-center p-6">
@@ -113,13 +141,17 @@ function ResetPasswordForm() {
               <CardTitle className="text-2xl font-bold text-green-700">
                 Password Reset Successful
               </CardTitle>
-              <CardDescription>Your password has been updated successfully</CardDescription>
+              <CardDescription>
+                Your password has been updated successfully
+              </CardDescription>
             </CardHeader>
 
             <CardContent className="text-center space-y-4">
-              <p className="text-gray-600">You can now sign in with your new password.</p>
+              <p className="text-gray-600">
+                You can now sign in with your new password.
+              </p>
               <Button
-                onClick={() => router.push('/auth/login')}
+                onClick={() => router.push(loginUrl)}
                 className="w-full bg-gradient-to-r from-primary-600 to-[#fcd0b1] hover:from-primary-700 hover:to-[#fcd0b1]"
               >
                 Continue to Sign In
@@ -136,7 +168,10 @@ function ResetPasswordForm() {
       <div className="w-full max-w-md">
         {/* Back to login button */}
         <div className="mb-6">
-          <Link href="/auth/login" className="inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors">
+          <Link
+            href={loginUrl}
+            className="inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Sign In
           </Link>
@@ -150,7 +185,9 @@ function ResetPasswordForm() {
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-[#fcd0b1] bg-clip-text text-transparent">
               Set New Password
             </CardTitle>
-            <CardDescription>Create a strong password for your account</CardDescription>
+            <CardDescription>
+              Create a strong password for your account
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -164,7 +201,10 @@ function ResetPasswordForm() {
 
               {!!email && (
                 <p className="text-xs text-gray-500">
-                  For: <span className="font-medium">{decodeURIComponent(email)}</span>
+                  For:{' '}
+                  <span className="font-medium">
+                    {decodeURIComponent(email)}
+                  </span>
                 </p>
               )}
 
@@ -188,7 +228,11 @@ function ResetPasswordForm() {
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
 
@@ -200,7 +244,11 @@ function ResetPasswordForm() {
                   </div>
                 )}
 
-                {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="text-sm text-red-600">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -220,14 +268,22 @@ function ResetPasswordForm() {
                     variant="ghost"
                     size="sm"
                     className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
                     disabled={isLoading}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
+                  <p className="text-sm text-red-600">
+                    {errors.confirmPassword.message}
+                  </p>
                 )}
               </div>
 
