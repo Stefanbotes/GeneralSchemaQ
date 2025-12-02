@@ -1,9 +1,8 @@
-
-// Forgot password page
+// app/auth/forgot-password/page.tsx
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,7 +11,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AnimatedLogo } from '@/components/ui/animated-logo';
 import { ArrowLeft, Mail, Send, AlertCircle } from 'lucide-react';
@@ -30,6 +35,8 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('');
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams?.get('callbackUrl') ?? '/dashboard';
 
   const {
     register,
@@ -40,17 +47,23 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
+  const loginUrl = `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
       setIsLoading(true);
       setError('');
 
+      // Include callbackUrl so the API can embed it in the reset link
       const response = await fetch('/api/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          email: data.email,
+          callbackUrl,
+        }),
       });
 
       const result = await response.json();
@@ -59,8 +72,10 @@ export default function ForgotPasswordPage() {
         setIsSuccess(true);
         toast.success('Password reset instructions sent to your email.');
       } else {
-        setError(result.error || 'Failed to send password reset email');
-        toast.error(result.error || 'Failed to send password reset email');
+        const msg =
+          result.error || result.message || 'Failed to send password reset email';
+        setError(msg);
+        toast.error(msg);
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
@@ -72,10 +87,13 @@ export default function ForgotPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-[#fcd0b1] flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="mb-6">
-            <Link href="/auth/login" className="inline-flex items-center text-primary600 hover:text-primary700 transition-colors">
+            <Link
+              href={loginUrl}
+              className="inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Sign In
             </Link>
@@ -100,17 +118,16 @@ export default function ForgotPasswordPage() {
               <p className="text-gray-600">
                 We've sent password reset instructions to:
               </p>
-              <p className="font-semibold text-gray-800">
-                {getValues('email')}
-              </p>
+              <p className="font-semibold text-gray-800">{getValues('email')}</p>
               <p className="text-sm text-gray-500">
-                If you don't see the email in your inbox, please check your spam folder.
+                If you don't see the email in your inbox, please check your spam
+                folder.
               </p>
-              
+
               <div className="pt-4">
                 <Button
-                  onClick={() => router.push('/auth/login')}
-                  className="w-full bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700"
+                  onClick={() => router.push(loginUrl)}
+                  className="w-full bg-gradient-to-r from-primary-600 to-[#fcd0b1] hover:from-primary-700 hover:to-[#fcd0b1]"
                 >
                   Return to Sign In
                 </Button>
@@ -123,11 +140,14 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-[#fcd0b1] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to login button */}
         <div className="mb-6">
-          <Link href="/auth/login" className="inline-flex items-center text-primary600 hover:text-primary700 transition-colors">
+          <Link
+            href={loginUrl}
+            className="inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Sign In
           </Link>
@@ -138,11 +158,12 @@ export default function ForgotPasswordPage() {
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-[#fcd0b1] bg-clip-text text-transparent">
               Reset Password
             </CardTitle>
             <CardDescription>
-              Enter your email address and we'll send you password reset instructions
+              Enter your email address and we'll send you password reset
+              instructions
             </CardDescription>
           </CardHeader>
 
@@ -169,13 +190,15 @@ export default function ForgotPasswordPage() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email.message}</p>
+                  <p className="text-sm text-red-600">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700"
+                className="w-full bg-gradient-to-r from-primary-600 to-[#fcd0b1] hover:from-primary-700 hover:to-[#fcd0b1]"
                 disabled={isLoading}
               >
                 {isLoading ? 'Sending...' : 'Send Reset Instructions'}
@@ -185,9 +208,9 @@ export default function ForgotPasswordPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Remember your password?{' '}
-                <Link 
-                  href="/auth/login" 
-                  className="text-primary600 hover:text-primary700 font-semibold transition-colors"
+                <Link
+                  href={loginUrl}
+                  className="text-primary-600 hover:text-primary-700 font-semibold transition-colors"
                 >
                   Sign in
                 </Link>
