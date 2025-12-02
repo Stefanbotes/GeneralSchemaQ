@@ -1,4 +1,4 @@
-
+// app/auth/verify-email/page.tsx
 // Email verification page
 'use client';
 
@@ -7,7 +7,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AnimatedLogo } from '@/components/ui/animated-logo';
 import { ArrowLeft, Mail, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
@@ -22,6 +28,7 @@ function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const token = searchParams?.get('token');
   const email = searchParams?.get('email');
+  const callbackUrl = searchParams?.get('callbackUrl') ?? '/dashboard';
 
   useEffect(() => {
     if (token && email) {
@@ -47,10 +54,12 @@ function VerifyEmailForm() {
         setStatus('success');
         setMessage(result.message);
         toast.success('Email verified successfully!');
-        
-        // Redirect to login after 3 seconds
+
+        // ✅ Redirect to login *with callbackUrl* after 3 seconds
+        const loginUrl = `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+
         setTimeout(() => {
-          router.push('/auth/login');
+          router.push(loginUrl);
         }, 3000);
       } else {
         setStatus('error');
@@ -70,8 +79,7 @@ function VerifyEmailForm() {
     try {
       setIsResending(true);
 
-      // This would typically call a resend verification endpoint
-      // For now, we'll show a success message
+      // TODO: Wire this up to a real resend endpoint, e.g. /api/resend-verification
       toast.success('Verification email sent! Please check your inbox.');
       setIsResending(false);
     } catch (error) {
@@ -80,12 +88,18 @@ function VerifyEmailForm() {
     }
   };
 
+  const loginUrl = `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+  const registerUrl = `/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-[#fcd0b1] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Back to login button */}
         <div className="mb-6">
-          <Link href="/auth/login" className="inline-flex items-center text-primary600 hover:text-primary700 transition-colors">
+          <Link
+            href={loginUrl}
+            className="inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Sign In
           </Link>
@@ -96,11 +110,13 @@ function VerifyEmailForm() {
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-[#fcd0b1] bg-clip-text text-transparent">
               Email Verification
             </CardTitle>
             <CardDescription>
-              {status === 'pending' && !token && 'Check your email for verification instructions'}
+              {status === 'pending' &&
+                !token &&
+                'Check your email for verification instructions'}
               {status === 'verifying' && 'Verifying your email address...'}
               {status === 'success' && 'Your email has been verified successfully!'}
               {status === 'error' && 'There was an issue verifying your email'}
@@ -111,8 +127,8 @@ function VerifyEmailForm() {
             {status === 'pending' && !token && (
               <div className="text-center">
                 <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 bg-primary100 rounded-full flex items-center justify-center">
-                    <Mail className="h-8 w-8 text-primary600" />
+                  <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
+                    <Mail className="h-8 w-8 text-primary-600" />
                   </div>
                 </div>
                 <p className="text-gray-600 mb-4">
@@ -120,9 +136,10 @@ function VerifyEmailForm() {
                   {email && <span className="font-semibold">{email}</span>}
                 </p>
                 <p className="text-sm text-gray-500 mb-6">
-                  Click the link in your email to verify your account and complete registration.
+                  Click the link in your email to verify your account and complete
+                  registration.
                 </p>
-                
+
                 <Button
                   onClick={resendVerification}
                   variant="outline"
@@ -144,7 +161,7 @@ function VerifyEmailForm() {
             {status === 'verifying' && (
               <div className="text-center">
                 <div className="flex justify-center mb-4">
-                  <Loader2 className="h-12 w-12 text-primary600 animate-spin" />
+                  <Loader2 className="h-12 w-12 text-primary-600 animate-spin" />
                 </div>
                 <p className="text-gray-600">Verifying your email address...</p>
               </div>
@@ -163,8 +180,8 @@ function VerifyEmailForm() {
                   Redirecting to sign in page in 3 seconds...
                 </p>
                 <Button
-                  onClick={() => router.push('/auth/login')}
-                  className="w-full mt-4 bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 hover:bg-primary)700 hover:to-[#fcd0b1]-700"
+                  onClick={() => router.push(loginUrl)}
+                  className="w-full mt-4 bg-gradient-to-r from-primary-600 to-[#fcd0b1] hover:from-primary-700 hover:to-[#fcd0b1]"
                 >
                   Continue to Sign In
                 </Button>
@@ -180,7 +197,7 @@ function VerifyEmailForm() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{message}</AlertDescription>
                 </Alert>
-                
+
                 <div className="mt-6 space-y-3">
                   {email && (
                     <Button
@@ -199,9 +216,9 @@ function VerifyEmailForm() {
                       )}
                     </Button>
                   )}
-                  
+
                   <Button
-                    onClick={() => router.push('/auth/register')}
+                    onClick={() => router.push(registerUrl)}
                     variant="ghost"
                     className="w-full"
                   >
@@ -220,22 +237,20 @@ function VerifyEmailForm() {
 // Loading component for suspense fallback
 function VerifyEmailPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-primary)50 to-[#fcd0b1]-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-[#fcd0b1] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
               <AnimatedLogo className="w-20 h-20" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r bg-primary)600 to-[#fcd0b1]-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-[#fcd0b1] bg-clip-text text-transparent">
               Email Verification
             </CardTitle>
-            <CardDescription>
-              Loading...
-            </CardDescription>
+            <CardDescription>Loading...</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary600" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
           </CardContent>
         </Card>
       </div>
