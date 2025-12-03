@@ -1,8 +1,8 @@
-// app/results/ResultsClient.tsx
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 export default function ResultsClient() {
   const search = useSearchParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const justCompleted = search.get('justCompleted') === '1';
   const qsId = (search.get('id') || '').trim();
@@ -56,21 +57,32 @@ export default function ResultsClient() {
 
   // Auto-download once after completion OR whenever we have an id (if user opened a direct link)
   useEffect(() => {
+    // Only try auto-download once we know auth state
+    if (status !== 'authenticated') return;
+
     if (!didAuto.current && assessmentId && (justCompleted || qsId)) {
       didAuto.current = true;
       void downloadTier1(assessmentId);
     }
-  }, [assessmentId, justCompleted, qsId]);
+  }, [assessmentId, justCompleted, qsId, status]);
 
   const downloadTier1 = async (id: string) => {
     try {
+      if (!session?.user?.id) {
+        toast.error('You must be logged in to download your report.');
+        return;
+      }
+
       setDownloading(true);
       toast.loading('Generating your Inner Persona summary...');
       const res = await fetch('/api/reports/generate-tier1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // ✅ send cookies/session
-        body: JSON.stringify({ assessmentId: id }), // ✅ DB lookup mode
+        body: JSON.stringify({
+          userId: session.user.id,      // ✅ send userId for API route
+          assessmentId: id,             // ✅ existing DB lookup mode
+        }),
       });
 
       const txt = await res.text().catch(() => '');
@@ -109,17 +121,26 @@ export default function ResultsClient() {
               {justCompleted
                 ? 'Your assessment is complete. Your Tier-1 summary should download automatically.'
                 : 'You can download your Tier-1 summary again below.'}
-            </CardDescription>
+          </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
             <div className="flex justify-center">
               <Button
                 onClick={() => assessmentId && downloadTier1(assessmentId)}
-                disabled={!assessmentId || downloading || resolving}
+                disabled={
+                  !assessmentId ||
+                  downloading ||
+                  resolving ||
+                  status === 'loading' // avoid clicks while session is resolving
+                }
                 className="px-6"
               >
-                {downloading ? 'Generating…' : resolving ? 'Finding your latest…' : 'Download summary again'}
+                {downloading
+                  ? 'Generating…'
+                  : resolving
+                  ? 'Finding your latest…'
+                  : 'Download summary again'}
               </Button>
             </div>
 
@@ -155,3 +176,4 @@ function tryJson(txt: string | undefined | null): any | null {
     return null;
   }
 }
+
